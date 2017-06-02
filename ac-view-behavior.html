@@ -68,9 +68,6 @@
             'instrument-buttons-loaded-2': '_onButtonsGroupLoaded'
         },
         properties: {
-            pitch:{
-                type:Number
-            },
             reverb: {
                 type: Number,
                 value: 0
@@ -105,7 +102,7 @@
                 value: false
             }
         },
-    /* ------------- Audio --------------------- */
+    /* ------------- Loading --------------------- */
         _onButtonsGroupLoaded: function () {
             this.loadedButtonsGroups++;
             if (this.loadedButtonsGroups === this.totalButtonsGroups) {
@@ -132,7 +129,6 @@
             }
         },
         loadNotes: function(e){
-            this.pitch = e.pitch ;
             this.loadedButtonsGroups = 0;
             this.finishedLoading = false;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
