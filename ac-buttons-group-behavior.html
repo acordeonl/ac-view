@@ -206,14 +206,16 @@
             }
         },
     /* ------------------- Web App Communication ------------------- */
-        _sendMessage: function(functionName,args){
+        _acViewCallFunction: function(functionName,args){
             if(parent !== window) {
                 parent.postMessage([
                     functionName, args
                 ], '*');
             }
             else {
-                // this.fire('')
+                Polymer.RenderStatus.afterNextRender(this, function(){
+                    this.fire('ac-view-call',{functionName:functionName,args:args}) ;
+                }) ;
             }
         },
     /* -------------- Loading -------------------- */
@@ -228,29 +230,23 @@
             nodeList[e.viewAudioIndex].setAudio(e.audioUrl);
         },
         registerButtonsGroup: function () {
-            var e = {};
-            e.detail = {};
-            e.detail = {
+            this._acViewCallFunction('registerButtonsGroup', {
                 name: this.name,
                 defaultPlaybackVolume: this.defaultPlaybackVolume*100,
                 defaultInstrumentVolume: this.defaultInstrumentVolume*100,
                 defaultInstrumentPanning: this.defaultInstrumentPanning*100,
                 defaultPlaybackPanning: this.defaultPlaybackPanning*100
-            };
-            this._sendMessage('registerButtonsGroup', e);
+            });
         },
         registerViewAudios: function () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
-                var e = {};
-                e.detail = {};
-                e.detail = {
+                this._acViewCallFunction('registerViewAudio', {
                     name: nodeList[i].id,
                     url: nodeList[i].audioUrl,
                     buttonsGroupIndex: this.index,
                     viewAudioIndex: i
-                };
-                this._sendMessage('registerViewAudio', e);
+                });
             }
         },
     /* ------------------- Initialization ------------------- */
@@ -262,7 +258,7 @@
             this.playbackButtonActions = new LinkedList();
             this.instrumentButtonActions = new LinkedList();
             this.totalViewAudios = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO').length;
-            this._sendMessage('addTotalViewAudios', this.totalViewAudios);
+            this._acViewCallFunction('addTotalViewAudios', this.totalViewAudios);
             this.loadedViewAudios = 0;
             this.listen(this, 'synthesizer-load', '_onLoadSynthesizer');
             setInterval(this.updateGUI.bind(this), 5);

@@ -106,7 +106,7 @@
         _onButtonsGroupLoaded: function () {
             this.loadedButtonsGroups++;
             if (this.loadedButtonsGroups === this.totalButtonsGroups) {
-                this._sendMessage('onLoadACView', {});
+                this._acViewCallFunction('onLoadACView', {});
                 this.finishedLoading = true;
                 this._onFinishedLoadingNotes();
                 if (!this.registeredButtonsGroup) {
@@ -131,7 +131,7 @@
         setViewAudio: function (e) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
             nodeList[e.buttonsGroupIndex].setViewAudio(e);
-            this._sendMessage('initACView',{});
+            this._acViewCallFunction('initACView',{});
         },
     /* ------------- midi --------------------- */
         action: function (e) {
@@ -237,14 +237,16 @@
             }
         },
     /* ------------------- Web App Communication ------------------- */
-        _sendMessage: function(functionName,args){
+        _acViewCallFunction: function(functionName,args){
             if(parent !== window){
                 parent.postMessage([
-                functionName, args
-            ], '*');
+                    functionName, args
+                ], '*');
             }
             else {
-                // this.fire('')
+                Polymer.RenderStatus.afterNextRender(this, function(){
+                    this.fire('ac-view-call',{functionName:functionName,args:args}) ;
+                }) ;
             }
         },
     /* --------------- Initialization ------------------- */
@@ -269,7 +271,7 @@
             this.toggleNotes({target: "instrument", value: e['showingInstrumentNotes']});
         },
         _reportReverb: function () {
-            this._sendMessage('setReverb', this.defaultReverb);
+            this._acViewCallFunction('setReverb', this.defaultReverb);
         },
         ready: function () {
             this.loadedButtonsGroups = 0;
@@ -278,9 +280,8 @@
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setIndex(i);
             }
-            this._sendMessage('setTotalButtonsGroups', this.totalButtonsGroups);
-            this._sendMessage('initACView', {});
-            this._sendMessage('setTotalButtonsGroup', {});
+            this._acViewCallFunction('setTotalButtonsGroups', this.totalButtonsGroups);
+            this._acViewCallFunction('initACView', {});
             //if in an iframe
             if (window !== parent) {
                 window.onmessage = function (args) {
