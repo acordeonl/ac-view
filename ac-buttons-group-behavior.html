@@ -77,19 +77,21 @@
                 type: Object
             }
         },
-    /* ----------------  Pitch ------------------------- */
-        setPitch: function (value) {
+    /* ----------------  Audio ------------------------- */
+        setViewAudioUrl: function (viewAudioIndex,audioUrl) {
+            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
+            nodeList[viewAudioIndex].setAudioUrl(audioUrl);
+        },
+        loadNotes: function (pitch) {
             this.loadedViewAudios = 0;
             this.finishedLoading = false;
-            this._setPitch(value);
-            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            for (var i = 0; i < nodeList.length; i++)
-                nodeList[i].onPitchUpdate();
+            this._setPitch(pitch);
             this._loadNotes();
         },
         _loadNote: function (synthId, note) {
             this.$$('#' + synthId).loadNote(note);
         },
+
     /* -------------------- GUI ------------------------- */
         addGUIAction: function (e) {
             if (e.origin === 'playback' || e.origin === 'playbackGUI') {
@@ -224,10 +226,6 @@
             if (this.loadedViewAudios === this.totalViewAudios) {
                 this.fire('instrument-buttons-loaded-2');
             }
-        },
-        setViewAudio: function (e) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            nodeList[e.viewAudioIndex].setAudio(e.audioUrl);
         },
         registerButtonsGroup: function () {
             this._acViewCallFunction('registerButtonsGroup', {
