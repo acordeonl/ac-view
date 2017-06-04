@@ -271,6 +271,16 @@
         _reportReverb: function () {
             this._acViewCallFunction('setReverb', this.defaultReverb);
         },
+        reportDefaultAudioUrls: function(){
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var defaultAudioUrls = [] ;
+            for (var i = 0; i < nodeList.length; i++) {
+                var res = nodeList[i].getDefaultAudioUrls() ;
+                if(res.length > 0 )
+                    defaultAudioUrls.push(res) ;
+            }
+            this._acViewCallFunction('initACView2',defaultAudioUrls);
+        },
         ready: function () {
             this.loadedButtonsGroups = 0;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
