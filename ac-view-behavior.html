@@ -63,19 +63,24 @@
 */
     ACViewBehavior = {
         listeners: {
-            'action': 'action',
+            'action': 'onMidiEvent',
             'instrument-buttons-loaded': '_onButtonsGroupLoaded',
             'instrument-buttons-loaded-2': '_onButtonsGroupLoaded'
         },
         properties: {
-            reverb: {
-                type: Number,
-                value: 0
+            chords:{
+                type:Array,
+                value:[],
+                observer:'_reportChords'
             },
             defaultReverb: {
                 type: Number,
                 value: 0,
                 observer: '_reportReverb'
+            },
+            reverb: {
+                type: Number,
+                value: 0
             },
             registeredButtonsGroup: {
                 type: Boolean,
@@ -140,13 +145,13 @@
             }
         },
     /* ------------- midi --------------------- */
-        action: function (e) {
+        onButtonEvent: function (e) {
             if (!this.finishedLoading)
                 return;
             if (e.cmd === 'velocity-change') {
                 this._setVelocity(e.velocity);
             }
-            this._instrumentAction(e);
+            this._onButtonEvent(e);
         },
         _setVelocity: function (velocity) {
             noteNotFound = false;
@@ -227,6 +232,12 @@
             wet.gain.value = (1.0 - ((100 - synthReverb) / 100));
             dry.gain.value = (100 - synthReverb) / 100;
         },
+        displayChord: function(chord){
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].displayChord(chord) ;
+            }
+        },
         setRotation: function (rotation) {
             this.rotation = rotation;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
@@ -250,7 +261,6 @@
     /* --------------- Initialization ------------------- */
         setTheme: function (e) {
             this.customStyle = e;
-            console.log(e); 
             this.updateStyles();
         },
         setPreferences: function (e) {
@@ -271,6 +281,9 @@
         },
         _reportReverb: function () {
             this._acViewCallFunction('setReverb', this.defaultReverb);
+        },
+        _reportChords: function(){
+            this._acViewCallFunction('setChords',this.chords);
         },
         reportDefaultAudioUrls: function(){
             var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');

@@ -125,7 +125,7 @@
                 if(this.requested[note]!==undefined) {
                     this.notesLoaded ++ ;
                     if(this.notesLoaded === this.totalNotes )
-                    this.fire('synthesizer-load') ;
+                    this.fire('view-audio-load') ;
                     return ;
                 }
                 var request = new XMLHttpRequest();
@@ -145,7 +145,7 @@
                         // this.fire("toast", {msg: 'La tonalidad no pudo ser cargada'});
                         parent.postMessage(['toast','La tonalidad no pudo ser cargada'],'*') ;
                         this.noteNotFound = true;
-                        // this.fire('synthesizer-load') ;
+                        // this.fire('view-audio-load') ;
                     }
                     return;
                 }
@@ -163,7 +163,7 @@
                     this.notesLoaded ++ ;
                     if(this.notesLoaded === this.totalNotes ) {
                         this.notesLoaded = 0 ;
-                        this.fire('synthesizer-load') ;
+                        this.fire('view-audio-load') ;
                     }
                 }.bind(this));
             },
@@ -172,7 +172,7 @@
                 this.instrumentVelocity = velocity ;
                 this._updateInstrumentVolume() ;
             },
-            _startButtonAudio: function(note,button,e){
+            _startAudio: function(note,button,e){
                 if(e.origin==='playbackGUI')
                     return ;
                 var when = context.currentTime ;
@@ -194,7 +194,7 @@
                 if(e.origin ==='instrument')
                     this.playBA[button].gain.connect(this.instrumentSynthGain) ;
             },
-            _stopButtonAudio: function(button,e){
+            _stopAudio: function(button,e){
                 if(e.origin==='playbackGUI')
                     return ;
                 var when =  context.currentTime ;

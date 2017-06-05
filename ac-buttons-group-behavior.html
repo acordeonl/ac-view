@@ -88,12 +88,23 @@
             this._setPitch(pitch);
             this._loadNotes();
         },
-        _loadNote: function (synthId, note) {
-            this.$$('#' + synthId).loadNote(note);
+        _loadNote: function (viewAudioId, note) {
+            this.$$('#' + viewAudioId).loadNote(note);
         },
-
+        onButtonEvent: function(e){
+            this._ButtonEventToAudio(e) ;
+            this._ButtonEventToGUI(e) ;
+        },
+    /* ------------------- Chords ------------------- */
+        displayChord: function(chord){
+            if( this._displayChord !== null && this._displayChord !== undefined) {
+                this._displayChord(chord) ;
+            }
+        },
     /* -------------------- GUI ------------------------- */
-        addGUIAction: function (e) {
+        displayEvent: function ( buttonId , buttonState , e) {
+            e.which = buttonId ;
+            e.buttonState = buttonState ;
             if (e.origin === 'playback' || e.origin === 'playbackGUI') {
                 if (e.playNow !== undefined) {
                     e.when = context.currentTime;
@@ -161,14 +172,14 @@
             this.playbackButtonActions.clear();
             this.instrumentButtonActions.clear();
         },
-    /* ----------------- Synthesizer -------------------------- */
+    /* ----------------- View audio -------------------------- */
         stopAudio: function (origin) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             var i;
-            for (i = 0; i < nodeList.length; i++)
+            for (i = 0; i < nodeList.length; i++){
                 nodeList[i].stop(origin);
             }
-        ,
+        },
         setVelocity: function (velocity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
@@ -221,7 +232,7 @@
             }
         },
     /* -------------- Loading -------------------- */
-        _onLoadSynthesizer: function () {
+        _onLoadViewAudio: function () {
             this.loadedViewAudios++;
             if (this.loadedViewAudios === this.totalViewAudios) {
                 this.fire('instrument-buttons-loaded-2');
@@ -268,7 +279,7 @@
             this.totalViewAudios = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO').length;
             this._acViewCallFunction('addTotalViewAudios', this.totalViewAudios);
             this.loadedViewAudios = 0;
-            this.listen(this, 'synthesizer-load', '_onLoadSynthesizer');
+            this.listen(this, 'view-audio-load', '_onLoadViewAudio');
             setInterval(this.updateGUI.bind(this), 5);
         }
     };
