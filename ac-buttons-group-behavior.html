@@ -78,7 +78,7 @@
             }
         },
     /* ----------------  Audio ------------------------- */
-        setViewAudioUrl: function (viewAudioIndex,audioUrl) {
+        setViewAudioUrl: function (viewAudioIndex, audioUrl) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             nodeList[viewAudioIndex].setAudioUrl(audioUrl);
         },
@@ -91,20 +91,14 @@
         _loadNote: function (viewAudioId, note) {
             this.$$('#' + viewAudioId).loadNote(note);
         },
-        onButtonEvent: function(e){
-            this._ButtonEventToAudio(e) ;
-            this._ButtonEventToGUI(e) ;
+    /* ------------------- Button Events ------------------- */
+        onButtonEvent: function (e) {
+            this._buttonEventToAudio(e);
+            this._buttonEventToGUI(e);
         },
-    /* ------------------- Chords ------------------- */
-        displayChord: function(chord){
-            if( this._displayChord !== null && this._displayChord !== undefined) {
-                this._displayChord(chord) ;
-            }
-        },
-    /* -------------------- GUI ------------------------- */
-        displayEvent: function ( buttonId , buttonState , e) {
-            e.which = buttonId ;
-            e.buttonState = buttonState ;
+        _buttonEventToGUI: function (e) {
+            e.buttonId = this._mapButtonEventToButtonId(e.button, e.channel);
+            e.buttonState = this._mapButtonEventToButtonState(e.cmd, e.button, e.channel);
             if (e.origin === 'playback' || e.origin === 'playbackGUI') {
                 if (e.playNow !== undefined) {
                     e.when = context.currentTime;
@@ -117,16 +111,31 @@
                 this.instrumentButtonActions.push(e);
             }
         },
+        _buttonEventToAudio: function (e) {
+            var buttonId = this._mapButtonEventToButtonId(e.button, e.channel);
+            if (e.cmd === 'note-on')
+                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(this._mapButtonEventToNote(buttonId, e.button, e.channel), buttonId, e);
+            else {
+                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(buttonId, e);
+            }
+        },
+    /* ------------------- Chords ------------------- */
+        displayChord: function (chord) {
+            if (this._displayChord !== null && this._displayChord !== undefined) {
+                this._displayChord(chord);
+            }
+        },
+    /* -------------------- GUI ------------------------- */
         updateGUI: function () {
             if (this.playbackButtonActions.length > 0) {
                 if (this.playbackButtonActions.first.value.when < context.currentTime) {
-                    this.$$('[' + this.playbackButtonActions.first.value.which + ']').render(this.playbackButtonActions.first.value.origin, this.playbackButtonActions.first.value.buttonState);
+                    this.$$('[channel' + this.playbackButtonActions.first.value.channel + '][id' + this.playbackButtonActions.first.value.buttonId + ']').render(this.playbackButtonActions.first.value.origin, this.playbackButtonActions.first.value.buttonState);
                     this.playbackButtonActions.popFirst();
                 }
             }
             if (this.instrumentButtonActions.length > 0) {
                 if (this.instrumentButtonActions.first.value.guiWhen < context.currentTime) {
-                    this.$$('[' + this.instrumentButtonActions.first.value.which + ']').render(this.instrumentButtonActions.first.value.origin, this.instrumentButtonActions.first.value.buttonState);
+                    this.$$('[channel' + this.playbackButtonActions.first.value.channel + '][id' + this.instrumentButtonActions.first.value.buttonId + ']').render(this.instrumentButtonActions.first.value.origin, this.instrumentButtonActions.first.value.buttonState);
                     this.instrumentButtonActions.popFirst();
                 }
             }
@@ -141,12 +150,12 @@
                 }
             }
         },
-        setOpacity: function (which, opacity) {
+        setOpacity: function (buttonId, opacity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[button]');
             for (var i = 0; i < nodeList.length; i++) {
-                if (which === 'playback')
+                if (buttonId === 'playback')
                     nodeList[i].playbackOpacity = opacity;
-                if (which === 'instrument')
+                if (buttonId === 'instrument')
                     nodeList[i].instrumentOpacity = opacity;
                 }
             },
@@ -163,7 +172,7 @@
                     when = context.currentTime + (this.playbackButtonActions.first.value.tempo) * (this.playbackButtonActions.first.value.time - this.playbackButtonActions.first.value.playbackTime);
                 }
                 if (when < context.currentTime || this.playbackButtonActions.first.value.playNow !== undefined) {
-                    this.$$('[' + this.playbackButtonActions.first.value.which + ']').render(this.playbackButtonActions.first.value.origin, this.playbackButtonActions.first.value.buttonState);
+                    this.$$('[' + this.playbackButtonActions.first.value.buttonId + ']').render(this.playbackButtonActions.first.value.origin, this.playbackButtonActions.first.value.buttonState);
                     this.playbackButtonActions.popFirst();
                 } else {
                     break;
@@ -176,7 +185,7 @@
         stopAudio: function (origin) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             var i;
-            for (i = 0; i < nodeList.length; i++){
+            for (i = 0; i < nodeList.length; i++) {
                 nodeList[i].stop(origin);
             }
         },
@@ -219,16 +228,18 @@
             }
         },
     /* ------------------- acView Communication ------------------- */
-        _acViewCallFunction: function(functionName,args){
-            if(parent !== window) {
+        _acViewCallFunction: function (functionName, args) {
+            if (parent !== window) {
                 parent.postMessage([
                     functionName, args
                 ], '*');
-            }
-            else {
-                Polymer.RenderStatus.afterNextRender(this, function(){
-                    this.fire('ac-view-call',{functionName:functionName,args:args}) ;
-                }) ;
+            } else {
+                Polymer.RenderStatus.afterNextRender(this, function () {
+                    this.fire('ac-view-call', {
+                        functionName: functionName,
+                        args: args
+                    });
+                });
             }
         },
     /* -------------- Loading -------------------- */
@@ -241,10 +252,10 @@
         registerButtonsGroup: function () {
             this._acViewCallFunction('registerButtonsGroup', {
                 name: this.name,
-                defaultPlaybackVolume: this.defaultPlaybackVolume*100,
-                defaultInstrumentVolume: this.defaultInstrumentVolume*100,
-                defaultInstrumentPanning: this.defaultInstrumentPanning*100,
-                defaultPlaybackPanning: this.defaultPlaybackPanning*100
+                defaultPlaybackVolume: this.defaultPlaybackVolume * 100,
+                defaultInstrumentVolume: this.defaultInstrumentVolume * 100,
+                defaultInstrumentPanning: this.defaultInstrumentPanning * 100,
+                defaultPlaybackPanning: this.defaultPlaybackPanning * 100
             });
         },
         registerViewAudios: function () {
@@ -258,16 +269,15 @@
                 });
             }
         },
-
     /* ------------------- Initialization ------------------- */
         getDefaultAudioUrls: function () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            var defaultAudioUrls = [] ;
+            var defaultAudioUrls = [];
             for (var i = 0; i < nodeList.length; i++) {
-                if(nodeList[i].defaultAudioUrl !== null && nodeList[i].defaultAudioUrl !== undefined)
-                    defaultAudioUrls.push(nodeList[i].defaultAudioUrl) ;
-            }
-            return defaultAudioUrls ;
+                if (nodeList[i].defaultAudioUrl !== null && nodeList[i].defaultAudioUrl !== undefined)
+                    defaultAudioUrls.push(nodeList[i].defaultAudioUrl);
+                }
+            return defaultAudioUrls;
         },
         setIndex: function (index) {
             this.index = index;
