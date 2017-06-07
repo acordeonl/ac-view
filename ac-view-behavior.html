@@ -64,8 +64,8 @@
     ACViewBehavior = {
         listeners: {
             'action': 'onMidiEvent',
-            'instrument-buttons-loaded': '_onButtonsGroupLoaded',
-            'instrument-buttons-loaded-2': '_onButtonsGroupLoaded'
+            'instrument-acLeds-loaded': '_onAcLedGroupLoaded',
+            'instrument-acLeds-loaded-2': '_onAcLedGroupLoaded'
         },
         properties: {
             chords:{
@@ -82,15 +82,15 @@
                 type: Number,
                 value: 0
             },
-            registeredButtonsGroup: {
+            registeredAcLedGroup: {
                 type: Boolean,
                 value: false
             },
-            totalButtonsGroups: {
+            totalAcLedGroups: {
                 type: Number,
                 value: 0
             },
-            loadedButtonsGroups: {
+            loadedAcLedGroups: {
                 type: Number,
                 value: 0
             },
@@ -108,35 +108,35 @@
             }
         },
     /* ------------- Loading --------------------- */
-        _onButtonsGroupLoaded: function () {
-            this.loadedButtonsGroups++;
-            if (this.loadedButtonsGroups === this.totalButtonsGroups) {
+        _onAcLedGroupLoaded: function () {
+            this.loadedAcLedGroups++;
+            if (this.loadedAcLedGroups === this.totalAcLedGroups) {
                 this._acViewCallFunction('onLoadACView', {});
                 this.finishedLoading = true;
                 this._onFinishedLoadingNotes();
-                if (!this.registeredButtonsGroup) {
-                    this.registeredButtonsGroup = true;
-                    this.registerButtonsGroup();
+                if (!this.registeredAcLedGroup) {
+                    this.registeredAcLedGroup = true;
+                    this.registerAcLedGroup();
                     this.registerViewAudios();
                 }
             }
         },
-        registerButtonsGroup: function () {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+        registerAcLedGroup: function () {
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].registerButtonsGroup();
+                nodeList[i].registerAcLedGroup();
             }
         },
         registerViewAudios: function () {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].registerViewAudios();
             }
         },
         loadNotes: function(e){
-            this.loadedButtonsGroups = 0;
+            this.loadedAcLedGroups = 0;
             this.finishedLoading = false;
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < e.audioUrls.length; i++)
                 for (var j = 0; j < e.audioUrls[i].length; j++)
                     nodeList[i].setViewAudioUrl(j,e.audioUrls[i][j]);
@@ -144,18 +144,18 @@
                 nodeList[i].loadNotes(e.pitch);
             }
         },
-    /* ------------- midi --------------------- */
-        onButtonEvent: function (e) {
+    /* ------------- MIDI --------------------- */
+        onMIDIEvent: function (e) {
             if (!this.finishedLoading)
                 return;
             if (e.cmd === 'velocity-change') {
                 this._setVelocity(e.velocity);
             }
-            this._onButtonEvent(e);
+            this._onMIDIEvent(e);
         },
         _setVelocity: function (velocity) {
             noteNotFound = false;
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setVelocity(velocity / 127);
             }
@@ -171,13 +171,13 @@
             }.bind(this));
         },
         _stopAudio: function (origin) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].stopAudio(origin);
             }
         },
         resetGUI: function (e) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].resetGUI(e.origin, e.clearState);
             }
@@ -190,7 +190,7 @@
             if (value === null || value === undefined || isNaN(value))
                 return;
             var arr = target.split('_');
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             if (arr.length === 3) {
                 if (arr[0] === 'playback') {
                     if (arr[1] === 'volume')
@@ -216,13 +216,13 @@
             }
         },
         toggleNotes: function (e) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].toggleNotesOnButtons(e.target, e.value);
+                nodeList[i].toggleNotes(e.target, e.value);
             }
         },
         setOpacity: function (which, opacity) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setOpacity(which, opacity / 100);
             }
@@ -233,14 +233,14 @@
             dry.gain.value = (100 - synthReverb) / 100;
         },
         displayChord: function(chord){
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].displayChord(chord) ;
             }
         },
         setRotation: function (rotation) {
             this.rotation = rotation;
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].rotation = rotation;
             }
@@ -269,7 +269,7 @@
             this.setRotation(e['rotation']);
             this.settingsUpdate('playback_opacity', e['playback_opacity']);
             this.settingsUpdate('instrument_opacity', e['instrument_opacity']);
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 this.settingsUpdate('playback_volume_' + i, e['playback_volume_' + i]);
                 this.settingsUpdate('playback_panning_' + i, e['playback_panning_' + i]);
@@ -286,7 +286,7 @@
             this._acViewCallFunction('setChords',this.chords);
         },
         reportDefaultAudioUrls: function(){
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             var defaultAudioUrls = [] ;
             for (var i = 0; i < nodeList.length; i++) {
                 var res = nodeList[i].getDefaultAudioUrls() ;
@@ -296,13 +296,13 @@
             this._acViewCallFunction('initACView2',defaultAudioUrls);
         },
         ready: function () {
-            this.loadedButtonsGroups = 0;
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[buttons]');
-            this.totalButtonsGroups = nodeList.length;
+            this.loadedAcLedGroups = 0;
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            this.totalAcLedGroups = nodeList.length;
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setIndex(i);
             }
-            this._acViewCallFunction('setTotalButtonsGroups', this.totalButtonsGroups);
+            this._acViewCallFunction('setTotalAcLedGroups', this.totalAcLedGroups);
             this._acViewCallFunction('initACView', {});
             //if in an iframe
             if (window !== parent) {

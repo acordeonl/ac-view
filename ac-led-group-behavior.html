@@ -6,7 +6,10 @@
 *
 * @polymerBehavior
 */
-    ACButtonsGroupBehavior = {
+    acLedGroupBehavior = {
+        listeners:{
+            'view-audio-load':'_onLoadViewAudio'
+        },
         properties: {
         /* ------------------- Loading ------------------- */
             name: {
@@ -70,10 +73,10 @@
                 value: 1
             },
         /* ------------------- Action ------------------- */
-            playbackButtonActions: {
+            playbackAcLedActions: {
                 type: Object
             },
-            instrumentButtonActions: {
+            instrumentAcLedActions: {
                 type: Object
             }
         },
@@ -91,32 +94,41 @@
         _loadNote: function (viewAudioId, note) {
             this.$$('#' + viewAudioId).loadNote(note);
         },
-    /* ------------------- Button Events ------------------- */
-        onButtonEvent: function (e) {
-            this._buttonEventToAudio(e);
-            this._buttonEventToGUI(e);
-        },
-        _buttonEventToGUI: function (e) {
-            e.buttonId = this._mapButtonEventToButtonId(e.button, e.channel);
-            e.buttonState = this._mapButtonEventToButtonState(e.cmd, e.button, e.channel);
+    /* ------------------- MIDIEvents ------------------- */
+        onMIDIEvent: function (e) {
+        /* ------------------- MIDIEvent to GUI ------------------- */
+            e.acLedId = this._mapMIDIEventToAcLedId(e.midiNote, e.channel);
+            e.acLedState = this._mapMIDIEventToAcLedState(e.cmd, e.midiNote, e.channel);
             if (e.origin === 'playback' || e.origin === 'playbackGUI') {
                 if (e.playNow !== undefined) {
                     e.when = context.currentTime;
                 } else {
                     e.when = context.currentTime + (e.tempo) * (e.time - e.playbackTime);
                 }
-                this.playbackButtonActions.push(e);
+                this.playbackAcLedActions.push(e);
             }
             if (e.origin === 'instrument') {
-                this.instrumentButtonActions.push(e);
+                this.instrumentAcLedActions.push(e);
+            }
+        /* ------------------- MIDIEvent to audio ------------------- */
+            if (e.cmd === 'note-on')
+                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(this._mapMIDIEventToMIDINote(e.acLedId, e.midiNote, e.channel), e.acLedId, e);
+            else {
+                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e.acLedId, e);
             }
         },
-        _buttonEventToAudio: function (e) {
-            var buttonId = this._mapButtonEventToButtonId(e.button, e.channel);
-            if (e.cmd === 'note-on')
-                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(this._mapButtonEventToNote(buttonId, e.button, e.channel), buttonId, e);
+    /* ------------------- MIDIEvents Default helpers  ------------------- */
+        _mapMIDIEventToAcLedId: function(acLed,channel){
+            return acLed ;
+        },
+        _mapMIDIEventToMIDINote: function(acLedId,acLed,channel){
+            return acLed ;
+        },
+        _mapMIDIEventToAcLedState: function(cmd,acLed,channel){
+            if (cmd === 'note-on')
+                return 1 ;
             else {
-                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(buttonId, e);
+                return 0 ;
             }
         },
     /* ------------------- Chords ------------------- */
@@ -127,21 +139,21 @@
         },
     /* -------------------- GUI ------------------------- */
         updateGUI: function () {
-            if (this.playbackButtonActions.length > 0) {
-                if (this.playbackButtonActions.first.value.when < context.currentTime) {
-                    this.$$('[channel' + this.playbackButtonActions.first.value.channel + '][id' + this.playbackButtonActions.first.value.buttonId + ']').render(this.playbackButtonActions.first.value.origin, this.playbackButtonActions.first.value.buttonState);
-                    this.playbackButtonActions.popFirst();
+            if (this.playbackAcLedActions.length > 0) {
+                if (this.playbackAcLedActions.first.value.when < context.currentTime) {
+                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').render(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
+                    this.playbackAcLedActions.popFirst();
                 }
             }
-            if (this.instrumentButtonActions.length > 0) {
-                if (this.instrumentButtonActions.first.value.guiWhen < context.currentTime) {
-                    this.$$('[channel' + this.playbackButtonActions.first.value.channel + '][id' + this.instrumentButtonActions.first.value.buttonId + ']').render(this.instrumentButtonActions.first.value.origin, this.instrumentButtonActions.first.value.buttonState);
-                    this.instrumentButtonActions.popFirst();
+            if (this.instrumentAcLedActions.length > 0) {
+                if (this.instrumentAcLedActions.first.value.guiWhen < context.currentTime) {
+                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.instrumentAcLedActions.first.value.acLedId + ']').render(this.instrumentAcLedActions.first.value.origin, this.instrumentAcLedActions.first.value.acLedState);
+                    this.instrumentAcLedActions.popFirst();
                 }
             }
         },
-        toggleNotesOnButtons: function (target, value) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[button]');
+        toggleNotes: function (target, value) {
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
                 if (target === 'playback') {
                     nodeList[i].showingPlaybackNotes = value;
@@ -150,36 +162,36 @@
                 }
             }
         },
-        setOpacity: function (buttonId, opacity) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[button]');
+        setOpacity: function (acLedId, opacity) {
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
-                if (buttonId === 'playback')
+                if (acLedId === 'playback')
                     nodeList[i].playbackOpacity = opacity;
-                if (buttonId === 'instrument')
+                if (acLedId === 'instrument')
                     nodeList[i].instrumentOpacity = opacity;
                 }
             },
         resetGUI: function (origin, clearState) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[button]');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (i = 0; i < nodeList.length; i++) {
                 nodeList[i].resetGUI(origin, clearState);
             }
-            while (this.playbackButtonActions.length > 0) {
+            while (this.playbackAcLedActions.length > 0) {
                 var when;
-                if (this.playbackButtonActions.first.value.playNow !== undefined) {
+                if (this.playbackAcLedActions.first.value.playNow !== undefined) {
                     when = context.currentTime;
                 } else {
-                    when = context.currentTime + (this.playbackButtonActions.first.value.tempo) * (this.playbackButtonActions.first.value.time - this.playbackButtonActions.first.value.playbackTime);
+                    when = context.currentTime + (this.playbackAcLedActions.first.value.tempo) * (this.playbackAcLedActions.first.value.time - this.playbackAcLedActions.first.value.playbackTime);
                 }
-                if (when < context.currentTime || this.playbackButtonActions.first.value.playNow !== undefined) {
-                    this.$$('[' + this.playbackButtonActions.first.value.buttonId + ']').render(this.playbackButtonActions.first.value.origin, this.playbackButtonActions.first.value.buttonState);
-                    this.playbackButtonActions.popFirst();
+                if (when < context.currentTime || this.playbackAcLedActions.first.value.playNow !== undefined) {
+                    this.$$('[' + this.playbackAcLedActions.first.value.acLedId + ']').render(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
+                    this.playbackAcLedActions.popFirst();
                 } else {
                     break;
                 }
             }
-            this.playbackButtonActions.clear();
-            this.instrumentButtonActions.clear();
+            this.playbackAcLedActions.clear();
+            this.instrumentAcLedActions.clear();
         },
     /* ----------------- View audio -------------------------- */
         stopAudio: function (origin) {
@@ -246,11 +258,11 @@
         _onLoadViewAudio: function () {
             this.loadedViewAudios++;
             if (this.loadedViewAudios === this.totalViewAudios) {
-                this.fire('instrument-buttons-loaded-2');
+                this.fire('instrument-acLeds-loaded-2');
             }
         },
-        registerButtonsGroup: function () {
-            this._acViewCallFunction('registerButtonsGroup', {
+        registerAcLedGroup: function () {
+            this._acViewCallFunction('registerAcLedGroup', {
                 name: this.name,
                 defaultPlaybackVolume: this.defaultPlaybackVolume * 100,
                 defaultInstrumentVolume: this.defaultInstrumentVolume * 100,
@@ -264,7 +276,7 @@
                 this._acViewCallFunction('registerViewAudio', {
                     name: nodeList[i].id,
                     url: nodeList[i].audioUrl,
-                    buttonsGroupIndex: this.index,
+                    acLedsGroupIndex: this.index,
                     viewAudioIndex: i
                 });
             }
@@ -284,12 +296,16 @@
         },
         onFinishedLoadingNotes: function () {},
         ready: function () {
-            this.playbackButtonActions = new LinkedList();
-            this.instrumentButtonActions = new LinkedList();
-            this.totalViewAudios = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO').length;
+            this.playbackAcLedActions = new LinkedList();
+            this.instrumentAcLedActions = new LinkedList();
+            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
+            this.totalViewAudios = nodeList.length ;
+
+            // for (var i = 0; i < nodeList.length; i++) {
+            //     array[i]
+            // }
             this._acViewCallFunction('addTotalViewAudios', this.totalViewAudios);
             this.loadedViewAudios = 0;
-            this.listen(this, 'view-audio-load', '_onLoadViewAudio');
             setInterval(this.updateGUI.bind(this), 5);
         }
     };

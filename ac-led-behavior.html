@@ -5,7 +5,7 @@
 *
 * @polymerBehavior
 */
-    ACButtonBehavior= {
+    acLedBehavior= {
         properties:{
             insrumentOpacity:{
                 type:Number,
@@ -52,12 +52,12 @@
             name += octave;
             return name;
         },
-        render: function(origin,buttonState){
-            if(origin === 'playback' || origin === 'playbackGUI' && this.playbackState !== buttonState){
-                this.playbackState = buttonState ;
+        render: function(origin,acLedState){
+            if(origin === 'playback' || origin === 'playbackGUI' && this.playbackState !== acLedState){
+                this.playbackState = acLedState ;
             }
-            if(origin === 'instrument' && this.instrumentState !== buttonState)
-                this.instrumentState = buttonState ;
+            if(origin === 'instrument' && this.instrumentState !== acLedState)
+                this.instrumentState = acLedState ;
         },
         resetGUI: function(origin,clearState){
             if(origin==='playback' && clearState ) {
