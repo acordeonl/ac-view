@@ -59,6 +59,10 @@
                 value: 1,
                 observer: '_setSynthPlaybackVolume'
             },
+            pitch:{
+                type:Number,
+                value:67
+            },
         /* ------------------- Defaults ------------------- */
             defaultInstrumentPanning: {
                 type: Number,
@@ -96,27 +100,42 @@
         loadNotes: function (pitch) {
             this.loadedViewAudios = 0;
             this.finishedLoading = false;
-            this._setPitch(pitch);
-            this._loadNotes();
-        },
-        _loadNote: function (viewAudioId, note) {
-            this.$$('#' + viewAudioId).loadNote(note);
+
+        /* ------------------- Pitch ------------------- */
+            var diff = pitch - this.pitch ;
+            this.pitch += diff ;
+            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
+            for (var j = 0; j < nodeList.length; j++) {
+                var channel = nodeList[j].channel ;
+                for (var i = 0; i < this.MIDIEventToNoteMap[channel].length; i++) {
+                    if( this.MIDIEventToNoteMap[channel][i] === null || this.MIDIEventToNoteMap[channel][i] === undefined )
+                        continue ;
+                    this.MIDIEventToNoteMap[channel][i] = this._addPitch(this.MIDIEventToNoteMap[channel][i],channel,diff);
+                }
+            }
+        /* ------------------- Audio loading ------------------- */
+            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
+            for (var j = 0; j < nodeList.length; j++) {
+                var channel = nodeList[j].channel ;
+                for (var i = 0; i < this.MIDIEventToNoteMap[channel].length; i++) {
+                    if (this.MIDIEventToNoteMap[channel][i] === undefined || this.MIDIEventToNoteMap[channel][i] === null)
+                        continue ;
+                    nodeList[j].loadNote(this.MIDIEventToNoteMap[channel][i]);
+                }
+            }
         },
     /* ------------------- MIDIEvents ------------------- */
         onMIDIEvent: function (e) {
             this._MIDIEventToGUI(e) ;
             this._MIDIEventToAudio(e) ;
         },
-        _MIDIEventToAudio: function(e){
-            if (e.cmd === 'note-on')
-                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(this.MIDIEventToNoteMap[e.channel][e.midiNote], e.midiNote, e);
-            else {
-                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e.midiNote, e);
-            }
-        },
         _MIDIEventToGUI: function(e){
             e.acLedId = this._mapMIDIEventToAcLedId(e.midiNote, e.channel);
-            e.acLedState = this._mapMIDIEventToAcLedState(e.cmd, e.midiNote, e.channel);
+            if(e.cmd === 'note-on')
+                e.acLedState = this._mapMIDIEventToAcLedState(e.midiNote, e.channel);
+            else {
+                e.acLedState = 0 ;
+            }
             if (e.origin === 'playback' || e.origin === 'playbackGUI') {
                 if (e.playNow !== undefined) {
                     e.when = context.currentTime;
@@ -129,6 +148,16 @@
                 this.instrumentAcLedActions.push(e);
             }
         },
+        _MIDIEventToAudio: function(e){
+            if (e.cmd === 'note-on')
+                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(this.MIDIEventToNoteMap[e.channel][e.midiNote],e);
+            else {
+                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e);
+            }
+        },
+        _mapMIDIEventToNote: function(channel,midiNote,newNote){
+            this.MIDIEventToNoteMap[channel][midiNote] = newNote;
+        },
     /* ------------------- MIDIEvents Default helpers  ------------------- */
         _mapMIDIEventToAcLedId: function(midiNote,channel){
             return midiNote ;
@@ -139,9 +168,6 @@
             else {
                 return 0 ;
             }
-        },
-        _mapMIDIEventToMIDINote: function(acLedId,midiNote,channel){
-            return this.MIDIEventToNoteMap[channel][acLedState][acLedId] ;
         },
     /* ------------------- Chords ------------------- */
         displayChord: function (chord) {
@@ -159,10 +185,8 @@
                 }
             }
             if (this.instrumentAcLedActions.length > 0) {
-                if (this.instrumentAcLedActions.first.value.guiWhen < context.currentTime) {
-                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.instrumentAcLedActions.first.value.acLedId + ']').render(this.instrumentAcLedActions.first.value.origin, this.instrumentAcLedActions.first.value.acLedState);
-                    this.instrumentAcLedActions.popFirst();
-                }
+                this.$$('[channel' + this.instrumentAcLedActions.first.value.channel + '][id' + this.instrumentAcLedActions.first.value.acLedId + ']').render(this.instrumentAcLedActions.first.value.origin, this.instrumentAcLedActions.first.value.acLedState);
+                this.instrumentAcLedActions.popFirst();
             }
         },
         toggleNotes: function (target, value) {
@@ -207,7 +231,6 @@
             this.playbackAcLedActions.clear();
             this.instrumentAcLedActions.clear();
         },
-
     /* ----------------- View audio -------------------------- */
         stopAudio: function (origin) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
@@ -311,18 +334,12 @@
         },
         onFinishedLoadingNotes: function () {},
         ready: function () {
-            // this.MIDIEventToNoteMap[e.channel][e.acLedState][e.acLedId]
             this.MIDIEventToNoteMap = [] ;
             this.playbackAcLedActions = new LinkedList();
             this.instrumentAcLedActions = new LinkedList();
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             this.totalViewAudios = nodeList.length ;
 
-            // initialize this.MIDIEventToNoteMap accordion to channel
-            // numbers in view audios, number of acLedStates and acLedId range
-            // for (var i = 0; i < nodeList.length; i++) {
-            //     nodeList[i]
-            // }
             for (var i = 0; i < nodeList.length; i++) {
                 var channel = nodeList[i].channel ;
                 this.MIDIEventToNoteMap[channel] =  [] ;
