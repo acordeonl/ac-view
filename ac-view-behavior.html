@@ -263,12 +263,16 @@
         _initAcLeds: function(){
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].initAcLeds(this.customStyle);
+                nodeList[i].initAcLeds();
             }
         },
         setTheme: function (e) {
             this.customStyle = e;
             this.updateStyles();
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].setTheme(this.customStyle);
+            }
         },
         setPreferences: function (e) {
             this.setReverb(e['reverb']);

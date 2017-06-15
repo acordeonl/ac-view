@@ -330,10 +330,18 @@
             }
         },
     /* ------------------- Setup ------------------- */
-        initAcLeds: function(e){
+        initAcLeds: function(){
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (i = 0; i < nodeList.length; i++) {
-                nodeList[i].init(e);
+                nodeList[i].init();
+            }
+        },
+        setTheme: function(e){
+            this.customStyle =  e ;
+            this.updateStyles();
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].setTheme(this.customStyle);
             }
         },
         getDefaultAudioUrls: function () {

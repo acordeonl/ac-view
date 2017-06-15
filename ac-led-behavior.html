@@ -10,29 +10,29 @@
             acId:{
                 type:Number
             },
-            insrumentOpacity:{
+            customText:{
                 type:Number,
-                value:1
-            },
-            showingInstrumentNotes:{
-                type:Boolean,
-                value:false
-            },
-            instrumentState: {
-                type: Number,
-                value:0
-            },
-            playbackOpacity:{
-                type:Number,
-                value:1
-            },
-            showingPlaybackNotes:{
-                type:Boolean,
-                value:false
-            },
-            playbackState: {
-                type: Number,
-                value:0
+                value:-1
+            }
+        },
+        setTheme: function(e){
+            this.customStyle = e ;
+            this.updateStyles() ;
+            if (this.customText === 0 ) {
+                console.log('aja 2');
+                var nodeList = Polymer.dom(this.root).querySelectorAll('[note]');
+                for (i = 0; i < nodeList.length; i++) {
+                    nodeList[i].style.color = this.customStyle['--content-background'] ;
+                }
+            }
+        },
+        // Default colors for acLed
+        _getAcLedColor: function(acLedState){
+            if (acLedState === 1) {
+                return '--theme-color1' ;
+            }
+            if (acLedState === 2) {
+                return '--theme-color2' ;
             }
         },
         _getNoteName: function(note){
@@ -59,33 +59,34 @@
             if(origin === 'playback' || origin === 'playbackGUI' && this.playbackState !== acLedState){
                 if (acLedState !== 0) {
                     this.$$('[playbackAcLed]').style.display = 'block' ;
-                    this.$$('[playbackAcLed]').style.backgroundColor = this._getAcLedColor(acLedState);
+                    var color = this._getAcLedColor(acLedState) ;
+                    if( color.startsWith('--') )
+                        color = this.customStyle[color] ;
+                    this.$$('[playbackAcLed]').style.backgroundColor = color ;
                 }
                 else {
                     this.$$('[playbackAcLed]').style.display = 'none' ;
                 }
             }
-            if(origin === 'instrument' && this.instrumentState !== acLedState)
-                this.instrumentState = acLedState ;
+            if(origin === 'instrument' && this.instrumentState !== acLedState) {
+                if (acLedState !== 0) {
+                    this.$$('[instrumentAcLed]').style.display = 'block' ;
+                    this.$$('[instrumentAcLed]').style.backgroundColor = this._getAcLedColor(acLedState);
+                }
+                else {
+                    this.$$('[instrumentAcLed]').style.display = 'none' ;
+                }
+            }
         },
         resetGUI: function(origin,clearState){
             if(origin==='playback' && clearState ) {
                 this.$$('[playbackAcLed]').style.display = 'none' ;
             }
-            if(origin==='instrument' && clearState)
-                this.instrumentState = 0 ;
+            if(origin==='instrument' && clearState) {
+                this.$$('[instrumentAcLed]').style.display = 'none' ;
+            }
         },
-        _initNoteElement: function(target,e){
-            target.style.position = 'absolute' ;
-            target.style.color = e['--content-background'];
-            target.style.fontWeight = '400' ;
-            target.style.fontSize = '18px';
-            target.style.display = 'flex';
-            target.style.justifyContent = 'center';
-            target.style.alignItems = 'center';
-        },
-        init: function(e){
-            this.updateStyles() ;
+        init: function(){
             this.async(function(){
                 var acLed = this.$$('[acLed]') ;
                 if(acLed.getAttribute('dev') !== null && acLed.getAttribute('dev') !== undefined)
@@ -94,16 +95,26 @@
                 acLed.style.position = 'absolute' ;
                 var instrumentAcLed = acLed.cloneNode(true)  ;
                 var playbackAcLed  = acLed.cloneNode(true)  ;
-
+                console.log(this.$$('[acLed] [note]'));
                 if ( this.$$('[acLed] [note]') === null || this.$$('[acLed] [note]') === undefined ) {
                     var noteElement = document.createElement('div') ;
                     noteElement.setAttribute('note',"") ;
                     noteElement.style.width = '100%';
                     noteElement.style.height = '100%';
-                    this._initNoteElement(noteElement,e) ;
+                    noteElement.style.position = 'absolute' ;
+                    noteElement.style.color = this.customStyle['--content-background'];
+                    noteElement.style.fontWeight = '400' ;
+                    noteElement.style.fontSize = '18px';
+                    noteElement.style.display = 'flex';
+                    noteElement.style.justifyContent = 'center';
+                    noteElement.style.alignItems = 'center';
                     acLed.appendChild(noteElement) ;
                     instrumentAcLed = acLed.cloneNode(true)  ;
                     playbackAcLed  = acLed.cloneNode(true)  ;
+                }
+                else{
+                    console.log('es custom');
+                    this.customText = 1 ;
                 }
 
                 var acLedRoot = acLed.parentNode ;
@@ -118,6 +129,8 @@
 
                 this.$$('[playbackAcLed]').style.display = 'none';
                 this.$$('[instrumentAcLed]').style.display = 'none';
+
+                // testing
                 this.$$('[playbackNote]').innerHTML = 'Ab' ;
                 this.$$('[instrumentNote]').innerHTML = 'Ab' ;
 
