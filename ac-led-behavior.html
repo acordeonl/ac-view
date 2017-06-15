@@ -10,9 +10,6 @@
             acId:{
                 type:Number
             },
-            shadowElement:{
-                type:Object
-            },
             insrumentOpacity:{
                 type:Number,
                 value:1
@@ -60,22 +57,23 @@
         },
         render: function(origin,acLedState){
             if(origin === 'playback' || origin === 'playbackGUI' && this.playbackState !== acLedState){
-                this.$$('[playbackAcLed]').style.backgroundColor = this._getAcLedColor(acLedState);
+                if (acLedState !== 0) {
+                    this.$$('[playbackAcLed]').style.display = 'block' ;
+                    this.$$('[playbackAcLed]').style.backgroundColor = this._getAcLedColor(acLedState);
+                }
+                else {
+                    this.$$('[playbackAcLed]').style.display = 'none' ;
+                }
             }
             if(origin === 'instrument' && this.instrumentState !== acLedState)
                 this.instrumentState = acLedState ;
         },
         resetGUI: function(origin,clearState){
             if(origin==='playback' && clearState ) {
-                this.playbackState = 0 ;
+                this.$$('[playbackAcLed]').style.display = 'none' ;
             }
             if(origin==='instrument' && clearState)
                 this.instrumentState = 0 ;
-        },
-        updateAcLedStyles: function(e){
-            if( this.shadowElement !== null && this.shadowElement !== undefined ) {
-                this.shadowElement.style.backgroundColor = e['--ac-led-shadow'] ;
-            }
         },
         _initNoteElement: function(target,e){
             target.style.position = 'absolute' ;
@@ -90,40 +88,39 @@
             this.updateStyles() ;
             this.async(function(){
                 var acLed = this.$$('[acLed]') ;
+                if(acLed.getAttribute('dev') !== null && acLed.getAttribute('dev') !== undefined)
+                    return ;
+
                 acLed.style.position = 'absolute' ;
-                this.shadowElement = acLed.cloneNode(true)  ;
-                var playbackAcLed , instrumentAcLed ;
-                var noteElement = document.createElement('div') ;
-                noteElement.setAttribute('note',"") ;
-                noteElement.style.width = acLed.getBoundingClientRect().width+'px';
-                noteElement.style.height = acLed.getBoundingClientRect().height+'px';
-                acLed.appendChild(noteElement) ;
-                this._initNoteElement(noteElement,e) ;
-                var acLedRoot = acLed.parentNode ;
-                var withShadow = acLed.getAttribute('withShadow') ;
-                instrumentAcLed = acLed.cloneNode(true)  ;
-                playbackAcLed  = acLed.cloneNode(true)  ;
+                var instrumentAcLed = acLed.cloneNode(true)  ;
+                var playbackAcLed  = acLed.cloneNode(true)  ;
 
-                acLedRoot.removeChild(acLed) ;
-
-                if(withShadow !== null && withShadow !== undefined) {
-                    this.shadowElement.style.marginTop = '0.8vh' ;
-                    this.shadowElement.style.backgroundColor = e['--ac-led-shadow'];
-                    acLedRoot.appendChild (this.shadowElement,acLed) ;
+                if ( this.$$('[acLed] [note]') === null || this.$$('[acLed] [note]') === undefined ) {
+                    var noteElement = document.createElement('div') ;
+                    noteElement.setAttribute('note',"") ;
+                    noteElement.style.width = '100%';
+                    noteElement.style.height = '100%';
+                    this._initNoteElement(noteElement,e) ;
+                    acLed.appendChild(noteElement) ;
+                    instrumentAcLed = acLed.cloneNode(true)  ;
+                    playbackAcLed  = acLed.cloneNode(true)  ;
                 }
 
-                instrumentAcLed.style.backgroundColor = 'white' ;
+                var acLedRoot = acLed.parentNode ;
+                acLedRoot.removeChild(acLed) ;
+
                 instrumentAcLed.setAttribute('instrumentAcLed',"") ;
                 acLedRoot.appendChild (instrumentAcLed) ;
-
-                playbackAcLed.style.backgroundColor = 'white' ;
                 playbackAcLed.setAttribute('playbackAcLed',"") ;
                 acLedRoot.appendChild (playbackAcLed) ;
-
                 this.$$('[playbackAcLed] [note]').setAttribute('playbackNote',"") ;
                 this.$$('[instrumentAcLed] [note]').setAttribute('instrumentNote',"") ;
 
+                this.$$('[playbackAcLed]').style.display = 'none';
+                this.$$('[instrumentAcLed]').style.display = 'none';
                 this.$$('[playbackNote]').innerHTML = 'Ab' ;
+                this.$$('[instrumentNote]').innerHTML = 'Ab' ;
+
             }.bind(this) , 0  )  ;
         }
     } ;
