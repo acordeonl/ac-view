@@ -46,6 +46,7 @@
         masterGain.connect(context.destination);
     }
     initAudioContext();
+
     function stopAudio() {
         return new Promise(function (resolve, reject) {
             masterGain.gain.cancelScheduledValues(context.currentTime);
@@ -68,6 +69,12 @@
             'instrument-acLeds-loaded-2': '_onAcLedGroupLoaded'
         },
         properties: {
+            recording:{
+                type:Object
+            },
+            currentPlaybackTime:{
+                type:Object
+            },
             chords:{
                 type:Array,
                 value:[],
@@ -222,10 +229,10 @@
                 nodeList[i].toggleNotes(e.target, e.value);
             }
         },
-        setOpacity: function (which, opacity) {
+        setOpacity: function (target, opacity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].setOpacity(which, opacity / 100);
+                nodeList[i].setOpacity(target, opacity / 100);
             }
         },
         setReverb: function (value) {
@@ -258,6 +265,20 @@
                     this.fire('ac-view-call',{functionName:functionName,args:args}) ;
                 }) ;
             }
+        },
+    /* ------------------- Recording Data ------------------- */
+        _requestRecording: function(){
+            this._acViewCallFunction('setRecording',{}) ;
+        },
+        setRecording: function(recording){
+            this.recording = recording ;
+        },
+        _requestCurrentPlaybackTime: function(){
+            this._acViewCallFunction('setCurrentPlaybackTime',{}) ;
+        },
+        setCurrentPlaybackTime: function(time){
+            this.currentPlaybackTime = time ;
+            console.log(this.currentPlaybackTime);
         },
     /* --------------- Initialization ------------------- */
         _initAcLeds: function(){

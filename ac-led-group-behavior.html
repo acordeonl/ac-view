@@ -136,9 +136,10 @@
                 this._MIDIEventToAudio(e) ;
         },
         _MIDIEventToGUI: function(e){
-            e.acLedId = this._mapMIDIEventToAcLedId(e.midiNote, e.channel);
+            e.acLedId = this._mapMIDIEventToAcLedId(e.channel,e.midiNote);
+            e.note = this.MIDIEventToNoteMap[e.channel][e.midiNote] ;
             if(e.cmd === 'note-on')
-                e.acLedState = this._mapMIDIEventToAcLedState(e.midiNote, e.channel);
+                e.acLedState = this._mapMIDIEventToAcLedState(e.channel,e.midiNote);
             else {
                 e.acLedState = 0 ;
             }
@@ -169,10 +170,10 @@
             this.MIDIEventToNoteMap[channel][midiNote] = newNote;
         },
     /* ------------------- MIDIEvents Default helpers  ------------------- */
-        _mapMIDIEventToAcLedId: function(midiNote,channel){
+        _mapMIDIEventToAcLedId: function(channel,midiNote){
             return midiNote ;
         },
-        _mapMIDIEventToAcLedState: function(cmd,midiNote,channel){
+        _mapMIDIEventToAcLedState: function(cmd,channel,midiNote){
             if (cmd === 'note-on')
                 return 1 ;
             return 0 ;
@@ -187,38 +188,30 @@
             }
         },
     /* -------------------- GUI ------------------------- */
-
         updateGUI: function () {
             if (this.playbackAcLedActions.length > 0) {
                 if (this.playbackAcLedActions.first.value.when < context.currentTime) {
-                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').render(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
+                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').render(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note);
                     this.playbackAcLedActions.popFirst();
                 }
             }
             if (this.instrumentAcLedActions.length > 0) {
-                this.$$('[channel' + this.instrumentAcLedActions.first.value.channel + '][id' + this.instrumentAcLedActions.first.value.acLedId + ']').render(this.instrumentAcLedActions.first.value.origin, this.instrumentAcLedActions.first.value.acLedState);
+                this.$$('[channel' + this.instrumentAcLedActions.first.value.channel + '][id' + this.instrumentAcLedActions.first.value.acLedId + ']').render(this.instrumentAcLedActions.first.value.origin, this.instrumentAcLedActions.first.value.acLedState,this.instrumentAcLedActions.first.value.note);
                 this.instrumentAcLedActions.popFirst();
             }
         },
         toggleNotes: function (target, value) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
-                if (target === 'playback') {
-                    nodeList[i].showingPlaybackNotes = value;
-                } else {
-                    nodeList[i].showingInstrumentNotes = value;
-                }
+                nodeList[i].toggleNotes(target,value) ;
             }
         },
-        setOpacity: function (acLedId, opacity) {
+        setOpacity: function (target, opacity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
-                if (acLedId === 'playback')
-                    nodeList[i].playbackOpacity = opacity;
-                if (acLedId === 'instrument')
-                    nodeList[i].instrumentOpacity = opacity;
-                }
-            },
+                nodeList[i].setOpacity(target,opacity) ;
+            }
+        },
         resetGUI: function (origin, clearState) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (i = 0; i < nodeList.length; i++) {
@@ -362,9 +355,14 @@
             this.flags = []  ;
             this.playbackAcLedActions = new LinkedList();
             this.instrumentAcLedActions = new LinkedList();
-            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            this.totalViewAudios = nodeList.length ;
 
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].setAttribute("channel"+nodeList[i].channel, "");
+            }
+
+            nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
+            this.totalViewAudios = nodeList.length ;
             for (var i = 0; i < nodeList.length; i++) {
                 var channel = nodeList[i].channel ;
                 this.flags[channel] = false ;
