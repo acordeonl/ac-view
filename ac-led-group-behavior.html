@@ -67,6 +67,13 @@
                 type:Number,
                 value:67
             },
+        /* ------------------- Chords ------------------- */
+            chordOn:{
+                type:Array
+            },
+            chordChannel:{
+                type:Number
+            },
         /* ------------------- Defaults ------------------- */
             defaultInstrumentPanning: {
                 type: Number,
@@ -185,6 +192,30 @@
         displayChord: function (chord) {
             if (this._displayChord !== null && this._displayChord !== undefined) {
                 this._displayChord(chord);
+            }
+        },
+        _playChord: function(channel,chord){
+            this.chordOn = chord ;
+            this.chordChannel = channel ;
+            for (var i = 0; i < chord.length; i++) {
+                var e = {};
+                e.playNow = 1;
+                e.midiNote = chord[i];
+                e.channel = channel;
+                e.origin = 'playback';
+                e.cmd = 'note-on';
+                this.onMIDIEvent(e) ;
+            }
+        },
+        _stopChord: function(){
+            for (var i = 0; i < this.chordOn.length; i++) {
+                var e = {};
+                e.playNow = 1;
+                e.midiNote = this.chordOn[i];
+                e.channel = this.chordChannel;
+                e.origin = 'playback';
+                e.cmd = 'note-off';
+                this.onMIDIEvent(e) ;
             }
         },
     /* -------------------- GUI ------------------------- */
