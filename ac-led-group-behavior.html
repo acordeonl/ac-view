@@ -63,10 +63,6 @@
                 value: 1,
                 observer: '_setSynthPlaybackVolume'
             },
-            pitch:{
-                type:Number,
-                value:67
-            },
         /* ------------------- Chords ------------------- */
             chordOn:{
                 type:Array
@@ -108,13 +104,11 @@
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             nodeList[viewAudioIndex].setAudioUrl(audioUrl);
         },
-        loadNotes: function (pitch) {
+        loadNotes: function (diff) {
             this.loadedViewAudios = 0;
             this.finishedLoading = false;
-
         /* ------------------- Pitch ------------------- */
-            var diff = pitch - this.pitch ;
-            this.pitch += diff ;
+
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
@@ -195,6 +189,9 @@
             }
         },
         _playChord: function(channel,chord){
+            if (this.chordOn !== undefined && this.chordOn !== null && this.chordOn.length > 0) {
+                this._stopChord() ;
+            }
             this.chordOn = chord ;
             this.chordChannel = channel ;
             for (var i = 0; i < chord.length; i++) {
@@ -217,6 +214,7 @@
                 e.cmd = 'note-off';
                 this.onMIDIEvent(e) ;
             }
+            this.chordOn = [] ;
         },
     /* -------------------- GUI ------------------------- */
         updateGUI: function () {
