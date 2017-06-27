@@ -46,7 +46,6 @@
         masterGain.connect(context.destination);
     }
     initAudioContext();
-
     function stopAudio() {
         return new Promise(function (resolve, reject) {
             masterGain.gain.cancelScheduledValues(context.currentTime);
@@ -69,24 +68,24 @@
             'instrument-acLeds-loaded-2': '_onAcLedGroupLoaded'
         },
         properties: {
-            pitch:{
-                type:Number,
-                value:-1
+            pitch: {
+                type: Number,
+                value: -1
             },
-            defaultPitch:{
-                type:Number,
-                observer:'setViewPitch'
+            defaultPitch: {
+                type: Number,
+                observer: 'setViewPitch'
             },
-            recording:{
-                type:Object
+            recording: {
+                type: Object
             },
-            currentPlaybackTime:{
-                type:Object
+            currentPlaybackTime: {
+                type: Object
             },
-            chords:{
-                type:Array,
-                value:[],
-                observer:'_reportChords'
+            chords: {
+                type: Array,
+                value: [],
+                observer: '_reportChords'
             },
             defaultReverb: {
                 type: Number,
@@ -122,16 +121,16 @@
                 value: false
             }
         },
-    /* ------------- Loading --------------------- */
-        setViewPitch: function(pitch){
-            this.pitch = pitch  ;
-            this.solvePitchInit() ;
+        /* ------------- Loading --------------------- */
+        setViewPitch: function (pitch) {
+            this.pitch = pitch;
+            this.pitchInitR();
         },
         _onAcLedGroupLoaded: function () {
             this.loadedAcLedGroups++;
             if (this.loadedAcLedGroups === this.totalAcLedGroups) {
                 this._acViewCallFunction('onLoadACView', {});
-                this._initAcLeds() ;
+                this._initAcLeds();
                 this.finishedLoading = true;
                 this._onFinishedLoadingNotes();
                 if (!this.registeredAcLedGroup) {
@@ -153,22 +152,23 @@
                 nodeList[i].registerViewAudios();
             }
         },
-        loadNotes: function(e){
-            this.pitchInit.then(function(){
-                var diff = e.pitch - this.pitch ;
-                this.pitch += diff ;
-                this.loadedAcLedGroups = 0;
-                this.finishedLoading = false;
-                var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
-                for (var i = 0; i < e.audioUrls.length; i++)
-                    for (var j = 0; j < e.audioUrls[i].length; j++)
-                        nodeList[i].setViewAudioUrl(j,e.audioUrls[i][j]);
-                for (var i = 0; i < nodeList.length; i++) {
-                    nodeList[i].loadNotes(diff);
+        loadNotes: async function (e) {
+            await this.pitchInit ;
+            var diff = e.pitch - this.pitch;
+            this.pitch += diff;
+            this.loadedAcLedGroups = 0;
+            this.finishedLoading = false;
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < e.audioUrls.length; i++) {
+                for (var j = 0; j < e.audioUrls[i].length; j++) {
+                    nodeList[i].setViewAudioUrl(j, e.audioUrls[i][j]);
                 }
-            }.bind(this)) ;
+            }
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].loadNotes(diff);
+            }
         },
-    /* ------------- MIDI --------------------- */
+        /* ------------- MIDI --------------------- */
         onMIDIEvent: function (e) {
             if (!this.finishedLoading)
                 return;
@@ -184,7 +184,7 @@
                 nodeList[i].setVelocity(velocity / 127);
             }
         },
-    /* ------------- playback controls -------------- */
+        /* ------------- playback controls -------------- */
         stop: function (e) {
             this.resetGUI('playback', e.clearState);
             stopAudio().then(function () {
@@ -209,7 +209,7 @@
         clearPlaybackGUI: function () {
             this.resetGUI({origin: 'playback', clearState: true});
         },
-    /* ------------- settings controls -------------- */
+        /* ------------- settings controls -------------- */
         settingsUpdate: function (target, value) {
             if (value === null || value === undefined || isNaN(value))
                 return;
@@ -256,10 +256,10 @@
             wet.gain.value = (1.0 - ((100 - synthReverb) / 100));
             dry.gain.value = (100 - synthReverb) / 100;
         },
-        displayChord: function(chord){
+        displayChord: function (chord) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].displayChord(chord) ;
+                nodeList[i].displayChord(chord);
             }
         },
         setRotation: function (rotation) {
@@ -269,35 +269,37 @@
                 nodeList[i].rotation = rotation;
             }
         },
-    /* ------------------- acView Communication ------------------- */
-        _acViewCallFunction: function(functionName,args){
-            if(parent !== window){
+        /* ------------------- acView Communication ------------------- */
+        _acViewCallFunction: function (functionName, args) {
+            if (parent !== window) {
                 parent.postMessage([
                     functionName, args
                 ], '*');
+            } else {
+                Polymer.RenderStatus.afterNextRender(this, function () {
+                    this.fire('ac-view-call', {
+                        functionName: functionName,
+                        args: args
+                    });
+                });
             }
-            else {
-                Polymer.RenderStatus.afterNextRender(this, function(){
-                    this.fire('ac-view-call',{functionName:functionName,args:args}) ;
-                }) ;
-            }
         },
-    /* ------------------- Recording Data ------------------- */
-        _requestRecording: function(){
-            this._acViewCallFunction('setRecording',{}) ;
+        /* ------------------- Recording Data ------------------- */
+        _requestRecording: function () {
+            this._acViewCallFunction('setRecording', {});
         },
-        setRecording: function(recording){
-            this.recording = recording ;
+        setRecording: function (recording) {
+            this.recording = recording;
         },
-        _requestCurrentPlaybackTime: function(){
-            this._acViewCallFunction('setCurrentPlaybackTime',{}) ;
+        _requestCurrentPlaybackTime: function () {
+            this._acViewCallFunction('setCurrentPlaybackTime', {});
         },
-        setCurrentPlaybackTime: function(time){
-            this.currentPlaybackTime = time ;
+        setCurrentPlaybackTime: function (time) {
+            this.currentPlaybackTime = time;
             console.log(this.currentPlaybackTime);
         },
-    /* --------------- Initialization ------------------- */
-        _initAcLeds: function(){
+        /* --------------- Initialization ------------------- */
+        _initAcLeds: function () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].initAcLeds();
@@ -330,23 +332,21 @@
         _reportReverb: function () {
             this._acViewCallFunction('setReverb', this.defaultReverb);
         },
-        _reportChords: function(){
-            this._acViewCallFunction('setChords',this.chords);
+        _reportChords: function () {
+            this._acViewCallFunction('setChords', this.chords);
         },
-        reportDefaultAudioUrls: function(){
+        reportDefaultAudioUrls: function () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
-            var defaultAudioUrls = [] ;
+            var defaultAudioUrls = [];
             for (var i = 0; i < nodeList.length; i++) {
-                var res = nodeList[i].getDefaultAudioUrls() ;
-                if(res.length > 0 )
-                    defaultAudioUrls.push(res) ;
-            }
-            this._acViewCallFunction('initACView2',defaultAudioUrls);
+                var res = nodeList[i].getDefaultAudioUrls();
+                if (res.length > 0)
+                    defaultAudioUrls.push(res);
+                }
+            this._acViewCallFunction('initACView2', defaultAudioUrls);
         },
         ready: function () {
-            this.pitchInit = new Promise(function (resolve, reject) {
-                this.solvePitchInit = resolve ;
-            }.bind(this));
+            this.pitchInit = new Promise(resolve => this.pitchInitR = resolve);
             this.loadedAcLedGroups = 0;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             this.totalAcLedGroups = nodeList.length;
