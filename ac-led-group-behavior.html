@@ -100,15 +100,14 @@
             }
         },
     /* ----------------  Audio ------------------------- */
-        setViewAudioUrl: function (viewAudioIndex, audioUrl) {
+        loadAudio: function (viewAudioIndex, audioUrl) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            nodeList[viewAudioIndex].setAudioUrl(audioUrl);
+            nodeList[viewAudioIndex].loadAudio(audioUrl);
         },
-        loadNotes: function (diff) {
+        addPitch: function (diff) {
             this.loadedViewAudios = 0;
             this.finishedLoading = false;
         /* ------------------- Pitch ------------------- */
-
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
@@ -118,16 +117,7 @@
                     this.MIDIEventToNoteMap[channel][i] = this._addPitch(this.MIDIEventToNoteMap[channel][i],channel,diff);
                 }
             }
-        /* ------------------- Audio loading ------------------- */
-            // var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            // for (var j = 0; j < nodeList.length; j++) {
-            //     var channel = nodeList[j].channel ;
-            //     for (var i = 0; i < this.MIDIEventToNoteMap[channel].length; i++) {
-            //         if (this.MIDIEventToNoteMap[channel][i] === undefined || this.MIDIEventToNoteMap[channel][i] === null)
-            //             continue ;
-            //         nodeList[j].loadNote(this.MIDIEventToNoteMap[channel][i]);
-            //     }
-            // }
+            // check if pitch is supported by view-audio
         },
     /* ------------------- MIDIEvents ------------------- */
         onMIDIEvent: function (e) {
@@ -320,7 +310,7 @@
         _onLoadViewAudio: function () {
             this.loadedViewAudios++;
             if (this.loadedViewAudios === this.totalViewAudios) {
-                this.fire('instrument-acLeds-loaded-2');
+                this.fire('instrument-acLeds-loaded');
             }
         },
         registerAcLedGroup: function () {

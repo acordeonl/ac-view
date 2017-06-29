@@ -104,56 +104,42 @@
                 }
             },
         /* --------- audio loading ----------------- */
-            setAudioUrl: function(audioUrl){
+            loadAudio: async function(audioUrl){
                 this.audioUrl = audioUrl ;
                 this.loopDurations = [] ;
                 this.notesBuffers = [] ;
                 this.playBA = [] ;
                 this.instBA = []  ;
-                var request = new XMLHttpRequest();
-                request.open('GET', this.audioUrl , true);
-                request.responseType = 'arraybuffer';
-                request.onload = this._onload.bind(this) ;
-                request.send();
-            },
-            _onload: async function(request){
-                var data = request.currentTarget.response;
-                var bb = new DataView(data);
+                var arrayBuffer = await(await fetch(audioUrl)).arrayBuffer();
+                var bb = new DataView(arrayBuffer);
                 var notesLoaded = 0, totalNotes = bb.getUint32(0);
                 var currentByte = 4 ;
                 for (var i = 0; i < totalNotes; i++) {
                     var loopDuration = bb.getFloat64(currentByte);
                     currentByte += 8 ;
-
                     var midiNote = bb.getUint32(currentByte) ;
                     currentByte += 4 ;
-
                     var byteLength = bb.getUint32(currentByte) ;
                     currentByte += 4 ;
 
                     var dstU8 = new Uint8Array(byteLength);
-                    var srcU8 = new Uint8Array(data, currentByte, byteLength);
+                    var srcU8 = new Uint8Array(arrayBuffer, currentByte, byteLength);
                     currentByte += byteLength ;
                     dstU8.set(srcU8);
                     var sound = dstU8;
-
-                    var buffer = await context.decodeAudioData(sound.buffer);
-
-                    this.notesBuffers[midiNote] = buffer ;
+                    var audioBuffer = await context.decodeAudioData(sound.buffer);
+                    this.notesBuffers[midiNote] = audioBuffer ;
                     this.loopDurations[midiNote] = loopDuration ;
-                    console.log(this.audioUrl,midiNote,this.loopDurations[midiNote]);
-
                     if (++notesLoaded === totalNotes)
                         this.fire('view-audio-load') ;
                 }
             },
-        /* ------------- midi ------------------ */
+        /* ------------- Audio synth ------------------ */
             setVelocity: function(velocity){
                 this.instrumentVelocity = velocity ;
                 this._updateInstrumentVolume() ;
             },
             _startAudio: function(note,e){
-                console.log(note, e.midiNote);
                 if(e.origin==='playbackGUI')
                     return ;
                 if(e.origin ==='playback') {
@@ -172,7 +158,7 @@
                         this.playBA[e.midiNote].source.loopEnd = this.playBA[e.midiNote].source.buffer.duration;
                         this.playBA[e.midiNote].source.loop = true;
                     }
-                    
+
                     this.playBA[e.midiNote].source.connect(this.playBA[e.midiNote].gain);
                     this.playBA[e.midiNote].source.start(when);
                     this.playBA[e.midiNote].gain.connect(this.playbackSynthGain) ;
