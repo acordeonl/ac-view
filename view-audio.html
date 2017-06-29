@@ -116,32 +116,9 @@
                 request.onload = this._onload.bind(this) ;
                 request.send();
             },
-            loadNote: function(note){
-                // remove note not found
-                // remove requested
-                //remove notes loaded
-                //remove total notes
-                // al cargar y procesar todo llamar a view-audio-load
-                // if(this.noteNotFound)
-                //     return ;
-                // if(this.requested[note]!==undefined) {
-                //     this.notesLoaded ++ ;
-                //     if(this.notesLoaded === this.totalNotes )
-                //         this.fire('view-audio-load') ;
-                //     return ;
-                // }
-                // var request = new XMLHttpRequest();
-                // request.id = this.updateID ;
-                // request.note = note ;
-                // request.open('GET', this.audioUrl+'/'+request.note+'c.mp3', true);
-                // request.responseType = 'arraybuffer';
-                // request.onload = this._onload.bind(this) ;
-                // request.send();
-            },
             _onload: async function(request){
                 var data = request.currentTarget.response;
                 var bb = new DataView(data);
-
                 var notesLoaded = 0, totalNotes = bb.getUint32(0);
                 var currentByte = 4 ;
                 for (var i = 0; i < totalNotes; i++) {
@@ -164,6 +141,7 @@
 
                     this.notesBuffers[midiNote] = buffer ;
                     this.loopDurations[midiNote] = loopDuration ;
+                    console.log(this.audioUrl,midiNote,this.loopDurations[midiNote]);
 
                     if (++notesLoaded === totalNotes)
                         this.fire('view-audio-load') ;
@@ -175,6 +153,7 @@
                 this._updateInstrumentVolume() ;
             },
             _startAudio: function(note,e){
+                console.log(note, e.midiNote);
                 if(e.origin==='playbackGUI')
                     return ;
                 if(e.origin ==='playback') {
@@ -187,10 +166,14 @@
                     this.playBA[e.midiNote].gain.value = 0.7 ;
                     this.playBA[e.midiNote].source = context.createBufferSource();
                     this.playBA[e.midiNote].source.buffer = this.notesBuffers[note] ;
-                    this.playBA[e.midiNote].source.loopStart = this.playBA[e.midiNote].source.buffer.duration - this.loopDurations[note];
-                    this.playBA[e.midiNote].source.loopEnd = this.playBA[e.midiNote].source.buffer.duration;
+
+                    if (this.loopDurations[note] !== -1) {
+                        this.playBA[e.midiNote].source.loopStart = this.playBA[e.midiNote].source.buffer.duration - this.loopDurations[note];
+                        this.playBA[e.midiNote].source.loopEnd = this.playBA[e.midiNote].source.buffer.duration;
+                        this.playBA[e.midiNote].source.loop = true;
+                    }
+                    
                     this.playBA[e.midiNote].source.connect(this.playBA[e.midiNote].gain);
-                    this.playBA[e.midiNote].source.loop = true;
                     this.playBA[e.midiNote].source.start(when);
                     this.playBA[e.midiNote].gain.connect(this.playbackSynthGain) ;
                 }
