@@ -119,15 +119,15 @@
                 }
             }
         /* ------------------- Audio loading ------------------- */
-            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            for (var j = 0; j < nodeList.length; j++) {
-                var channel = nodeList[j].channel ;
-                for (var i = 0; i < this.MIDIEventToNoteMap[channel].length; i++) {
-                    if (this.MIDIEventToNoteMap[channel][i] === undefined || this.MIDIEventToNoteMap[channel][i] === null)
-                        continue ;
-                    nodeList[j].loadNote(this.MIDIEventToNoteMap[channel][i]);
-                }
-            }
+            // var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
+            // for (var j = 0; j < nodeList.length; j++) {
+            //     var channel = nodeList[j].channel ;
+            //     for (var i = 0; i < this.MIDIEventToNoteMap[channel].length; i++) {
+            //         if (this.MIDIEventToNoteMap[channel][i] === undefined || this.MIDIEventToNoteMap[channel][i] === null)
+            //             continue ;
+            //         nodeList[j].loadNote(this.MIDIEventToNoteMap[channel][i]);
+            //     }
+            // }
         },
     /* ------------------- MIDIEvents ------------------- */
         onMIDIEvent: function (e) {
@@ -279,32 +279,24 @@
         },
         _setSynthInstrumentPanning: function (panning) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            if (nodeList[0].totalNotes === undefined)
-                return;
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setInstrumentPanning(panning);
             }
         },
         _setSynthPlaybackPanning: function (panning) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            if (nodeList[0].totalNotes === undefined)
-                return;
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setPlaybackPanning(panning);
             }
         },
         _setSynthPlaybackVolume: function (volume) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            if (nodeList[0].totalNotes === undefined)
-                return;
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setPlaybackGain(volume);
             }
         },
         _setSynthInstrumentVolume: function (volume) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            if (nodeList[0].totalNotes === undefined)
-                return;
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setInstrumentGain(volume);
             }

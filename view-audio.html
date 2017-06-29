@@ -22,13 +22,6 @@
                     type:Boolean,
                     value:false
                 },
-                notesLoaded:{
-                    type:Number,
-                    value:0
-                },
-                totalNotes:{
-                    type:Number
-                },
                 updateID:{
                     type:Number,
                     value:0
@@ -113,62 +106,68 @@
         /* --------- audio loading ----------------- */
             setAudioUrl: function(audioUrl){
                 this.audioUrl = audioUrl ;
-                this.requested = [] ;
                 this.loopDurations = [] ;
                 this.notesBuffers = [] ;
                 this.playBA = [] ;
                 this.instBA = []  ;
-                this.notesLoaded = 0 ;
-                this.updateID ++ ;
-                this.noteNotFound = false ;
-            },
-            loadNote: function(note){
-                if(this.noteNotFound)
-                    return ;
-                if(this.requested[note]!==undefined) {
-                    this.notesLoaded ++ ;
-                    if(this.notesLoaded === this.totalNotes )
-                    this.fire('view-audio-load') ;
-                    return ;
-                }
                 var request = new XMLHttpRequest();
-                request.id = this.updateID ;
-                request.note = note ;
-                request.open('GET', this.audioUrl+'/'+request.note+'c.mp3', true);
+                request.open('GET', this.audioUrl , true);
                 request.responseType = 'arraybuffer';
                 request.onload = this._onload.bind(this) ;
                 request.send();
             },
-            _onload: function(request){
-                request = request.currentTarget ;
-                if(request.id !== this.updateID)
-                    return ;
-                if (request.status === 404) {
-                    if (!this.noteNotFound) {
-                        // this.fire("toast", {msg: 'La tonalidad no pudo ser cargada'});
-                        parent.postMessage(['toast','La tonalidad no pudo ser cargada'],'*') ;
-                        this.noteNotFound = true;
-                        // this.fire('view-audio-load') ;
-                    }
-                    return;
-                }
-                var data = request.response;
+            loadNote: function(note){
+                // remove note not found
+                // remove requested
+                //remove notes loaded
+                //remove total notes
+                // al cargar y procesar todo llamar a view-audio-load
+                // if(this.noteNotFound)
+                //     return ;
+                // if(this.requested[note]!==undefined) {
+                //     this.notesLoaded ++ ;
+                //     if(this.notesLoaded === this.totalNotes )
+                //         this.fire('view-audio-load') ;
+                //     return ;
+                // }
+                // var request = new XMLHttpRequest();
+                // request.id = this.updateID ;
+                // request.note = note ;
+                // request.open('GET', this.audioUrl+'/'+request.note+'c.mp3', true);
+                // request.responseType = 'arraybuffer';
+                // request.onload = this._onload.bind(this) ;
+                // request.send();
+            },
+            _onload: async function(request){
+                var data = request.currentTarget.response;
                 var bb = new DataView(data);
-                this.requested[request.note] =true ;
-                this.loopDurations[request.note] = bb.getFloat32(0, true);
-                var length = bb.getUint32(4, true);
-                var dstU8 = new Uint8Array(length);
-                var srcU8 = new Uint8Array(data, 8, length);
-                dstU8.set(srcU8);
-                var sound = dstU8;
-                context.decodeAudioData(sound.buffer, function (buffer) {
-                    this.notesBuffers[request.note] = buffer ;
-                    this.notesLoaded ++ ;
-                    if(this.notesLoaded === this.totalNotes ) {
-                        this.notesLoaded = 0 ;
+
+                var notesLoaded = 0, totalNotes = bb.getUint32(0);
+                var currentByte = 4 ;
+                for (var i = 0; i < totalNotes; i++) {
+                    var loopDuration = bb.getFloat64(currentByte);
+                    currentByte += 8 ;
+
+                    var midiNote = bb.getUint32(currentByte) ;
+                    currentByte += 4 ;
+
+                    var byteLength = bb.getUint32(currentByte) ;
+                    currentByte += 4 ;
+
+                    var dstU8 = new Uint8Array(byteLength);
+                    var srcU8 = new Uint8Array(data, currentByte, byteLength);
+                    currentByte += byteLength ;
+                    dstU8.set(srcU8);
+                    var sound = dstU8;
+
+                    var buffer = await context.decodeAudioData(sound.buffer);
+
+                    this.notesBuffers[midiNote] = buffer ;
+                    this.loopDurations[midiNote] = loopDuration ;
+
+                    if (++notesLoaded === totalNotes)
                         this.fire('view-audio-load') ;
-                    }
-                }.bind(this));
+                }
             },
         /* ------------- midi ------------------ */
             setVelocity: function(velocity){
@@ -292,13 +291,10 @@
                 this.playbackPanner.connect(compressor);
             },
             ready: function () {
-                this.requested = [] ;
                 this.loopDurations = [] ;
                 this.notesBuffers = [] ;
                 this.playBA = [] ;
                 this.instBA = []  ;
-                this.notesLoaded = 0 ;
-                this.updateID = 0 ;
                 if(!this.instrumentSynthGain)
                     this.instrumentSynthGain = context.createGain() ;
                 if(!this.playbackSynthGain)
