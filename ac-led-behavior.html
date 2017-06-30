@@ -7,6 +7,12 @@
 */
     acLedBehavior= {
         properties:{
+            acLedPrototype:{
+                type:Object
+            },
+            acLedRoot:{
+                type:Object
+            },
             channel:{
                 type:Number
             },
@@ -17,11 +23,11 @@
                 type:Number,
                 value:-1
             },
-            showingPlaybackNotes:{
+            showingplaybackNotes:{
                 type:Boolean,
                 value:false
             },
-            showingInstrumentNotes:{
+            showinginstrumentNotes:{
                 type:Boolean,
                 value:false
             }
@@ -57,75 +63,36 @@
             return name;
         },
     /* ------------------- GUI ------------------- */
-        toggleNotes: function(target,value){
-            this.initAcLed.then(function(){
-                if (target === 'playback') {
-                    if(!value)
-                        this.$$('[playbackNote]').style.visibility = 'hidden' ;
-                    else
-                        this.$$('[playbackNote]').style.visibility = 'visible' ;
-                    this.showingPlaybackNotes = value ;
-                }
-                if (target === 'instrument') {
-                    if(!value)
-                        this.$$('[instrumentNote]').style.visibility = 'hidden' ;
-                    else
-                        this.$$('[instrumentNote]').style.visibility = 'visible' ;
-                    this.showingInstrumentNotes = value ;
-                }
-            }.bind(this)) ;
+        toggleNotes: async function(target,value){
+            await this.initAcLed ;
+            if(!value)
+                this.$$('['+target+'Note]').style.visibility = 'hidden' ;
+            else
+                this.$$('['+target+'Note]').style.visibility = 'visible' ;
+            this['showing'+target+'Notes'] = value ;
         },
-        setOpacity: function(target,opacity){
-            this.initAcLed.then(function(){
-                if(target === 'playback'){
-                    this.$$('[playbackAcLed]').style.opacity = opacity ;
-                }
-                if(target === 'instrument'){
-                    this.$$('[instrumentAcLed]').style.opacity = opacity ;
-                }
-            }.bind(this)) ;
+        setOpacity: async function(target,opacity){
+            await this.initAcLed ;
+            this.$$('['+target+'AcLed]').style.opacity = opacity ;
         },
         render: function(target,acLedState,note){
-            if(target === 'playback' || target === 'playbackGUI' && this.playbackState !== acLedState){
-                if (acLedState !== 0) {
-                    this.$$('[playbackAcLed]').style.display = 'block' ;
-                    var color = this._getAcLedColor(acLedState) ;
-                    if( color.startsWith('--') )
-                        color = this.customStyle[color] ;
-                    this.$$('[playbackAcLed]').style.backgroundColor = color ;
-                    if(this.showingPlaybackNotes){
-                        this.$$('[playbackNote]').innerHTML = this._getNoteName(note) ;
-                    }
-                }
-                else {
-                    this.$$('[playbackAcLed]').style.display = 'none' ;
+            if (acLedState !== 0) {
+                this.$$('['+target+'AcLed]').style.display = 'block' ;
+                var color = this._getAcLedColor(acLedState) ;
+                if( color.startsWith('--') )
+                    color = this.customStyle[color] ;
+                this.$$('['+target+'AcLed]').style.backgroundColor = color ;
+                if(this['showing'+target+'Notes']){
+                    this.$$('['+target+'Note]').innerHTML = this._getNoteName(note) ;
                 }
             }
-            if(target === 'instrument' && this.instrumentState !== acLedState) {
-                if (acLedState !== 0) {
-                    this.$$('[instrumentAcLed]').style.display = 'block' ;
-                    var color = this._getNoteName(acLedState) ;
-                    if( color.startsWith('--') )
-                        color = this.customStyle[color] ;
-                    this.$$('[instrumentAcLed]').style.backgroundColor = color ;
-                    if(this.showingInstrumentNotes ){
-                        this.$$('[instrumentNote]').innerHTML = this._getNoteName(note) ;
-                    }
-                }
-                else {
-                    this.$$('[instrumentAcLed]').style.display = 'none' ;
-                }
+            else {
+                this.$$('['+target+'AcLed]').style.display = 'none' ;
             }
         },
-        resetGUI: function(target,clearState){
-            this.initAcLed.then(function(){
-                if(target ==='playback' && clearState ) {
-                    this.$$('[playbackAcLed]').style.display = 'none' ;
-                }
-                if(target ==='instrument' && clearState) {
-                    this.$$('[instrumentAcLed]').style.display = 'none' ;
-                }
-            }.bind(this)) ;
+        clearGUI: async function(target){
+            await this.initAcLed ;
+            this.$$('['+target+'AcLed]').style.display = 'none' ;
         },
     /* ------------------- Setup ------------------- */
         setTheme: function(e){
@@ -138,14 +105,25 @@
                 }
             }
         },
+        addOrigin: function(target){
+            var newOrigin  = this.acLedPrototype.cloneNode(true);
+            newOrigin.setAttribute(target+'AcLed',"") ;
+            this.acLedRoot.appendChild (newOrigin) ;
+
+            this.$$('['+target+'AcLed] [note]').setAttribute(target+'Note',"") ;
+            this.$$('['+target+'AcLed]').style.display = 'none';
+
+            this.$$('['+target+'AcLed]').style.opacity = this.playbackOpacity;
+            if(target === 'playback')
+                this.$$('['+target+'AcLed]').style.opacity = this.instrumentOpacity;
+        },
         init: function(){
             var acLed = this.$$('[acLed]') ;
             if(acLed.getAttribute('dev') !== null && acLed.getAttribute('dev') !== undefined)
                 return ;
 
             acLed.style.position = 'absolute' ;
-            var instrumentAcLed = acLed.cloneNode(true)  ;
-            var playbackAcLed  = acLed.cloneNode(true)  ;
+            this.acLedPrototype = acLed.cloneNode(true)  ;
             if ( this.$$('[acLed] [note]') === null || this.$$('[acLed] [note]') === undefined ) {
                 this.customText = 0 ;
                 var noteElement = document.createElement('div') ;
@@ -160,34 +138,22 @@
                 noteElement.style.justifyContent = 'center';
                 noteElement.style.alignItems = 'center';
                 acLed.appendChild(noteElement) ;
-                instrumentAcLed = acLed.cloneNode(true)  ;
-                playbackAcLed  = acLed.cloneNode(true)  ;
+                this.acLedPrototype = acLed.cloneNode(true)  ;
             }
             else{
                 this.customText = 1 ;
             }
 
-            var acLedRoot = acLed.parentNode ;
-            acLedRoot.removeChild(acLed) ;
+            this.acLedRoot = acLed.parentNode ;
+            this.acLedRoot.removeChild(acLed) ;
 
-            instrumentAcLed.setAttribute('instrumentAcLed',"") ;
-            acLedRoot.appendChild (instrumentAcLed) ;
-            playbackAcLed.setAttribute('playbackAcLed',"") ;
-            acLedRoot.appendChild (playbackAcLed) ;
-            this.$$('[playbackAcLed] [note]').setAttribute('playbackNote',"") ;
-            this.$$('[instrumentAcLed] [note]').setAttribute('instrumentNote',"") ;
+            this.addOrigin('instrument') ;
+            this.addOrigin('playback') ;
 
-            this.$$('[playbackAcLed]').style.display = 'none';
-            this.$$('[instrumentAcLed]').style.display = 'none';
-            this.$$('[playbackAcLed]').style.opacity = this.playbackOpacity;
-            this.$$('[instrumentAcLed]').style.opacity = this.instrumentOpacity;
-
-            this.solveInitAcLed() ;
+            this.initAcLedR() ;
         },
         ready: function () {
-            this.initAcLed = new Promise(function (resolve, reject) {
-                this.solveInitAcLed = resolve ;
-            }.bind(this));
+            this.initAcLed = new Promise(resolve => this.initAcLedR = resolve);
         }
     } ;
 </script>

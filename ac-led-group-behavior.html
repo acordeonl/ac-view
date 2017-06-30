@@ -134,11 +134,11 @@
             else {
                 e.acLedState = 0 ;
             }
-            if (e.origin === 'playback' || e.origin === 'playbackGUI') {
+            if (e.origin === 'playback') {
                 if (e.playNow !== undefined) {
-                    e.when = context.currentTime;
+                    e.when = playbackContext.currentTime;
                 } else {
-                    e.when = context.currentTime + (e.tempo) * (e.time - e.playbackTime);
+                    e.when = playbackContext.currentTime + (e.tempo) * (e.time - e.playbackTime);
                 }
                 this.playbackAcLedActions.push(e);
             }
@@ -209,7 +209,7 @@
     /* -------------------- GUI ------------------------- */
         updateGUI: function () {
             if (this.playbackAcLedActions.length > 0) {
-                if (this.playbackAcLedActions.first.value.when < context.currentTime) {
+                if (this.playbackAcLedActions.first.value.when < playbackContext.currentTime) {
                     this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').render(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note);
                     this.playbackAcLedActions.popFirst();
                 }
@@ -231,19 +231,15 @@
                 nodeList[i].setOpacity(target,opacity) ;
             }
         },
-        resetGUI: function (origin, clearState) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
-            for (i = 0; i < nodeList.length; i++) {
-                nodeList[i].resetGUI(origin, clearState);
-            }
+        clearActions: function(target){
             while (this.playbackAcLedActions.length > 0) {
                 var when;
                 if (this.playbackAcLedActions.first.value.playNow !== undefined) {
-                    when = context.currentTime;
+                    when = playbackContext.currentTime;
                 } else {
-                    when = context.currentTime + (this.playbackAcLedActions.first.value.tempo) * (this.playbackAcLedActions.first.value.time - this.playbackAcLedActions.first.value.playbackTime);
+                    when = playbackContext.currentTime + (this.playbackAcLedActions.first.value.tempo) * (this.playbackAcLedActions.first.value.time - this.playbackAcLedActions.first.value.playbackTime);
                 }
-                if (when < context.currentTime || this.playbackAcLedActions.first.value.playNow !== undefined) {
+                if (when < playbackContext.currentTime || this.playbackAcLedActions.first.value.playNow !== undefined) {
                     this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').render(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
                     this.playbackAcLedActions.popFirst();
                 } else {
@@ -251,14 +247,19 @@
                 }
             }
             this.playbackAcLedActions.clear();
-            this.instrumentAcLedActions.clear();
+            // this.instrumentAcLedActions.clear();
+        },
+        clearGUI: function (target) {
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
+            for (i = 0; i < nodeList.length; i++) {
+                nodeList[i].clearGUI(target);
+            }
         },
     /* ----------------- View audio -------------------------- */
-        stopAudio: function (origin) {
+        stopAudio: function (target) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            var i;
-            for (i = 0; i < nodeList.length; i++) {
-                nodeList[i].stop(origin);
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].stop(target);
             }
         },
         setVelocity: function (velocity) {

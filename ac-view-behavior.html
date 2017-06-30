@@ -1,6 +1,6 @@
 <link rel="import" href="/bower_components/polymer/polymer.html">
 <script>
-    var context,
+    var playbackContext,
         convolver,
         dry,
         wet,
@@ -11,7 +11,7 @@
     convolverRequest.responseType = 'arraybuffer';
     var convolverBuffer
     convolverRequest.onload = function () {
-        context.decodeAudioData(convolverRequest.response, function (buffer) {
+        playbackContext.decodeAudioData(convolverRequest.response, function (buffer) {
             convolver.buffer = buffer;
             convolverBuffer = buffer;
         });
@@ -19,19 +19,19 @@
     convolverRequest.send();
     var playing = false;
     function initAudioContext() {
-        context = null;
+        playbackContext = null;
         convolver = null;
         dry = null;
         wet = null;
         compressor = null;
         masterGain = null;
-        context = new AudioContext();
-        convolver = context.createConvolver();
+        playbackContext = new AudioContext();
+        convolver = playbackContext.createConvolver();
         convolver.buffer = convolverBuffer;
-        dry = context.createGain();
-        wet = context.createGain();
-        masterGain = context.createGain();
-        compressor = context.createDynamicsCompressor();
+        dry = playbackContext.createGain();
+        wet = playbackContext.createGain();
+        masterGain = playbackContext.createGain();
+        compressor = playbackContext.createDynamicsCompressor();
         compressor.threshold.value = 0;
         compressor.knee.value = 0;
         compressor.ratio.value = 20;
@@ -43,14 +43,14 @@
         convolver.connect(wet);
         dry.connect(masterGain);
         wet.connect(masterGain);
-        masterGain.connect(context.destination);
+        masterGain.connect(playbackContext.destination);
     }
     initAudioContext();
     function stopAudio() {
         return new Promise(function (resolve, reject) {
-            masterGain.gain.cancelScheduledValues(context.currentTime);
-            masterGain.gain.setValueAtTime(masterGain.gain.value, context.currentTime);
-            masterGain.gain.exponentialRampToValueAtTime(0.00001, context.currentTime + 0.1);
+            masterGain.gain.cancelScheduledValues(playbackContext.currentTime);
+            masterGain.gain.setValueAtTime(masterGain.gain.value, playbackContext.currentTime);
+            masterGain.gain.exponentialRampToValueAtTime(0.00001, playbackContext.currentTime + 0.1);
             setTimeout(function () {
                 resolve();
             }, 100);
@@ -185,29 +185,31 @@
             }
         },
     /* ------------- playback controls -------------- */
-        stop: function (e) {
-            this.resetGUI('playback', e.clearState);
-            stopAudio().then(function () {
-                context.close();
-                initAudioContext();
-                this._stopAudio('playback');
-                this.setReverb(this.reverb);
-            }.bind(this));
+        stop: async function (e) {
+            this.clearActions('playback') ;
+            await stopAudio() ;
+            playbackContext.close();
+            initAudioContext();
+            this._stopAudio('playback');
+            this.setReverb(this.reverb);
         },
-        _stopAudio: function (origin) {
+        _stopAudio: function (target) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].stopAudio(origin);
+                nodeList[i].stopAudio(target);
             }
         },
-        resetGUI: function (e) {
+        clearGUI: function (target) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].resetGUI(e.origin, e.clearState);
+                nodeList[i].clearGUI(target);
             }
         },
-        clearPlaybackGUI: function () {
-            this.resetGUI({origin: 'playback', clearState: true});
+        clearActions: function(target){
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].clearActions(target);
+            }
         },
     /* ------------- settings controls -------------- */
         settingsUpdate: function (target, value) {
