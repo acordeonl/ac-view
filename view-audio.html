@@ -140,8 +140,6 @@
                 this._updateInstrumentVolume() ;
             },
             _startAudio: function(note,e){
-                if(e.origin==='playbackGUI')
-                    return ;
                 if(e.origin ==='playback') {
                     var when = playbackContext.currentTime ;
                     if( (e.tempo)*(e.time-e.playbackTime)> 0)
@@ -166,30 +164,28 @@
                 if(e.origin ==='instrument') {
                     if(this.instBA[e.midiNote] === undefined || this.instBA[e.midiNote] === null)
                         this.instBA[e.midiNote] = {} ;
-                    this.instBA[e.midiNote].gain = playbackContext.createGain();
+                    this.instBA[e.midiNote].gain = instrumentContext.createGain();
                     this.instBA[e.midiNote].gain.value = 0.7 ;
-                    this.instBA[e.midiNote].source = playbackContext.createBufferSource();
+                    this.instBA[e.midiNote].source = instrumentContext.createBufferSource();
                     this.instBA[e.midiNote].source.buffer = this.notesBuffers[note] ;
                     this.instBA[e.midiNote].source.loopStart = this.instBA[e.midiNote].source.buffer.duration - this.loopDurations[note];
                     this.instBA[e.midiNote].source.loopEnd = this.instBA[e.midiNote].source.buffer.duration;
                     this.instBA[e.midiNote].source.connect(this.instBA[e.midiNote].gain);
                     this.instBA[e.midiNote].source.loop = true;
-                    this.instBA[e.midiNote].source.start(playbackContext.currentTime);
+                    this.instBA[e.midiNote].source.start(instrumentContext.currentTime);
                     this.instBA[e.midiNote].gain.connect(this.instrumentSynthGain) ;
                 }
             },
             _stopAudio: function(e){
-                if(e.origin==='playbackGUI')
-                    return ;
                 var when =  playbackContext.currentTime ;
                 if((e.tempo)*(e.time-e.playbackTime) > 0)
                     when += (e.tempo)*(e.time-e.playbackTime) ;
 
                 if(e.origin === 'instrument') {
-                    this.instBA[e.midiNote].gain.gain.cancelScheduledValues(when) ;
-                    this.instBA[e.midiNote].gain.gain.setValueAtTime(this.instBA[e.midiNote].gain.gain.value, when);
-                    this.instBA[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when+0.1);
-                    this.instBA[e.midiNote].source.stop(when+0.1) ;
+                    this.instBA[e.midiNote].gain.gain.cancelScheduledValues(instrumentContext.currentTime) ;
+                    this.instBA[e.midiNote].gain.gain.setValueAtTime(this.instBA[e.midiNote].gain.gain.value, instrumentContext.currentTime);
+                    this.instBA[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, instrumentContext.currentTime+0.1);
+                    this.instBA[e.midiNote].source.stop(instrumentContext.currentTime+0.1) ;
                     this.instBA[e.midiNote] = null  ;
                 }
                 if(e.origin==='playback'){
@@ -201,14 +197,14 @@
                 }
             },
             stop: function(origin){
-                this.instrumentSynthGain = playbackContext.createGain() ;
-                this.instrumentPanner = playbackContext.createStereoPanner() ;
+                this.instrumentSynthGain = instrumentContext.createGain() ;
+                this.instrumentPanner = instrumentContext.createStereoPanner() ;
                 this.instrumentSynthGain.connect(this.instrumentPanner);
-                this.instrumentPanner.connect(compressor);
+                this.instrumentPanner.connect(instrumentCompressor);
                 this.playbackSynthGain = playbackContext.createGain() ;
                 this.playbackPanner = playbackContext.createStereoPanner() ;
                 this.playbackSynthGain.connect(this.playbackPanner);
-                this.playbackPanner.connect(compressor);
+                this.playbackPanner.connect(playbackCompressor);
                 this._updateInstrumentVolume() ;
                 this._updatePlaybackVolume() ;
                 this._updatePlaybackPanning() ;
@@ -239,14 +235,14 @@
             },
             _updateInstrumentVolume: function(){
                 if(!this.instrumentSynthGain)
-                    this.instrumentSynthGain = playbackContext.createGain() ;
+                    this.instrumentSynthGain = instrumentContext.createGain() ;
                 if(!this.instrumentPanner)
-                    this.instrumentPanner = playbackContext.createStereoPanner() ;
+                    this.instrumentPanner = instrumentContext.createStereoPanner() ;
                 if(this.instrumentGain !==undefined && this.instrumentVelocity!==undefined) {
                     this.instrumentSynthGain.gain.value = this.instrumentGain*this.instrumentVelocity ;
                 }
                 this.instrumentSynthGain.connect(this.instrumentPanner);
-                this.instrumentPanner.connect(compressor);
+                this.instrumentPanner.connect(instrumentCompressor);
             },
             _updatePlaybackVolume: function(){
                 if(!this.playbackSynthGain)
@@ -257,7 +253,7 @@
                     this.playbackSynthGain.gain.value = this.playbackGain;
                 }
                 this.playbackSynthGain.connect(this.playbackPanner);
-                this.playbackPanner.connect(compressor);
+                this.playbackPanner.connect(playbackCompressor);
             },
             ready: function () {
                 this.loopDurations = [] ;
@@ -265,11 +261,11 @@
                 this.playBA = [] ;
                 this.instBA = []  ;
                 if(!this.instrumentSynthGain)
-                    this.instrumentSynthGain = playbackContext.createGain() ;
+                    this.instrumentSynthGain = instrumentContext.createGain() ;
                 if(!this.playbackSynthGain)
                     this.playbackSynthGain = playbackContext.createGain() ;
                 if(!this.instrumentPanner)
-                    this.instrumentPanner = playbackContext.createStereoPanner() ;
+                    this.instrumentPanner = instrumentContext.createStereoPanner() ;
                 if(!this.playbackPanner) {
                     this.playbackPanner = playbackContext.createStereoPanner() ;
                 }

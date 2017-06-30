@@ -1,59 +1,66 @@
 <link rel="import" href="/bower_components/polymer/polymer.html">
 <script>
     var playbackContext,
-        convolver,
-        dry,
-        wet,
-        compressor,
-        masterGain;
-    var convolverRequest = new XMLHttpRequest();
-    convolverRequest.open('GET', "/data/16_IR_Pool_Size_00.wav", true);
-    convolverRequest.responseType = 'arraybuffer';
-    var convolverBuffer
-    convolverRequest.onload = function () {
-        playbackContext.decodeAudioData(convolverRequest.response, function (buffer) {
-            convolver.buffer = buffer;
-            convolverBuffer = buffer;
-        });
-    };
-    convolverRequest.send();
-    var playing = false;
-    function initAudioContext() {
-        playbackContext = null;
-        convolver = null;
-        dry = null;
-        wet = null;
-        compressor = null;
-        masterGain = null;
-        playbackContext = new AudioContext();
-        convolver = playbackContext.createConvolver();
-        convolver.buffer = convolverBuffer;
-        dry = playbackContext.createGain();
-        wet = playbackContext.createGain();
-        masterGain = playbackContext.createGain();
-        compressor = playbackContext.createDynamicsCompressor();
-        compressor.threshold.value = 0;
-        compressor.knee.value = 0;
-        compressor.ratio.value = 20;
-        compressor.attack.value = 0.005;
-        compressor.release.value = 0.05;
-        compressor.threshold.value = 0;
-        compressor.connect(convolver);
-        compressor.connect(dry);
-        convolver.connect(wet);
-        dry.connect(masterGain);
-        wet.connect(masterGain);
-        masterGain.connect(playbackContext.destination);
+        playbackConvolver,
+        playbackDry,
+        playbackWet,
+        playbackCompressor,
+        playbackMasterGain;
+
+    var instrumentContext,
+        instrumentConvolver,
+        instrumentDry,
+        instrumentWet,
+        instrumentCompressor,
+        instrumentMasterGain;
+
+    var convolverBuffer = null ;
+
+    async function initAudioContext(target) {
+        window[target+'Context'] = null;
+        window[target+'Convolver'] = null;
+        window[target+'Dry'] = null;
+        window[target+'Wet'] = null;
+        window[target+'Compressor'] = null;
+        window[target+'MasterGain'] = null;
+        window[target+'Context'] = new AudioContext();
+        window[target+'Convolver'] = window[target+'Context'].createConvolver();
+        if(convolverBuffer === null){
+            var convolverArrayBuffer = await(await fetch("/data/16_IR_Pool_Size_00.wav")).arrayBuffer();
+            convolverBuffer = await window[target+'Context'].decodeAudioData(convolverArrayBuffer) ;
+        }
+        window[target+'Convolver'].buffer = convolverBuffer;
+        window[target+'Dry'] = window[target+'Context'].createGain();
+        window[target+'Wet'] = window[target+'Context'].createGain();
+        window[target+'MasterGain'] = window[target+'Context'].createGain();
+        window[target+'Compressor'] = window[target+'Context'].createDynamicsCompressor();
+        window[target+'Compressor'].threshold.value = 0;
+        window[target+'Compressor'].knee.value = 0;
+        window[target+'Compressor'].ratio.value = 20;
+        window[target+'Compressor'].attack.value = 0.005;
+        window[target+'Compressor'].release.value = 0.05;
+        window[target+'Compressor'].threshold.value = 0;
+        window[target+'Compressor'].connect(window[target+'Convolver']);
+        window[target+'Compressor'].connect(window[target+'Dry']);
+        window[target+'Convolver'].connect(window[target+'Wet']);
+        window[target+'Dry'].connect(window[target+'MasterGain']);
+        window[target+'Wet'].connect(window[target+'MasterGain']);
+        window[target+'MasterGain'].connect(window[target+'Context'].destination);
+        if (target === 'playback') {
+            audioContextInitR() ;
+        }
     }
-    initAudioContext();
-    function stopAudio() {
-        return new Promise(function (resolve, reject) {
-            masterGain.gain.cancelScheduledValues(playbackContext.currentTime);
-            masterGain.gain.setValueAtTime(masterGain.gain.value, playbackContext.currentTime);
-            masterGain.gain.exponentialRampToValueAtTime(0.00001, playbackContext.currentTime + 0.1);
-            setTimeout(function () {
-                resolve();
-            }, 100);
+
+    var audioContextInit = new Promise(resolve => audioContextInitR = resolve);
+    initAudioContext('instrument');
+    initAudioContext('playback');
+    async function stopAudio () {
+        await audioContextInit ;
+        return  new Promise( resolve => {
+            playbackMasterGain.gain.cancelScheduledValues(playbackContext.currentTime);
+            playbackMasterGain.gain.setValueAtTime(playbackMasterGain.gain.value, playbackContext.currentTime);
+            playbackMasterGain.gain.exponentialRampToValueAtTime(0.00001, playbackContext.currentTime + 0.1);
+            setTimeout( () => { resolve() }, 100);
         });
     }
     /**
@@ -186,10 +193,10 @@
         },
     /* ------------- playback controls -------------- */
         stop: async function (e) {
-            this.clearActions('playback') ;
             await stopAudio() ;
+            this.clearActions('playback') ;
             playbackContext.close();
-            initAudioContext();
+            initAudioContext('playback');
             this._stopAudio('playback');
             this.setReverb(this.reverb);
         },
@@ -255,8 +262,10 @@
         },
         setReverb: function (value) {
             synthReverb = value;
-            wet.gain.value = (1.0 - ((100 - synthReverb) / 100));
-            dry.gain.value = (100 - synthReverb) / 100;
+            playbackWet.gain.value = (1.0 - ((100 - synthReverb) / 100));
+            playbackDry.gain.value = (100 - synthReverb) / 100;
+            instrumentWet.gain.value = (1.0 - ((100 - synthReverb) / 100));
+            instrumentDry.gain.value = (100 - synthReverb) / 100;
         },
         displayChord: function (chord) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
@@ -298,7 +307,6 @@
         },
         setCurrentPlaybackTime: function (time) {
             this.currentPlaybackTime = time;
-            console.log(this.currentPlaybackTime);
         },
     /* --------------- Initialization ------------------- */
         _initAcLeds: function () {
