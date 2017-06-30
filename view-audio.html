@@ -85,12 +85,12 @@
                 },
             /* ------------------- Action ------------------- */
                 // playbackButtonActions
-                playBA:{
+                playbackActions:{
                     type:Array,
                     value:[]
                 },
                 // instrumentButtonActions
-                instBA:{
+                instrumentActions:{
                     type:Array,
                     value:[]
                 },
@@ -108,8 +108,8 @@
                 this.audioUrl = audioUrl ;
                 this.loopDurations = [] ;
                 this.notesBuffers = [] ;
-                this.playBA = [] ;
-                this.instBA = []  ;
+                this.playbackActions = [] ;
+                this.instrumentActions = []  ;
                 var arrayBuffer = await(await fetch(audioUrl)).arrayBuffer();
                 var bb = new DataView(arrayBuffer);
                 var notesLoaded = 0, totalNotes = bb.getUint32(0);
@@ -144,73 +144,66 @@
                     var when = playbackContext.currentTime ;
                     if( (e.tempo)*(e.time-e.playbackTime)> 0)
                         when += (e.tempo)*(e.time-e.playbackTime)  ;
-                    if(this.playBA[e.midiNote] === undefined || this.playBA[e.midiNote] === null)
-                        this.playBA[e.midiNote] = {} ;
-                    this.playBA[e.midiNote].gain = playbackContext.createGain();
-                    this.playBA[e.midiNote].gain.value = 0.7 ;
-                    this.playBA[e.midiNote].source = playbackContext.createBufferSource();
-                    this.playBA[e.midiNote].source.buffer = this.notesBuffers[note] ;
+                    if(this.playbackActions[e.midiNote] === undefined || this.playbackActions[e.midiNote] === null)
+                        this.playbackActions[e.midiNote] = {} ;
+                    this.playbackActions[e.midiNote].gain = playbackContext.createGain();
+                    this.playbackActions[e.midiNote].gain.value = 0.7 ;
+                    this.playbackActions[e.midiNote].source = playbackContext.createBufferSource();
+                    this.playbackActions[e.midiNote].source.buffer = this.notesBuffers[note] ;
 
                     if (this.loopDurations[note] !== -1) {
-                        this.playBA[e.midiNote].source.loopStart = this.playBA[e.midiNote].source.buffer.duration - this.loopDurations[note];
-                        this.playBA[e.midiNote].source.loopEnd = this.playBA[e.midiNote].source.buffer.duration;
-                        this.playBA[e.midiNote].source.loop = true;
+                        this.playbackActions[e.midiNote].source.loopStart = this.playbackActions[e.midiNote].source.buffer.duration - this.loopDurations[note];
+                        this.playbackActions[e.midiNote].source.loopEnd = this.playbackActions[e.midiNote].source.buffer.duration;
+                        this.playbackActions[e.midiNote].source.loop = true;
                     }
 
-                    this.playBA[e.midiNote].source.connect(this.playBA[e.midiNote].gain);
-                    this.playBA[e.midiNote].source.start(when);
-                    this.playBA[e.midiNote].gain.connect(this.playbackSynthGain) ;
+                    this.playbackActions[e.midiNote].source.connect(this.playbackActions[e.midiNote].gain);
+                    this.playbackActions[e.midiNote].source.start(when);
+                    this.playbackActions[e.midiNote].gain.connect(this.playbackSynthGain) ;
                 }
-                if(e.origin ==='instrument') {
-                    if(this.instBA[e.midiNote] === undefined || this.instBA[e.midiNote] === null)
-                        this.instBA[e.midiNote] = {} ;
-                    this.instBA[e.midiNote].gain = instrumentContext.createGain();
-                    this.instBA[e.midiNote].gain.value = 0.7 ;
-                    this.instBA[e.midiNote].source = instrumentContext.createBufferSource();
-                    this.instBA[e.midiNote].source.buffer = this.notesBuffers[note] ;
-                    this.instBA[e.midiNote].source.loopStart = this.instBA[e.midiNote].source.buffer.duration - this.loopDurations[note];
-                    this.instBA[e.midiNote].source.loopEnd = this.instBA[e.midiNote].source.buffer.duration;
-                    this.instBA[e.midiNote].source.connect(this.instBA[e.midiNote].gain);
-                    this.instBA[e.midiNote].source.loop = true;
-                    this.instBA[e.midiNote].source.start(instrumentContext.currentTime);
-                    this.instBA[e.midiNote].gain.connect(this.instrumentSynthGain) ;
+                else{
+                    if(this[e.origin+'Actions'][e.midiNote] === undefined || this[e.origin+'Actions'][e.midiNote] === null)
+                        this[e.origin+'Actions'][e.midiNote] = {} ;
+                    this[e.origin+'Actions'][e.midiNote].gain = instrumentContext.createGain();
+                    this[e.origin+'Actions'][e.midiNote].gain.value = 0.7 ;
+                    this[e.origin+'Actions'][e.midiNote].source = instrumentContext.createBufferSource();
+                    this[e.origin+'Actions'][e.midiNote].source.buffer = this.notesBuffers[note] ;
+                    this[e.origin+'Actions'][e.midiNote].source.loopStart = this[e.origin+'Actions'][e.midiNote].source.buffer.duration - this.loopDurations[note];
+                    this[e.origin+'Actions'][e.midiNote].source.loopEnd = this[e.origin+'Actions'][e.midiNote].source.buffer.duration;
+                    this[e.origin+'Actions'][e.midiNote].source.connect(this[e.origin+'Actions'][e.midiNote].gain);
+                    this[e.origin+'Actions'][e.midiNote].source.loop = true;
+                    this[e.origin+'Actions'][e.midiNote].source.start(instrumentContext.currentTime);
+                    this[e.origin+'Actions'][e.midiNote].gain.connect(this.instrumentSynthGain) ;
                 }
             },
             _stopAudio: function(e){
                 var when =  playbackContext.currentTime ;
                 if((e.tempo)*(e.time-e.playbackTime) > 0)
                     when += (e.tempo)*(e.time-e.playbackTime) ;
-
-                if(e.origin === 'instrument') {
-                    this.instBA[e.midiNote].gain.gain.cancelScheduledValues(instrumentContext.currentTime) ;
-                    this.instBA[e.midiNote].gain.gain.setValueAtTime(this.instBA[e.midiNote].gain.gain.value, instrumentContext.currentTime);
-                    this.instBA[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, instrumentContext.currentTime+0.1);
-                    this.instBA[e.midiNote].source.stop(instrumentContext.currentTime+0.1) ;
-                    this.instBA[e.midiNote] = null  ;
-                }
                 if(e.origin==='playback'){
-                    this.playBA[e.midiNote].gain.gain.cancelScheduledValues(when) ;
-                    this.playBA[e.midiNote].gain.gain.setValueAtTime(this.playBA[e.midiNote].gain.gain.value, when);
-                    this.playBA[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when+0.1);
-                    this.playBA[e.midiNote].source.stop(when+0.1) ;
-                    this.playBA[e.midiNote] = null ;
+                    this.playbackActions[e.midiNote].gain.gain.cancelScheduledValues(when) ;
+                    this.playbackActions[e.midiNote].gain.gain.setValueAtTime(this.playbackActions[e.midiNote].gain.gain.value, when);
+                    this.playbackActions[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when+0.1);
+                    this.playbackActions[e.midiNote].source.stop(when+0.1) ;
+                    this.playbackActions[e.midiNote] = null ;
+                }
+                else {
+                    this[e.origin+'Actions'][e.midiNote].gain.gain.cancelScheduledValues(instrumentContext.currentTime) ;
+                    this[e.origin+'Actions'][e.midiNote].gain.gain.setValueAtTime(this[e.origin+'Actions'][e.midiNote].gain.gain.value, instrumentContext.currentTime);
+                    this[e.origin+'Actions'][e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, instrumentContext.currentTime+0.1);
+                    this[e.origin+'Actions'][e.midiNote].source.stop(instrumentContext.currentTime+0.1) ;
+                    this[e.origin+'Actions'][e.midiNote] = null  ;
                 }
             },
-            stop: function(origin){
-                this.instrumentSynthGain = instrumentContext.createGain() ;
-                this.instrumentPanner = instrumentContext.createStereoPanner() ;
-                this.instrumentSynthGain.connect(this.instrumentPanner);
-                this.instrumentPanner.connect(instrumentCompressor);
+            initPlaybackAudio: function(){
                 this.playbackSynthGain = playbackContext.createGain() ;
                 this.playbackPanner = playbackContext.createStereoPanner() ;
                 this.playbackSynthGain.connect(this.playbackPanner);
                 this.playbackPanner.connect(playbackCompressor);
-                this._updateInstrumentVolume() ;
                 this._updatePlaybackVolume() ;
                 this._updatePlaybackPanning() ;
-                this._updateInstrumentPanning() ;
             },
-        /* ---------- settings controls ------------ */
+        /* ---------- Settings controls ------------ */
             setPlaybackGain: function(gain){
                 this.playbackGain = gain ;
                 this._updatePlaybackVolume() ;
@@ -255,11 +248,13 @@
                 this.playbackSynthGain.connect(this.playbackPanner);
                 this.playbackPanner.connect(playbackCompressor);
             },
+        /* ------------------- Setup ------------------- */
+            addOrigin: function(origin){
+                this[origin+'Actions'] = [] ;
+            },
             ready: function () {
                 this.loopDurations = [] ;
                 this.notesBuffers = [] ;
-                this.playBA = [] ;
-                this.instBA = []  ;
                 if(!this.instrumentSynthGain)
                     this.instrumentSynthGain = instrumentContext.createGain() ;
                 if(!this.playbackSynthGain)

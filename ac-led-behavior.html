@@ -23,11 +23,14 @@
                 type:Number,
                 value:-1
             },
-            showingplaybackNotes:{
+            instruments:{
+                type:Array
+            },
+            showingPlaybackNotes:{
                 type:Boolean,
                 value:false
             },
-            showinginstrumentNotes:{
+            showingInstrumentNotes:{
                 type:Boolean,
                 value:false
             }
@@ -63,36 +66,66 @@
             return name;
         },
     /* ------------------- GUI ------------------- */
-        toggleNotes: async function(target,value){
+        toggleNotes: async function(origin,value){
             await this.initAcLed ;
-            if(!value)
-                this.$$('['+target+'Note]').style.visibility = 'hidden' ;
-            else
-                this.$$('['+target+'Note]').style.visibility = 'visible' ;
-            this['showing'+target+'Notes'] = value ;
+            if (origin === 'playback') {
+                if(!value)
+                    this.$$('[playbackNote]').style.visibility = 'hidden' ;
+                else
+                    this.$$('[playbackNote]').style.visibility = 'visible' ;
+                this.showingPlaybackNotes = value ;
+            }
+            else {
+                for (var i = 0; i < this.instruments.length; i++) {
+                    var origin = this.instruments[i] ;
+                    if(!value)
+                        this.$$('['+origin+'Note]').style.visibility = 'hidden' ;
+                    else
+                        this.$$('['+origin+'Note]').style.visibility = 'visible' ;
+                }
+                this.showingInstrumentNotes = value ;
+            }
         },
-        setOpacity: async function(target,opacity){
+        setOpacity: async function(origin,opacity){
             await this.initAcLed ;
-            this.$$('['+target+'AcLed]').style.opacity = opacity ;
+            if (origin === 'playback') {
+                this.$$('[playbackAcLed]').style.opacity = opacity ;
+            }
+            else {
+                for (var i = 0; i < this.instruments.length; i++) {
+                    var origin = this.instruments[i] ;
+                    this.$$('['+origin+'AcLed]').style.opacity = opacity ;
+                }
+            }
         },
-        render: function(target,acLedState,note){
+        render: function(origin,acLedState,note){
             if (acLedState !== 0) {
-                this.$$('['+target+'AcLed]').style.display = 'block' ;
+                this.$$('['+origin+'AcLed]').style.display = 'block' ;
                 var color = this._getAcLedColor(acLedState) ;
                 if( color.startsWith('--') )
                     color = this.customStyle[color] ;
-                this.$$('['+target+'AcLed]').style.backgroundColor = color ;
-                if(this['showing'+target+'Notes']){
-                    this.$$('['+target+'Note]').innerHTML = this._getNoteName(note) ;
+                this.$$('['+origin+'AcLed]').style.backgroundColor = color ;
+                if (origin === 'playback') {
+                    if(this['showingPlaybackNotes']){
+                        this.$$('[playbackNote]').innerHTML = this._getNoteName(note) ;
+                    }
+                }
+                else {
+                    for (var i = 0; i < this.instruments.length; i++) {
+                        var origin = this.instruments[i] ;
+                        if(this['showingInstrumentNotes']){
+                            this.$$('['+origin+'Note]').innerHTML = this._getNoteName(note) ;
+                        }
+                    }
                 }
             }
             else {
-                this.$$('['+target+'AcLed]').style.display = 'none' ;
+                this.$$('['+origin+'AcLed]').style.display = 'none' ;
             }
         },
-        clearGUI: async function(target){
+        clearGUI: async function(origin){
             await this.initAcLed ;
-            this.$$('['+target+'AcLed]').style.display = 'none' ;
+            this.$$('['+origin+'AcLed]').style.display = 'none' ;
         },
     /* ------------------- Setup ------------------- */
         setTheme: function(e){
@@ -105,19 +138,23 @@
                 }
             }
         },
-        addOrigin: function(target){
+        addOrigin: function(origin){
             var newOrigin  = this.acLedPrototype.cloneNode(true);
-            newOrigin.setAttribute(target+'AcLed',"") ;
+            newOrigin.setAttribute(origin+'AcLed',"") ;
             this.acLedRoot.appendChild (newOrigin) ;
 
-            this.$$('['+target+'AcLed] [note]').setAttribute(target+'Note',"") ;
-            this.$$('['+target+'AcLed]').style.display = 'none';
+            this.$$('['+origin+'AcLed] [note]').setAttribute(origin+'Note',"") ;
+            this.$$('['+origin+'AcLed]').style.display = 'none';
 
-            this.$$('['+target+'AcLed]').style.opacity = this.playbackOpacity;
-            if(target === 'playback')
-                this.$$('['+target+'AcLed]').style.opacity = this.instrumentOpacity;
+            if(origin === 'playback')
+                this.$$('['+origin+'AcLed]').style.opacity = this.playbackOpacity;
+            else {
+                this.instruments.push(origin) ;
+                this.$$('['+origin+'AcLed]').style.opacity = this.instrumentOpacity;
+            }
         },
         init: function(){
+            this.instruments = [] ;
             var acLed = this.$$('[acLed]') ;
             if(acLed.getAttribute('dev') !== null && acLed.getAttribute('dev') !== undefined)
                 return ;
@@ -147,12 +184,11 @@
             this.acLedRoot = acLed.parentNode ;
             this.acLedRoot.removeChild(acLed) ;
 
-            this.addOrigin('playback') ;
-            this.addOrigin('instrument') ;
 
             this.initAcLedR() ;
         },
         ready: function () {
+            this.instruments = [] ;
             this.initAcLed = new Promise(resolve => this.initAcLedR = resolve);
         }
     } ;

@@ -16,37 +16,37 @@
 
     var convolverBuffer = null ;
 
-    async function initAudioContext(target) {
-        window[target+'Context'] = null;
-        window[target+'Convolver'] = null;
-        window[target+'Dry'] = null;
-        window[target+'Wet'] = null;
-        window[target+'Compressor'] = null;
-        window[target+'MasterGain'] = null;
-        window[target+'Context'] = new AudioContext();
-        window[target+'Convolver'] = window[target+'Context'].createConvolver();
+    async function initAudioContext(origin) {
+        window[origin+'Context'] = null;
+        window[origin+'Convolver'] = null;
+        window[origin+'Dry'] = null;
+        window[origin+'Wet'] = null;
+        window[origin+'Compressor'] = null;
+        window[origin+'MasterGain'] = null;
+        window[origin+'Context'] = new AudioContext();
+        window[origin+'Convolver'] = window[origin+'Context'].createConvolver();
         if(convolverBuffer === null){
             var convolverArrayBuffer = await(await fetch("/data/16_IR_Pool_Size_00.wav")).arrayBuffer();
-            convolverBuffer = await window[target+'Context'].decodeAudioData(convolverArrayBuffer) ;
+            convolverBuffer = await window[origin+'Context'].decodeAudioData(convolverArrayBuffer) ;
         }
-        window[target+'Convolver'].buffer = convolverBuffer;
-        window[target+'Dry'] = window[target+'Context'].createGain();
-        window[target+'Wet'] = window[target+'Context'].createGain();
-        window[target+'MasterGain'] = window[target+'Context'].createGain();
-        window[target+'Compressor'] = window[target+'Context'].createDynamicsCompressor();
-        window[target+'Compressor'].threshold.value = 0;
-        window[target+'Compressor'].knee.value = 0;
-        window[target+'Compressor'].ratio.value = 20;
-        window[target+'Compressor'].attack.value = 0.005;
-        window[target+'Compressor'].release.value = 0.05;
-        window[target+'Compressor'].threshold.value = 0;
-        window[target+'Compressor'].connect(window[target+'Convolver']);
-        window[target+'Compressor'].connect(window[target+'Dry']);
-        window[target+'Convolver'].connect(window[target+'Wet']);
-        window[target+'Dry'].connect(window[target+'MasterGain']);
-        window[target+'Wet'].connect(window[target+'MasterGain']);
-        window[target+'MasterGain'].connect(window[target+'Context'].destination);
-        if (target === 'playback') {
+        window[origin+'Convolver'].buffer = convolverBuffer;
+        window[origin+'Dry'] = window[origin+'Context'].createGain();
+        window[origin+'Wet'] = window[origin+'Context'].createGain();
+        window[origin+'MasterGain'] = window[origin+'Context'].createGain();
+        window[origin+'Compressor'] = window[origin+'Context'].createDynamicsCompressor();
+        window[origin+'Compressor'].threshold.value = 0;
+        window[origin+'Compressor'].knee.value = 0;
+        window[origin+'Compressor'].ratio.value = 20;
+        window[origin+'Compressor'].attack.value = 0.005;
+        window[origin+'Compressor'].release.value = 0.05;
+        window[origin+'Compressor'].threshold.value = 0;
+        window[origin+'Compressor'].connect(window[origin+'Convolver']);
+        window[origin+'Compressor'].connect(window[origin+'Dry']);
+        window[origin+'Convolver'].connect(window[origin+'Wet']);
+        window[origin+'Dry'].connect(window[origin+'MasterGain']);
+        window[origin+'Wet'].connect(window[origin+'MasterGain']);
+        window[origin+'MasterGain'].connect(window[origin+'Context'].destination);
+        if (origin === 'playback') {
             audioContextInitR() ;
         }
     }
@@ -135,6 +135,9 @@
             if (this.loadedAcLedGroups === this.totalAcLedGroups) {
                 this._acViewCallFunction('onLoadACView', {});
                 this._initAcLeds();
+                this.addOrigin('chord') ;
+                this.addOrigin('playback') ;
+                this.addOrigin('instrument') ;
                 this.finishedLoading = true;
                 this._onFinishedLoadingNotes();
                 if (!this.registeredAcLedGroup) {
@@ -193,36 +196,32 @@
         },
     /* ------------- playback controls -------------- */
         stop: async function (e) {
-            await stopAudio() ;
             this.clearActions('playback') ;
+            await stopAudio() ;
             playbackContext.close();
             initAudioContext('playback');
-            this._stopAudio('playback');
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++)
+                nodeList[i].initPlaybackAudio();
             this.setReverb(this.reverb);
         },
-        _stopAudio: function (target) {
+        clearGUI: function (origin) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].stopAudio(target);
+                nodeList[i].clearGUI(origin);
             }
         },
-        clearGUI: function (target) {
+        clearActions: function(origin){
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].clearGUI(target);
-            }
-        },
-        clearActions: function(target){
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
-            for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].clearActions(target);
+                nodeList[i].clearActions(origin);
             }
         },
     /* ------------- settings controls -------------- */
-        settingsUpdate: function (target, value) {
+        settingsUpdate: function (origin, value) {
             if (value === null || value === undefined || isNaN(value))
                 return;
-            var arr = target.split('_');
+            var arr = origin.split('_');
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             if (arr.length === 3) {
                 if (arr[0] === 'playback') {
@@ -251,13 +250,13 @@
         toggleNotes: function (e) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].toggleNotes(e.target, e.value);
+                nodeList[i].toggleNotes(e.origin, e.value);
             }
         },
-        setOpacity: function (target, opacity) {
+        setOpacity: function (origin, opacity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].setOpacity(target, opacity / 100);
+                nodeList[i].setOpacity(origin, opacity / 100);
             }
         },
         setReverb: function (value) {
@@ -336,8 +335,8 @@
                 this.settingsUpdate('instrument_volume_' + i, e['instrument_volume_' + i]);
                 this.settingsUpdate('instrument_panning_' + i, e['instrument_panning_' + i]);
             }
-            this.toggleNotes({target: "playback", value: e['showingPlaybackNotes']});
-            this.toggleNotes({target: "instrument", value: e['showingInstrumentNotes']});
+            this.toggleNotes({origin: "playback", value: e['showingPlaybackNotes']});
+            this.toggleNotes({origin: "instrument", value: e['showingInstrumentNotes']});
         },
         _setDefaultReverb: function (reverb) {
             this.defaultReverb = reverb ;
@@ -355,6 +354,12 @@
                     defaultAudioUrls.push(res);
                 }
             this._acViewCallFunction('initACView2', defaultAudioUrls);
+        },
+        addOrigin: function(origin){
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].addOrigin(origin);
+            }
         },
         ready: function () {
             this.defaultPitchPromise = new Promise(resolve => this.defaultPitchPromiseR = resolve);

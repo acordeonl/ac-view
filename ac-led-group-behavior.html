@@ -89,11 +89,8 @@
                 value: 1
             },
         /* ------------------- Action ------------------- */
-            playbackAcLedActions: {
-                type: Object
-            },
-            instrumentAcLedActions: {
-                type: Object
+            instruments:{
+                type:Array
             },
             MIDIEventToNoteMap:{
                 type:Array,
@@ -143,8 +140,8 @@
                 }
                 this.playbackAcLedActions.push(e);
             }
-            if (e.origin === 'instrument') {
-                this.instrumentAcLedActions.push(e);
+            else {
+                this[e.origin+'AcLedActions'].push(e) ;
             }
         },
         _MIDIEventToAudio: function(e){
@@ -190,7 +187,7 @@
                 e.playNow = 1;
                 e.midiNote = chord[i];
                 e.channel = channel;
-                e.origin = 'playback';
+                e.origin = 'chord';
                 e.cmd = 'note-on';
                 this.onMIDIEvent(e) ;
             }
@@ -201,7 +198,7 @@
                 e.playNow = 1;
                 e.midiNote = this.chordOn[i];
                 e.channel = this.chordChannel;
-                e.origin = 'playback';
+                e.origin = 'chord';
                 e.cmd = 'note-off';
                 this.onMIDIEvent(e) ;
             }
@@ -209,30 +206,34 @@
         },
     /* -------------------- GUI ------------------------- */
         updateGUI: function () {
-            if (this.playbackAcLedActions.length > 0) {
+
+            if (this.playbackAcLedActions !== null && this.playbackAcLedActions !== undefined && this.playbackAcLedActions.length > 0) {
                 if (this.playbackAcLedActions.first.value.when < playbackContext.currentTime) {
                     this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').render(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note);
                     this.playbackAcLedActions.popFirst();
                 }
             }
-            if (this.instrumentAcLedActions.length > 0) {
-                this.$$('[channel' + this.instrumentAcLedActions.first.value.channel + '][id' + this.instrumentAcLedActions.first.value.acLedId + ']').render(this.instrumentAcLedActions.first.value.origin, this.instrumentAcLedActions.first.value.acLedState,this.instrumentAcLedActions.first.value.note);
-                this.instrumentAcLedActions.popFirst();
+            for (var i = 0; i < this.instruments.length; i++) {
+                var origin = this.instruments[i] ;
+                if (this[origin+'AcLedActions'].length > 0) {
+                    this.$$('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').render(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note);
+                    this[origin+'AcLedActions'].popFirst();
+                }
             }
         },
-        toggleNotes: function (target, value) {
+        toggleNotes: function (origin, value) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].toggleNotes(target,value) ;
+                nodeList[i].toggleNotes(origin,value) ;
             }
         },
-        setOpacity: function (target, opacity) {
+        setOpacity: function (origin, opacity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].setOpacity(target,opacity) ;
+                nodeList[i].setOpacity(origin,opacity) ;
             }
         },
-        clearActions: function(target){
+        clearActions: function(origin){
             while (this.playbackAcLedActions.length > 0) {
                 var when;
                 if (this.playbackAcLedActions.first.value.playNow !== undefined) {
@@ -250,17 +251,17 @@
             this.playbackAcLedActions.clear();
             // this.instrumentAcLedActions.clear();
         },
-        clearGUI: function (target) {
+        clearGUI: function (origin) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (i = 0; i < nodeList.length; i++) {
-                nodeList[i].clearGUI(target);
+                nodeList[i].clearGUI(origin);
             }
         },
     /* ----------------- View audio -------------------------- */
-        stopAudio: function (target) {
+        initPlaybackAudio: function () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].stop(target);
+                nodeList[i].initPlaybackAudio();
             }
         },
         setVelocity: function (velocity) {
@@ -337,6 +338,7 @@
         },
     /* ------------------- Setup ------------------- */
         initAcLeds: function(){
+            this.instruments = [] ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (i = 0; i < nodeList.length; i++) {
                 nodeList[i].init();
@@ -362,13 +364,24 @@
         setIndex: function (index) {
             this.index = index;
         },
-        onFinishedLoadingNotes: function () {},
+        addOrigin: async function(origin){
+            this[origin+'AcLedActions'] = new LinkedList() ;
+            if (origin !== 'playback') {
+                this.instruments.push(origin) ;
+            }
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].addOrigin(origin);
+            }
+            var nodeList2 = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
+            for (var j = 0; j < nodeList2.length; j++) {
+                nodeList2[j].addOrigin(origin) ;
+            }
+        },
         ready: function () {
             this.MIDIEventToNoteMap = [] ;
             this.flags = []  ;
-            this.playbackAcLedActions = new LinkedList();
-            this.instrumentAcLedActions = new LinkedList();
-
+            this.instruments = [] ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setAttribute("channel"+nodeList[i].channel, "");
