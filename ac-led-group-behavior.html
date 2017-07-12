@@ -310,6 +310,10 @@
             }
         },
     /* -------------- Loading -------------------- */
+        loadAudio: function (viewAudioIndex, audioUrl) {
+            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
+            nodeList[viewAudioIndex].loadAudio(audioUrl);
+        },
         _onLoadViewAudio: function () {
             this.loadedViewAudios++;
             if (this.loadedViewAudios === this.totalViewAudios) {
@@ -343,6 +347,9 @@
             for (i = 0; i < nodeList.length; i++) {
                 nodeList[i].init();
             }
+        },
+        getViewAudioCount: function(){
+            return Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO').length;
         },
         setTheme: function(e){
             this.customStyle =  e ;

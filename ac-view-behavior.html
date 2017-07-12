@@ -74,6 +74,10 @@
             'instrument-acLeds-loaded': '_onAcLedGroupLoaded'
         },
         properties: {
+            viewAudioCount:{
+                type:Array,
+                value:[]
+            },
             pitch: {
                 type: Number,
                 value: -1
@@ -171,11 +175,14 @@
         loadAudio: async function (audioUrls) {
             this.loadedAcLedGroups = 0;
             this.finishedLoading = false;
+            var ledGroup = 0 , cnt = 0 ;  ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < audioUrls.length; i++) {
-                for (var j = 0; j < audioUrls[i].length; j++) {
-                    nodeList[i].loadAudio(j, audioUrls[i][j]);
+                if (i-cnt === this.viewAudioCount[ledGroup]) {
+                    cnt += this.viewAudioCount[ledGroup] ;
+                    ledGroup++ ;
                 }
+                nodeList[ledGroup].loadAudio(i-cnt, audioUrls[i]);
             }
         },
     /* ------------- MIDI --------------------- */
@@ -368,6 +375,7 @@
             this.totalAcLedGroups = nodeList.length;
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setIndex(i);
+                this.viewAudioCount[i] = nodeList[i].getViewAudioCount () ;
             }
             this._acViewCallFunction('setTotalAcLedGroups', this.totalAcLedGroups);
             this._acViewCallFunction('initACView', {});
