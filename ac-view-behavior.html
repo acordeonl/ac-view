@@ -132,7 +132,7 @@
     /* ------------- Loading --------------------- */
         _setDefaultPitch: function (pitch) {
             this.pitch = pitch;
-            this.defaultPitchPromiseR();
+            this.setDefaultPitchPromiseR();
         },
         _onAcLedGroupLoaded: function () {
             this.loadedAcLedGroups++;
@@ -164,7 +164,7 @@
             }
         },
         setPitch: async function(pitch){
-            await this.defaultPitchPromise ;
+            await this.setDefaultPitchPromise ;
             var diff = pitch - this.pitch;
             this.pitch += diff;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
@@ -352,7 +352,7 @@
         _reportChords: function () {
             this._acViewCallFunction('setChords', this.chords);
         },
-        reportDefaultAudioUrls: function () {
+        getDefaultAudioUrls: function () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             var defaultAudioUrls = [];
             for (var i = 0; i < nodeList.length; i++) {
@@ -360,7 +360,7 @@
                 if (res.length > 0)
                     defaultAudioUrls.push(res);
                 }
-            this._acViewCallFunction('initACView2', defaultAudioUrls);
+            this._acViewCallFunction('getDefaultAudioUrlsResponse', defaultAudioUrls);
         },
         addOrigin: function(origin){
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
@@ -369,7 +369,7 @@
             }
         },
         ready: function () {
-            this.defaultPitchPromise = new Promise(resolve => this.defaultPitchPromiseR = resolve);
+            this.setDefaultPitchPromise = new Promise(resolve => this.setDefaultPitchPromiseR = resolve);
             this.loadedAcLedGroups = 0;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             this.totalAcLedGroups = nodeList.length;
@@ -377,14 +377,13 @@
                 nodeList[i].setIndex(i);
                 this.viewAudioCount[i] = nodeList[i].getViewAudioCount () ;
             }
-            this._acViewCallFunction('setTotalAcLedGroups', this.totalAcLedGroups);
-            this._acViewCallFunction('initACView', {});
             //if in an iframe
             if (window !== parent) {
                 window.onmessage = function (args) {
                     this[args.data[0]](args.data[1]);
                 }.bind(this);
             }
+            this._acViewCallFunction('initACView', {});
         }
     };
 </script>
