@@ -294,21 +294,6 @@
                 nodeList[i].setInstrumentGain(volume);
             }
         },
-    /* ------------------- acView Communication ------------------- */
-        _acViewCallFunction: function (functionName, args) {
-            if (parent !== window) {
-                parent.postMessage([
-                    functionName, args
-                ], '*');
-            } else {
-                Polymer.RenderStatus.afterNextRender(this, function () {
-                    this.fire('ac-view-call', {
-                        functionName: functionName,
-                        args: args
-                    });
-                });
-            }
-        },
     /* -------------- Loading -------------------- */
         loadAudio: function (viewAudioIndex, audioUrl) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
@@ -317,28 +302,30 @@
         _onLoadViewAudio: function () {
             this.loadedViewAudios++;
             if (this.loadedViewAudios === this.totalViewAudios) {
-                this.fire('instrument-acLeds-loaded');
+                this.fire('acLedGroup-loaded');
             }
         },
-        registerAcLedGroup: function () {
-            this._acViewCallFunction('registerAcLedGroup', {
+        getAcLedGroup: function () {
+            return {
                 name: this.name,
                 defaultPlaybackVolume: this.defaultPlaybackVolume * 100,
                 defaultInstrumentVolume: this.defaultInstrumentVolume * 100,
                 defaultInstrumentPanning: this.defaultInstrumentPanning * 100,
                 defaultPlaybackPanning: this.defaultPlaybackPanning * 100
-            });
+            } ;
         },
-        registerViewAudios: function () {
+        getViewAudios: function () {
+            var viewAudios = [] ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
-                this._acViewCallFunction('registerViewAudio', {
+                viewAudios.push ( {
                     name: nodeList[i].id,
                     url: nodeList[i].audioUrl,
                     acLedsGroupIndex: this.index,
                     viewAudioIndex: i
-                });
+                }) ;
             }
+            return viewAudios ;
         },
     /* ------------------- Setup ------------------- */
         initAcLeds: function(){
@@ -408,7 +395,6 @@
                     this.MIDIEventToNoteMap[channel][acId] = acId ;
                 }
             }
-            this._acViewCallFunction('addTotalViewAudios', this.totalViewAudios);
             this.loadedViewAudios = 0;
             setInterval(this.updateGUI.bind(this), 5);
         }
