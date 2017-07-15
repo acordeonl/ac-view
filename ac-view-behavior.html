@@ -175,14 +175,15 @@
             }
             this._acViewCallFunction('getViewAudiosResponse', viewAudios);
         },
-        setPitch: async function(pitch){
-            await this.setDefaultPitchPromise ;
-            var diff = pitch - this.pitch;
-            this.pitch += diff;
+        getDefaultAudioUrls: function () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            var defaultAudioUrls = [];
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].addPitch(diff);
-            }
+                var res = nodeList[i].getDefaultAudioUrls();
+                if (res.length > 0)
+                    defaultAudioUrls.push(res);
+                }
+            this._acViewCallFunction('getDefaultAudioUrlsResponse', defaultAudioUrls);
         },
         loadAudio: async function (audioUrls) {
             this.loadedAcLedGroups = 0;
@@ -298,7 +299,6 @@
                 nodeList[i].rotation = rotation;
             }
         },
-
     /* ------------------- Recording Data ------------------- */
         _requestRecording: function () {
             this._acViewCallFunction('setRecording', {});
@@ -317,6 +317,15 @@
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].initAcLeds();
+            }
+        },
+        setPitch: async function(pitch){
+            await this.setDefaultPitchPromise ;
+            var diff = pitch - this.pitch;
+            this.pitch += diff;
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].addPitch(diff);
             }
         },
         setTheme: function (e) {
@@ -349,16 +358,6 @@
         },
         _reportChords: function () {
             this._acViewCallFunction('setChords', this.chords);
-        },
-        getDefaultAudioUrls: function () {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
-            var defaultAudioUrls = [];
-            for (var i = 0; i < nodeList.length; i++) {
-                var res = nodeList[i].getDefaultAudioUrls();
-                if (res.length > 0)
-                    defaultAudioUrls.push(res);
-                }
-            this._acViewCallFunction('getDefaultAudioUrlsResponse', defaultAudioUrls);
         },
         addOrigin: function(origin){
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
