@@ -15,7 +15,7 @@
         instrumentMasterGain;
 
     var convolverBuffer = null ;
-
+    var sleep = n => new Promise (resolve => setTimeout(resolve,n)) ;
     async function initAudioContext(origin) {
         window[origin+'Context'] = null;
         window[origin+'Convolver'] = null;
@@ -54,8 +54,7 @@
     var audioContextInit = new Promise(resolve => audioContextInitR = resolve);
     initAudioContext('instrument');
     initAudioContext('playback');
-    async function stopAudio () {
-        await audioContextInit ;
+    function stopAudio () {
         return  new Promise( resolve => {
             playbackMasterGain.gain.cancelScheduledValues(playbackContext.currentTime);
             playbackMasterGain.gain.setValueAtTime(playbackMasterGain.gain.value, playbackContext.currentTime);
@@ -219,11 +218,14 @@
             this.clearActions('playback') ;
             await stopAudio() ;
             playbackContext.close();
+            audioContextInit = new Promise(resolve => audioContextInitR = resolve);
             initAudioContext('playback');
+            await audioContextInit ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++)
                 nodeList[i].initPlaybackAudio();
             this.setReverb(this.reverb);
+            // await sleep(1000);
             this._acViewCallFunction('onReadyToPlay', {});
         },
         clearGUI: function (origin) {
