@@ -214,7 +214,7 @@
             }
         },
     /* ------------- playback controls -------------- */
-        stop: async function (e) {
+        stop: async function () {
             this.clearActions('playback') ;
             await stopAudio() ;
             playbackContext.close();
@@ -225,7 +225,6 @@
             for (var i = 0; i < nodeList.length; i++)
                 nodeList[i].initPlaybackAudio();
             this.setReverb(this.reverb);
-            // await sleep(1000);
             this._acViewCallFunction('onReadyToPlay', {});
         },
         clearGUI: function (origin) {
