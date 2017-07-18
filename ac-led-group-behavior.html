@@ -103,8 +103,6 @@
             nodeList[viewAudioIndex].loadAudio(audioUrl);
         },
         addPitch: function (diff) {
-            this.loadedViewAudios = 0;
-            this.finishedLoading = false;
         /* ------------------- Pitch ------------------- */
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {

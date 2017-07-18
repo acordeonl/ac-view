@@ -147,7 +147,7 @@
         _onAcLedGroupLoaded: function () {
             this.loadedAcLedGroups++;
             if (this.loadedAcLedGroups === this.totalAcLedGroups) {
-                this._acViewCallFunction('onLoadACView', {});
+                this._acViewCallFunction('onACViewAudioLoad', {});
                 this._initAcLeds();
                 this.addOrigin('chord') ;
                 this.addOrigin('playback') ;
@@ -225,7 +225,7 @@
             for (var i = 0; i < nodeList.length; i++)
                 nodeList[i].initPlaybackAudio();
             this.setReverb(this.reverb);
-            this._acViewCallFunction('onReadyToPlay', {});
+            this._acViewCallFunction('onACViewReadyToPlay', {});
         },
         clearGUI: function (origin) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
