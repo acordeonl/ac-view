@@ -180,12 +180,14 @@
                 var when =  playbackContext.currentTime ;
                 if((e.tempo)*(e.time-e.playbackTime) > 0)
                     when += (e.tempo)*(e.time-e.playbackTime) ;
-                if(e.origin==='playback' && this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote].gain !== undefined){
-                    this.playbackActions[e.midiNote].gain.gain.cancelScheduledValues(when) ;
-                    this.playbackActions[e.midiNote].gain.gain.setValueAtTime(this.playbackActions[e.midiNote].gain.gain.value, when);
-                    this.playbackActions[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when+0.1);
-                    this.playbackActions[e.midiNote].source.stop(when+0.1) ;
-                    this.playbackActions[e.midiNote] = null ;
+                if(e.origin==='playback' && this.playbackActions[e.midiNote] !== undefined ){
+                    if (this.playbackActions[e.midiNote].gain !== undefined) {
+                        this.playbackActions[e.midiNote].gain.gain.cancelScheduledValues(when) ;
+                        this.playbackActions[e.midiNote].gain.gain.setValueAtTime(this.playbackActions[e.midiNote].gain.gain.value, when);
+                        this.playbackActions[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when+0.1);
+                        this.playbackActions[e.midiNote].source.stop(when+0.1) ;
+                        this.playbackActions[e.midiNote] = null ;
+                    }
                 }
                 else {
                     this[e.origin+'Actions'][e.midiNote].gain.gain.cancelScheduledValues(instrumentContext.currentTime) ;
