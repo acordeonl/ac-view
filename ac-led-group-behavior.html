@@ -98,10 +98,6 @@
             }
         },
     /* ----------------  Audio ------------------------- */
-        loadAudio: function (viewAudioIndex, audioUrl) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            nodeList[viewAudioIndex].loadAudio(audioUrl);
-        },
         addPitch: function (diff) {
             var res = true ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
@@ -295,6 +291,7 @@
         },
     /* -------------- Loading -------------------- */
         loadAudio: function (viewAudioIndex, audioUrl) {
+            this.loadedViewAudios = 0 ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             nodeList[viewAudioIndex].loadAudio(audioUrl);
         },
