@@ -103,7 +103,7 @@
             nodeList[viewAudioIndex].loadAudio(audioUrl);
         },
         addPitch: function (diff) {
-        /* ------------------- Pitch ------------------- */
+            var res = true ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
@@ -111,9 +111,10 @@
                     if( this.MIDIEventToNoteMap[channel][i] === null || this.MIDIEventToNoteMap[channel][i] === undefined )
                         continue ;
                     this.MIDIEventToNoteMap[channel][i] = this._addPitch(this.MIDIEventToNoteMap[channel][i],channel,diff);
+                    res &= nodeList[j].notesBuffers[this.MIDIEventToNoteMap[channel][i]] !== undefined ;
                 }
             }
-            // check if pitch is supported by view-audio
+            return res ;
         },
     /* ------------------- MIDIEvents ------------------- */
         onMIDIEvent: function (e) {
@@ -143,9 +144,9 @@
             }
         },
         _MIDIEventToAudio: function(e){
-            if (e.cmd === 'note-on')
+            if (e.cmd === 'note-on' && this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[this.MIDIEventToNoteMap[e.channel][e.midiNote]] !== undefined )
                 this.$$('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(this.MIDIEventToNoteMap[e.channel][e.midiNote],e);
-            else {
+            else if (this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[this.MIDIEventToNoteMap[e.channel][e.midiNote]] !== undefined){
                 this.$$('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e);
             }
         },

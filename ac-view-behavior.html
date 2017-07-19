@@ -326,8 +326,11 @@
             var diff = pitch - this.pitch;
             this.pitch += diff;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
-            for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].addPitch(diff);
+            var supported = true ;
+            for (var i = 0; i < nodeList.length; i++)
+                supported &= nodeList[i].addPitch(diff);
+            if (!supported) {
+                this._acViewCallFunction('toast','Algunas notas no podrán ser reproducidas debido a que no existen en el audio de la visualización') ; 
             }
         },
         setTheme: function (e) {
