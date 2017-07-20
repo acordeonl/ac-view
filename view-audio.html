@@ -189,7 +189,7 @@
                         this.playbackActions[e.midiNote] = null ;
                     }
                 }
-                else {
+                else if (this[e.origin+'Actions'][e.midiNote] !== undefined){
                     this[e.origin+'Actions'][e.midiNote].gain.gain.cancelScheduledValues(instrumentContext.currentTime) ;
                     this[e.origin+'Actions'][e.midiNote].gain.gain.setValueAtTime(this[e.origin+'Actions'][e.midiNote].gain.gain.value, instrumentContext.currentTime);
                     this[e.origin+'Actions'][e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, instrumentContext.currentTime+0.1);

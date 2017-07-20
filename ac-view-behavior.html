@@ -148,10 +148,6 @@
             this.loadedAcLedGroups++;
             if (this.loadedAcLedGroups === this.totalAcLedGroups) {
                 this._acViewCallFunction('onACViewAudioLoad', {});
-                this._initAcLeds();
-                this.addOrigin('chord') ;
-                this.addOrigin('playback') ;
-                this.addOrigin('instrument') ;
                 this.finishedLoading = true;
                 this._onFinishedLoadingNotes();
             }
@@ -194,7 +190,8 @@
                     cnt += this.viewAudioCount[ledGroup] ;
                     ledGroup++ ;
                 }
-                nodeList[ledGroup].loadAudio(i-cnt, audioUrls[i]);
+                if (nodeList[ledGroup] !== undefined)
+                    nodeList[ledGroup].loadAudio(i-cnt, audioUrls[i]);
             }
         },
     /* ------------- MIDI --------------------- */
@@ -379,11 +376,15 @@
                 nodeList[i].setIndex(i);
                 this.viewAudioCount[i] = nodeList[i].getViewAudioCount () ;
             }
+            this._initAcLeds();
+            this.addOrigin('chord') ;
+            this.addOrigin('playback') ;
+            this.addOrigin('instrument') ;
             //if in an iframe
             if (window !== parent) {
-                window.onmessage = function (args) {
+                window.onmessage = args => {
                     this[args.data[0]](args.data[1]);
-                }.bind(this);
+                } ;
             }
         }
     };
