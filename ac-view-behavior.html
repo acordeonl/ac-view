@@ -81,8 +81,8 @@
                 type: Number,
                 value: -1
             },
-            defaultPitch: {
-                type: Number
+            referencePitch:{
+                type:Number
             },
             recording: {
                 type: Object
@@ -140,9 +140,10 @@
             }
         },
     /* ------------- Loading --------------------- */
-        _setDefaultPitch: function (pitch) {
+        _setReferencePitch: function (pitch) {
             this.pitch = pitch;
-            this.setDefaultPitchPromiseR();
+            this.referencePitch = pitch ;
+            this.setReferencePitchPromiseR();
         },
         _onAcLedGroupLoaded: function () {
             this.loadedAcLedGroups++;
@@ -319,7 +320,7 @@
             }
         },
         setPitch: async function(pitch){
-            await this.setDefaultPitchPromise ;
+            await this.setReferencePitchPromise ;
             var diff = pitch - this.pitch;
             this.pitch += diff;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
@@ -368,7 +369,7 @@
             }
         },
         ready: function () {
-            this.setDefaultPitchPromise = new Promise(resolve => this.setDefaultPitchPromiseR = resolve);
+            this.setReferencePitchPromise = new Promise(resolve => this.setReferencePitchPromiseR = resolve);
             this.loadedAcLedGroups = 0;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             this.totalAcLedGroups = nodeList.length;
