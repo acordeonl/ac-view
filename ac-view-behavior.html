@@ -47,11 +47,15 @@
         window[origin+'Wet'].connect(window[origin+'MasterGain']);
         window[origin+'MasterGain'].connect(window[origin+'Context'].destination);
         if (origin === 'playback') {
-            audioContextInitR() ;
+            playbackAudioContextInitR() ;
+        }
+        else {
+            instrumentAudioContextInitR() ;
         }
     }
 
-    var audioContextInit = new Promise(resolve => audioContextInitR = resolve);
+    var playbackAudioContextInit = new Promise(resolve => playbackAudioContextInitR = resolve);
+    var instrumentAudioContextInit = new Promise(resolve => instrumentAudioContextInitR = resolve);
     initAudioContext('instrument');
     initAudioContext('playback');
     function stopAudio () {
@@ -73,10 +77,6 @@
             'acLedGroup-loaded': '_onAcLedGroupLoaded'
         },
         properties: {
-            viewAudioCount:{
-                type:Array,
-                value:[]
-            },
             pitch: {
                 type: Number,
                 value: -1
@@ -181,9 +181,18 @@
                 }
             this._acViewCallFunction('getDefaultAudioUrlsResponse', defaultAudioUrls);
         },
-        loadAudio: async function (audioUrls) {
+        loadAudio: function (audioUrls) {
             this.loadedAcLedGroups = 0;
             this.finishedLoading = false;
+            if (this.viewAudioCount === undefined) {
+                this.viewAudioCount = []  ;
+                var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+                for (var i = 0; i < nodeList.length; i++) {
+                    nodeList[i].setIndex(i);
+                    this.viewAudioCount[i] = nodeList[i].getViewAudioCount () ;
+                }
+            }
+
             var ledGroup = 0 , cnt = 0 ;  ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < audioUrls.length; i++) {
@@ -216,9 +225,9 @@
             this.clearActions('playback') ;
             await stopAudio() ;
             playbackContext.close();
-            audioContextInit = new Promise(resolve => audioContextInitR = resolve);
+            playbackAudioContextInit = new Promise(resolve => playbackAudioContextInitR = resolve);
             initAudioContext('playback');
-            await audioContextInit ;
+            await playbackAudioContextInit ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++)
                 nodeList[i].initPlaybackAudio();
@@ -339,7 +348,9 @@
                 nodeList[i].setTheme(this.customStyle);
             }
         },
-        setPreferences: function (e) {
+        setPreferences: async function (e) {
+            await playbackAudioContextInit ;
+            await instrumentAudioContextInit ;
             this.setReverb(e['reverb']);
             this.reverb = e['reverb'];
             this.setRotation(e['rotation']);
@@ -373,10 +384,6 @@
             this.loadedAcLedGroups = 0;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             this.totalAcLedGroups = nodeList.length;
-            for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].setIndex(i);
-                this.viewAudioCount[i] = nodeList[i].getViewAudioCount () ;
-            }
             this._initAcLeds();
             this.addOrigin('chord') ;
             this.addOrigin('playback') ;
