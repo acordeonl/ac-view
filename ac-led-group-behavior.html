@@ -291,14 +291,17 @@
         },
     /* -------------- Loading -------------------- */
         loadAudio: function (viewAudioIndex, audioUrl) {
-            this.loadedViewAudios = 0 ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
-            nodeList[viewAudioIndex].loadAudio(audioUrl);
+            if (nodeList[viewAudioIndex].audioUrl !== audioUrl)
+                nodeList[viewAudioIndex].loadAudio(audioUrl);
+            else
+                this._onLoadViewAudio() ;
         },
         _onLoadViewAudio: function () {
             this.loadedViewAudios++;
             if (this.loadedViewAudios === this.totalViewAudios) {
                 this.fire('acLedGroup-loaded');
+                this.loadedViewAudios = 0 ;
             }
         },
         getAcLedGroup: function () {
