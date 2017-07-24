@@ -229,9 +229,9 @@
                 this.instrumentPanner.pan.value = this.instrumentPanning ;
             },
             _updateInstrumentVolume: function(){
-                if(!this.instrumentSynthGain)
+                if(this.instrumentSynthGain === undefined)
                     this.instrumentSynthGain = instrumentContext.createGain() ;
-                if(!this.instrumentPanner)
+                if(this.instrumentPanner === undefined)
                     this.instrumentPanner = instrumentContext.createStereoPanner() ;
                 if(this.instrumentGain !==undefined && this.instrumentVelocity!==undefined) {
                     this.instrumentSynthGain.gain.value = this.instrumentGain*this.instrumentVelocity ;
