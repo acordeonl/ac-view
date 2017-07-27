@@ -90,11 +90,6 @@
             currentPlaybackTime: {
                 type: Object
             },
-            chords: {
-                type: Array,
-                value: [],
-                observer: '_reportChords'
-            },
             defaultReverb: {
                 type: Number,
                 value: 0
@@ -295,10 +290,13 @@
             instrumentWet.gain.value = (1.0 - ((100 - synthReverb) / 100));
             instrumentDry.gain.value = (100 - synthReverb) / 100;
         },
-        displayChord: function (chord) {
+        displayChord: function (arg) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            var midiNote = this.midiNameToNumber[arg.substr(0,arg.indexOf(' '))] ;
+            var description = arg.substr(arg.indexOf(' ')+1);
+            var diff = this.pitch-this.referencePitch ;
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].displayChord(chord);
+                nodeList[i].displayChord(midiNote-diff,description);
             }
         },
         setRotation: function (rotation) {
@@ -370,9 +368,6 @@
             this.defaultReverb = reverb ;
             this._acViewCallFunction('setReverb', this.defaultReverb);
         },
-        _reportChords: function () {
-            this._acViewCallFunction('setChords', this.chords);
-        },
         addOrigin: function(origin){
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
@@ -384,6 +379,30 @@
             this.loadedAcLedGroups = 0;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             this.totalAcLedGroups = nodeList.length;
+            this.chords = [] ;
+            this.midiNameToNumber = [] ;
+            for (let i = 0; i < nodeList.length; i++) {
+                var chrs = nodeList[i].chords ;
+                for (let j = 0; j < chrs.length; j++) {
+                    if (chrs[j]===undefined)
+                        continue ;
+                    for (var key in chrs[j]) {
+                        var noteName = "C C#D EbE F F#G AbA BbB ";
+                        noteName = (noteName.substring((j % 12) * 2, (j % 12) * 2 + 2) + (Math.floor(j / 12) ).toString()).replace(" ", "");
+                        this.midiNameToNumber[noteName] = j ;
+                        var chord = noteName+' '+key;
+                        var add = true ;
+                        for (let k = 0; k < this.chords.length; k++) {
+                            if (this.chords[k] === chord)
+                                add = false ;
+                        }
+                        if (add)
+                            this.chords.push(chord) ;
+                    }
+                }
+            }
+            this.chords.sort() ;
+            this._acViewCallFunction('setChords', this.chords);
             this._initAcLeds();
             this.addOrigin('chord') ;
             this.addOrigin('playback') ;
