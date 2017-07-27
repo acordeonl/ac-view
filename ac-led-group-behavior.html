@@ -103,7 +103,12 @@
                     res &= nodeList[j].notesBuffers[this.MIDIEventToNoteMap[channel][i]] !== undefined ;
                 }
             }
+            this._onAddPitch() ;
             return res ;
+        },
+        // for overriding
+        _onAddPitch: function(){
+
         },
     /* ------------------- MIDIEvents ------------------- */
         onMIDIEvent: function (e) {

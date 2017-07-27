@@ -253,7 +253,9 @@
             }
         },
         restartChord: function(){
-            this.displayChord(this.lastChord) ;
+            if (this.lastChord !== undefined) {
+                this.displayChord(this.lastChord) ;
+            }
         },
     /* ------------- settings controls -------------- */
         settingsUpdate: function (origin, value) {
