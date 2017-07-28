@@ -217,7 +217,6 @@
             this._onMIDIEvent(e);
         },
         _setVelocity: function (velocity) {
-            noteNotFound = false;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setVelocity(velocity / 127);
