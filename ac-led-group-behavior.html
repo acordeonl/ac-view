@@ -171,43 +171,68 @@
                 this.chords[midiNote] = [] ;
             this.chords[midiNote][description] = arr ;
         },
-        displayChord: function (midiNote,description) {
-            if (this.chords[midiNote] !== undefined) {
-                if (this.chords[midiNote][description] !== undefined) {
-                    this._playChord(this.chords[midiNote][description]) ;
-                }
+        toggleChords: function(playingChords){
+            this.playingChords = playingChords ;
+            if (this.playingChords) {
+                this._playCurrentChord() ;
+            }
+            else {
+                this.stopCurrentChord() ;
             }
         },
-        _playChord: function(args){
-            if (this.chordOn !== undefined) {
-                this._stopChord() ;
+        setCurrentChord: function (midiNote,description) {
+            if (this.chords[midiNote] !== undefined) {
+                if (this.chords[midiNote][description] !== undefined) {
+                    if (this.playingChords) {
+                        this.stopCurrentChord() ;
+                        this.currentChord = this.chords[midiNote][description] ;
+                        this._playCurrentChord() ;
+                    }
+                    else {
+                        this.currentChord = this.chords[midiNote][description] ;
+                    }
+                    return true ; 
+                }
+                return false ;
             }
-            this.chordOn = args ;
-            for (let i = 0; i < this.chordOn.length; i++) {
-                for (let j = 1; j < this.chordOn[i].length; j++) {
+            else {
+                if (this.playingChords) {
+                    this.stopCurrentChord() ;
+                }
+                this.currentChord = undefined ;
+                return false ;
+            }
+        },
+        _playCurrentChord: function(){
+            if (this.currentChord === undefined) {
+                return ;
+            }
+            for (let i = 0; i < this.currentChord.length; i++) {
+                for (let j = 1; j < this.currentChord[i].length; j++) {
                     var e = {};
                     e.playNow = 1;
-                    e.midiNote = this.chordOn[i][j];
-                    e.channel = this.chordOn[i][0];
+                    e.midiNote = this.currentChord[i][j];
+                    e.channel = this.currentChord[i][0];
                     e.origin = 'chord';
                     e.cmd = 'note-on';
                     this.onMIDIEvent(e) ;
                 }
             }
         },
-        _stopChord: function(){
-            for (let i = 0; i < this.chordOn.length; i++) {
-                for (let j = 1; j < this.chordOn[i].length; j++) {
+        stopCurrentChord: function(){
+            if (this.currentChord === undefined)
+                return ;
+            for (let i = 0; i < this.currentChord.length; i++) {
+                for (let j = 1; j < this.currentChord[i].length; j++) {
                     var e = {};
                     e.playNow = 1;
-                    e.midiNote = this.chordOn[i][j];
-                    e.channel = this.chordOn[i][0];
+                    e.midiNote = this.currentChord[i][j];
+                    e.channel = this.currentChord[i][0];
                     e.origin = 'chord';
                     e.cmd = 'note-off';
                     this.onMIDIEvent(e) ;
                 }
             }
-            this.chordOn = undefined;
         },
     /* -------------------- GUI ------------------------- */
         updateGUI: function () {

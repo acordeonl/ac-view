@@ -77,6 +77,14 @@
             'acLedGroup-loaded': '_onAcLedGroupLoaded'
         },
         properties: {
+            playingChords:{
+                type:Boolean,
+                value:false
+            },
+            hasChord:{
+                type:Boolean,
+                value:false
+            },
             pitch: {
                 type: Number,
                 value: -1
@@ -242,19 +250,34 @@
             }
         },
     /* ------------------- Chords ------------------- */
-        displayChord: function (arg) {
-            this.lastChord = arg ;
+        setCurrentChord: function (arg) {
+            this.currentChord = arg ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             var midiNote = this.midiNameToNumber[arg.substr(0,arg.indexOf(' '))] ;
             var description = arg.substr(arg.indexOf(' ')+1);
             var diff = this.pitch-this.referencePitch ;
+            this.hasChord = false ;
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].displayChord(midiNote-diff,description);
+                this.hasChord |= nodeList[i].setCurrentChord(midiNote-diff,description);
+            }
+            if (!this.hasChord && this.playingChords) {
+                this._acViewCallFunction('toast','El acorde seleccionado no está disponible en la visualización') ;
+
             }
         },
         restartChord: function(){
-            if (this.lastChord !== undefined) {
-                this.displayChord(this.lastChord) ;
+            if (this.currentChord !== undefined) {
+                this.setCurrentChord(this.currentChord) ;
+            }
+        },
+        toggleChords: function(playingChords){
+            this.playingChords = playingChords ;
+            if (!this.hasChord && this.playingChords) {
+                this._acViewCallFunction('toast','El acorde seleccionado no está disponible en la visualización') ;
+            }
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].toggleChords(playingChords) ;
             }
         },
     /* ------------- settings controls -------------- */
@@ -391,21 +414,23 @@
             this.midiNameToNumber = [] ;
             for (let i = 0; i < nodeList.length; i++) {
                 var chrs = nodeList[i].chords ;
-                for (let j = 0; j < chrs.length; j++) {
-                    if (chrs[j]===undefined)
+                if (chrs!==undefined) {
+                    for (let j = 0; j < chrs.length; j++) {
+                        if (chrs[j]===undefined)
                         continue ;
-                    for (var key in chrs[j]) {
-                        var noteName = "C C#D EbE F F#G AbA BbB ";
-                        noteName = (noteName.substring((j % 12) * 2, (j % 12) * 2 + 2) + (Math.floor(j / 12) ).toString()).replace(" ", "");
-                        this.midiNameToNumber[noteName] = j ;
-                        var chord = noteName+' '+key;
-                        var add = true ;
-                        for (let k = 0; k < this.chords.length; k++) {
-                            if (this.chords[k] === chord)
+                        for (var key in chrs[j]) {
+                            var noteName = "C C#D EbE F F#G AbA BbB ";
+                            noteName = (noteName.substring((j % 12) * 2, (j % 12) * 2 + 2) + (Math.floor(j / 12) ).toString()).replace(" ", "");
+                            this.midiNameToNumber[noteName] = j ;
+                            var chord = noteName+' '+key;
+                            var add = true ;
+                            for (let k = 0; k < this.chords.length; k++) {
+                                if (this.chords[k] === chord)
                                 add = false ;
-                        }
-                        if (add)
+                            }
+                            if (add)
                             this.chords.push(chord) ;
+                        }
                     }
                 }
             }
