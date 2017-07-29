@@ -437,8 +437,8 @@
             this._acViewCallFunction('setChords', this.chords);
             this._initAcLeds();
             this.addOrigin('chord') ;
-            this.addOrigin('playback') ;
             this.addOrigin('instrument') ;
+            this.addOrigin('playback') ;
             //if in an iframe
             if (window !== parent) {
                 window.onmessage = args => {
