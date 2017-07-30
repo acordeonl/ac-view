@@ -85,6 +85,10 @@
             'acLedGroup-loaded': '_onAcLedGroupLoaded'
         },
         properties: {
+            origins:{
+                type:Array,
+                value:[]
+            },
             playingChords:{
                 type:Boolean,
                 value:false
@@ -214,6 +218,9 @@
         },
     /* ------------- MIDI --------------------- */
         onMIDIEvent: function (e) {
+            if (this.origins[e.origin] === undefined) {
+                return ;
+            }
             if (!this.finishedLoading)
                 return;
             if (e.cmd === 'velocity-change') {
@@ -238,7 +245,7 @@
                 nodeList[i].initInstrumentVolume() ;
             }
             this.setReverb(this.reverb);
-            this._acViewCallFunction('onStopedInstrumentAudio') ; 
+            this._acViewCallFunction('onStopedInstrumentAudio') ;
         },
     /* ------------- playback controls -------------- */
         stop: async function () {
@@ -412,12 +419,14 @@
             this._acViewCallFunction('setReverb', this.defaultReverb);
         },
         addOrigin: function(origin){
+            this.origins[origin] = 1 ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].addOrigin(origin);
             }
         },
         ready: function () {
+            this.origins = [] ;
             this.setReferencePitchPromise = new Promise(resolve => this.setReferencePitchPromiseR = resolve);
             this.loadedAcLedGroups = 0;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
@@ -453,7 +462,6 @@
             }
             this._initAcLeds();
             this.addOrigin('chord') ;
-            this.addOrigin('instrument') ;
             this.addOrigin('playback') ;
             //if in an iframe
             if (window !== parent) {
