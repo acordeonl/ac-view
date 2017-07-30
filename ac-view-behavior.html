@@ -237,6 +237,7 @@
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].initInstrumentVolume() ;
             }
+            this.setReverb(this.reverb);
             this._acViewCallFunction('onStopedInstrumentAudio') ; 
         },
     /* ------------- playback controls -------------- */
