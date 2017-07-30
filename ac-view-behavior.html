@@ -81,10 +81,6 @@
                 type:Boolean,
                 value:false
             },
-            hasChord:{
-                type:Boolean,
-                value:false
-            },
             pitch: {
                 type: Number,
                 value: -1
@@ -146,6 +142,7 @@
         _setReferencePitch: function (pitch) {
             this.pitch = pitch;
             this.referencePitch = pitch ;
+            this._acViewCallFunction('setReferencePitch', this.referencePitch) ;
             this.setReferencePitchPromiseR();
         },
         _onAcLedGroupLoaded: function () {
@@ -255,13 +252,8 @@
             var midiNote = this.midiNameToNumber[arg.substr(0,arg.indexOf(' '))] ;
             var description = arg.substr(arg.indexOf(' ')+1);
             var diff = this.pitch-this.referencePitch ;
-            this.hasChord = false ;
             for (var i = 0; i < nodeList.length; i++) {
-                this.hasChord |= nodeList[i].setCurrentChord(midiNote-diff,description);
-            }
-            if (!this.hasChord && this.playingChords) {
-                this._acViewCallFunction('toast','El acorde seleccionado no está disponible en la visualización') ;
-
+                nodeList[i].setCurrentChord(midiNote-diff,description);
             }
         },
         restartChord: function(){
@@ -271,9 +263,6 @@
         },
         toggleChords: function(playingChords){
             this.playingChords = playingChords ;
-            if (!this.hasChord && this.playingChords) {
-                this._acViewCallFunction('toast','El acorde seleccionado no está disponible en la visualización') ;
-            }
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].toggleChords(playingChords) ;
@@ -410,31 +399,34 @@
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             this.totalAcLedGroups = nodeList.length;
             this.chords = [] ;
-            this.midiNameToNumber = [] ;
             for (let i = 0; i < nodeList.length; i++) {
                 var chrs = nodeList[i].chords ;
                 if (chrs!==undefined) {
                     for (let j = 0; j < chrs.length; j++) {
                         if (chrs[j]===undefined)
-                        continue ;
+                            continue ;
                         for (var key in chrs[j]) {
-                            var noteName = "C C#D EbE F F#G AbA BbB ";
-                            noteName = (noteName.substring((j % 12) * 2, (j % 12) * 2 + 2) + (Math.floor(j / 12) ).toString()).replace(" ", "");
-                            this.midiNameToNumber[noteName] = j ;
-                            var chord = noteName+' '+key;
+                            var chord = {} ;
+                            chord.noteNumber = j ;
+                            chord.description = key ;
                             var add = true ;
                             for (let k = 0; k < this.chords.length; k++) {
                                 if (this.chords[k] === chord)
                                 add = false ;
                             }
                             if (add)
-                            this.chords.push(chord) ;
+                                this.chords.push(chord) ;
                         }
                     }
                 }
             }
-            this.chords.sort() ;
             this._acViewCallFunction('setChords', this.chords);
+            this.midiNameToNumber = [] ;
+            for (let i = 0; i < 200; i++) {
+                var noteName = "C C#D EbE F F#G AbA BbB ";
+                noteName = (noteName.substring((i % 12) * 2, (i % 12) * 2 + 2) + (Math.floor(i / 12) ).toString()).replace(" ", "");
+                this.midiNameToNumber[noteName] = i ;
+            }
             this._initAcLeds();
             this.addOrigin('chord') ;
             this.addOrigin('instrument') ;

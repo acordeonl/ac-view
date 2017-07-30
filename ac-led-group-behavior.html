@@ -177,36 +177,30 @@
                 this._playCurrentChord() ;
             }
             else {
-                this.stopCurrentChord() ;
+                this._stopCurrentChord() ;
             }
         },
         setCurrentChord: function (midiNote,description) {
-            if (this.chords[midiNote] !== undefined) {
-                if (this.chords[midiNote][description] !== undefined) {
-                    if (this.playingChords) {
-                        this.stopCurrentChord() ;
-                        this.currentChord = this.chords[midiNote][description] ;
-                        this._playCurrentChord() ;
-                    }
-                    else {
-                        this.currentChord = this.chords[midiNote][description] ;
-                    }
-                    return true ; 
-                }
-                return false ;
+            if (this.chords === undefined)
+                return ;
+            if (this.playingChords) {
+                this._stopCurrentChord() ;
+                if (this.chords[midiNote] !== undefined)
+                    this.currentChord = this.chords[midiNote][description] ;
+                else
+                    this.currentChord = undefined ;
+                this._playCurrentChord() ;
             }
             else {
-                if (this.playingChords) {
-                    this.stopCurrentChord() ;
-                }
-                this.currentChord = undefined ;
-                return false ;
+                if (this.chords[midiNote] !== undefined)
+                    this.currentChord = this.chords[midiNote][description] ;
+                else
+                    this.currentChord = undefined ;
             }
         },
         _playCurrentChord: function(){
-            if (this.currentChord === undefined) {
+            if (this.currentChord === undefined)
                 return ;
-            }
             for (let i = 0; i < this.currentChord.length; i++) {
                 for (let j = 1; j < this.currentChord[i].length; j++) {
                     var e = {};
@@ -219,7 +213,7 @@
                 }
             }
         },
-        stopCurrentChord: function(){
+        _stopCurrentChord: function(){
             if (this.currentChord === undefined)
                 return ;
             for (let i = 0; i < this.currentChord.length; i++) {
@@ -414,7 +408,6 @@
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setAttribute("channel"+nodeList[i].channel, "");
             }
-
             nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             this.totalViewAudios = nodeList.length ;
             for (var i = 0; i < nodeList.length; i++) {
