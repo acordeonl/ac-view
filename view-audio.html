@@ -169,7 +169,7 @@
                         this.playbackActions[e.midiNote] = null ;
                     }
                 }
-                else if (this[e.origin+'Actions'][e.midiNote] !== undefined){
+                else if (this[e.origin+'Actions'][e.midiNote] !== undefined && this[e.origin+'Actions'][e.midiNote] !== null){
                     this[e.origin+'Actions'][e.midiNote].gain.gain.cancelScheduledValues(instrumentContext.currentTime) ;
                     this[e.origin+'Actions'][e.midiNote].gain.gain.setValueAtTime(this[e.origin+'Actions'][e.midiNote].gain.gain.value, instrumentContext.currentTime);
                     this[e.origin+'Actions'][e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, instrumentContext.currentTime+0.1);
@@ -184,6 +184,15 @@
                 this.playbackPanner.connect(playbackCompressor);
                 this._updatePlaybackVolume() ;
                 this._updatePlaybackPanning() ;
+            },
+        /* ------------------- Instrument ------------------- */
+            initInstrumentVolume: function(){
+                this.instrumentSynthGain = instrumentContext.createGain() ;
+                this.instrumentPanner = instrumentContext.createStereoPanner() ;
+                this.instrumentSynthGain.gain.value = this.instrumentGain ;
+                this.instrumentPanner.pan.value = this.instrumentPanning ;
+                this.instrumentSynthGain.connect(this.instrumentPanner);
+                this.instrumentPanner.connect(instrumentCompressor);
             },
         /* ---------- Settings controls ------------ */
             setPlaybackGain: function(gain){
@@ -237,13 +246,13 @@
             ready: function () {
                 this.loopDurations = [] ;
                 this.notesBuffers = [] ;
-                if(!this.instrumentSynthGain)
+                if(this.instrumentSynthGain === undefined)
                     this.instrumentSynthGain = instrumentContext.createGain() ;
-                if(!this.playbackSynthGain)
+                if(this.playbackSynthGain === undefined )
                     this.playbackSynthGain = playbackContext.createGain() ;
-                if(!this.instrumentPanner)
+                if(this.instrumentPanner === undefined)
                     this.instrumentPanner = instrumentContext.createStereoPanner() ;
-                if(!this.playbackPanner) {
+                if(this.playbackPanner === undefined ) {
                     this.playbackPanner = playbackContext.createStereoPanner() ;
                 }
             }

@@ -58,11 +58,19 @@
     var instrumentAudioContextInit = new Promise(resolve => instrumentAudioContextInitR = resolve);
     initAudioContext('instrument');
     initAudioContext('playback');
-    function stopAudio () {
+    function stopPlaybackAudio () {
         return  new Promise( resolve => {
             playbackMasterGain.gain.cancelScheduledValues(playbackContext.currentTime);
             playbackMasterGain.gain.setValueAtTime(playbackMasterGain.gain.value, playbackContext.currentTime);
             playbackMasterGain.gain.exponentialRampToValueAtTime(0.00001, playbackContext.currentTime + 0.1);
+            setTimeout( () => { resolve() }, 100);
+        });
+    }
+    function stopInstrumentAudio () {
+        return  new Promise( resolve => {
+            instrumentMasterGain.gain.cancelScheduledValues(instrumentContext.currentTime);
+            instrumentMasterGain.gain.setValueAtTime(instrumentMasterGain.gain.value, instrumentContext.currentTime);
+            instrumentMasterGain.gain.exponentialRampToValueAtTime(0.00001, instrumentContext.currentTime + 0.1);
             setTimeout( () => { resolve() }, 100);
         });
     }
@@ -219,10 +227,22 @@
                 nodeList[i].setVelocity(velocity / 127);
             }
         },
+    /* ------------------- Instrument ------------------- */
+        stopInstrumentAudio: async function(){
+            this.clearGUI('instrument') ;
+            await stopInstrumentAudio() ;
+            instrumentContext.close();
+            initAudioContext('instrument') ;
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].initInstrumentVolume() ;
+            }
+            this._acViewCallFunction('onStopedInstrumentAudio') ; 
+        },
     /* ------------- playback controls -------------- */
         stop: async function () {
             this.clearActions('playback') ;
-            await stopAudio() ;
+            await stopPlaybackAudio() ;
             playbackContext.close();
             playbackAudioContextInit = new Promise(resolve => playbackAudioContextInitR = resolve);
             initAudioContext('playback');
@@ -262,11 +282,14 @@
             }
         },
         toggleChords: function(playingChords){
+            if (this.playingChords === playingChords)
+                return ;
             this.playingChords = playingChords ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].toggleChords(playingChords) ;
             }
+            this._acViewCallFunction('onACViewChordsOff') ;
         },
     /* ------------- settings controls -------------- */
         settingsUpdate: function (origin, value) {

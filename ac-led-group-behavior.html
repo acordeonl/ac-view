@@ -110,6 +110,13 @@
         _onAddPitch: function(){
 
         },
+    /* ------------------- Instrument ------------------- */
+        initInstrumentVolume: function(){
+            var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].initInstrumentVolume() ;
+            }
+        },
     /* ------------------- MIDIEvents ------------------- */
         onMIDIEvent: function (e) {
             if(e.noGUI === null || e.noGUI === undefined)
