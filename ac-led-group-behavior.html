@@ -88,6 +88,10 @@
             MIDIEventToNoteMap:{
                 type:Array,
                 value:[]
+            },
+            mapKeyboardToNote:{
+                type:Array,
+                value:[]
             }
         },
     /* ----------------  Audio ------------------------- */
@@ -109,6 +113,32 @@
         // for overriding
         _onAddPitch: function(){
 
+        },
+    /* ------------------- Keyboard ------------------- */
+        _setKeyboardToNote: function(key,arg){
+            this.mapKeyboardToNote[key] = arg ;
+        },
+        onKeyboardNoteOn: function(key){
+            if (this.mapKeyboardToNote[key] !== undefined) {
+                var e = {};
+                e.playNow = 1;
+                e.midiNote = this.mapKeyboardToNote[key][1];
+                e.channel = this.mapKeyboardToNote[key][0];
+                e.origin = 'keyboard';
+                e.cmd = 'note-on';
+                this.onMIDIEvent(e) ;
+            }
+        },
+        onKeyboardNoteOff: function(key){
+            if (this.mapKeyboardToNote[key] !== undefined) {
+                var e = {};
+                e.playNow = 1;
+                e.midiNote = this.mapKeyboardToNote[key][1];
+                e.channel = this.mapKeyboardToNote[key][0];
+                e.origin = 'keyboard';
+                e.cmd = 'note-off';
+                this.onMIDIEvent(e) ;
+            }
         },
     /* ------------------- Instrument ------------------- */
         initInstrumentVolume: function(){

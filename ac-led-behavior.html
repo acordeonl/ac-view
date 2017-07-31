@@ -125,7 +125,9 @@
         },
         clearGUI: async function(origin){
             await this.initAcLed ;
-            this.$$('['+origin+'AcLed]').style.display = 'none' ;
+            if (this.$$('['+origin+'AcLed]') !== undefined && this.$$('['+origin+'AcLed]') !== null ) {
+                this.$$('['+origin+'AcLed]').style.display = 'none' ;
+            }
         },
     /* ------------------- Setup ------------------- */
         setTheme: function(e){
