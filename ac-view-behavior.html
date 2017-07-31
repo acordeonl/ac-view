@@ -85,6 +85,10 @@
             'acLedGroup-loaded': '_onAcLedGroupLoaded'
         },
         properties: {
+            keyboardEnabled:{
+                type:Boolean,
+                value:false
+            },
             keyboardOn:{
                 type:Array,
                 value:[]
@@ -240,6 +244,8 @@
         },
     /* ------------------- Keyboard ------------------- */
         keyPress: function(e){
+            if (!this.keyboardEnabled)
+                return ;
             var nodeList = Polymer.dom(this.root).querySelectorAll("[acLedGroup]");
             for (var i = 0; i < nodeList.length; i++) {
                 if (this.keyboardOn[e.key] === undefined) {
@@ -249,6 +255,8 @@
             }
         },
         keyUp: function(e){
+            if (!this.keyboardEnabled)
+                return ;
             var nodeList = Polymer.dom(this.root).querySelectorAll("[acLedGroup]");
             for (var i = 0; i < nodeList.length; i++) {
                 if (this.keyboardOn[e.key] !== undefined) {
