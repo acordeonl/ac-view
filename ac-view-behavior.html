@@ -81,13 +81,16 @@
 */
     ACViewBehavior = {
         listeners: {
-            'action': 'onMidiEvent',
             'acLedGroup-loaded': '_onAcLedGroupLoaded'
         },
         properties: {
+            instrumentOrigins:{
+                type:Array,
+                value:[]
+            },
             keyboardEnabled:{
                 type:Boolean,
-                value:false
+                value:true
             },
             keyboardOn:{
                 type:Array,
@@ -226,20 +229,25 @@
         },
     /* ------------- MIDI --------------------- */
         onMIDIEvent: function (e) {
-            if (this.origins[e.origin] === undefined) {
-                return ;
-            }
+            if (this.origins[e.origin] === undefined)
+                this.addOrigin(e.origin) ;
             if (!this.finishedLoading)
                 return;
             if (e.cmd === 'velocity-change') {
                 this._setVelocity(e.velocity);
             }
-            this._onMIDIEvent(e);
+            else {
+                this._onMIDIEvent(e);
+            }
         },
         _setVelocity: function (velocity) {
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
-            for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].setVelocity(velocity / 127);
+            if (this.instrumentOrigins === undefined)
+                return ;
+                if (this.instrumentOrigins.length >1 || this.playingChords)
+                    velocity = 100 ;
+                var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+                for (var i = 0; i < nodeList.length; i++) {
+                    nodeList[i].setVelocity(velocity / 127);
             }
         },
     /* ------------------- Keyboard ------------------- */
@@ -277,6 +285,11 @@
             }
             this.setReverb(this.reverb);
             this._acViewCallFunction('onStopedInstrumentAudio') ;
+        },
+        clearInstrumentsGUI: function(){
+            for (var i = 0; i < this.instrumentOrigins.length; i++) {
+                this.clearGUI(this.instrumentOrigins[i]);
+            }
         },
     /* ------------- playback controls -------------- */
         stop: async function () {
@@ -324,6 +337,9 @@
             if (this.playingChords === playingChords)
                 return ;
             this.playingChords = playingChords ;
+            if (this.playingChords) {
+                this._setVelocity(100) ;
+            }
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].toggleChords(playingChords) ;
@@ -406,6 +422,9 @@
                 nodeList[i].initAcLeds();
             }
         },
+        _updateMyTheme: function(){
+            this._acViewCallFunction('updateACViewTheme') ;
+        },
         setPitch: async function(pitch){
             await this.setReferencePitchPromise ;
             var diff = pitch - this.pitch;
@@ -450,14 +469,17 @@
             this._acViewCallFunction('setReverb', this.defaultReverb);
         },
         addOrigin: function(origin){
+            if (this.origins[origin] !==undefined)
+                return ;
             this.origins[origin] = 1 ;
+            if (origin.startsWith('___midi_instrument'))
+                this.instrumentOrigins.push(origin) ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
-            for (var i = 0; i < nodeList.length; i++) {
+            for (var i = 0; i < nodeList.length; i++)
                 nodeList[i].addOrigin(origin);
-            }
+            this._updateMyTheme() ;
         },
         ready: function () {
-            this.origins = [] ;
             this.setReferencePitchPromise = new Promise(resolve => this.setReferencePitchPromiseR = resolve);
             this.loadedAcLedGroups = 0;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
@@ -495,6 +517,7 @@
             this.addOrigin('chord') ;
             this.addOrigin('keyboard') ;
             this.addOrigin('playback') ;
+            this.addOrigin('acView') ;
             //if in an iframe
             if (window !== parent) {
                 window.onmessage = args => {
