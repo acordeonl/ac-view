@@ -479,6 +479,7 @@
         ___acVaddOrigin: function(origin){
             if (this.___acVorigins[origin] !==undefined)
                 return ;
+            console.log('will add origin',origin);
             this.___acVorigins[origin] = 1 ;
             if (origin.startsWith('___midi_instrument'))
                 this.___acVinstrumentOrigins.push(origin) ;
@@ -488,6 +489,9 @@
             this.___acV_updateMyTheme() ;
         },
         ready: function () {
+            this.___acVorigins = [] ;
+            this.___acVinstrumentOrigins = [] ;
+            this.___acVkeyboardOn = [] ; 
             this.setReferencePitchPromise = new Promise(resolve => this.setReferencePitchPromiseR = resolve);
             this.___acVloadedAcLedGroups = 0;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
