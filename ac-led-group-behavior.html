@@ -156,6 +156,10 @@
         },
         _MIDIEventToGUI: function(e){
             e.acLedId = this._mapMIDIEventToAcLedId(e.channel,e.midiNote);
+            if (this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
+                this.fire('toast',{msg:'La configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'})  ; 
+                return ;
+            }
             e.note = this.MIDIEventToNoteMap[e.channel][e.midiNote] ;
             if(e.cmd === 'note-on')
                 e.acLedState = this._mapMIDIEventToAcLedState(e.channel,e.midiNote);

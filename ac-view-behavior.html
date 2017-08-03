@@ -81,7 +81,8 @@
 */
     ACViewBehavior = {
         listeners: {
-            'acLedGroup-loaded': '_onAcLedGroupLoaded'
+            'acLedGroup-loaded': '_onAcLedGroupLoaded',
+            'toast':'_handleToast'
         },
         properties: {
             instrumentOrigins:{
@@ -274,6 +275,9 @@
             }
         },
     /* ------------------- Instrument ------------------- */
+        _handleToast: function(e){
+            this._acViewCallFunction('toast',e.detail.msg) ;
+        },
         stopInstrumentAudio: async function(){
             this.clearGUI('instrument') ;
             await stopInstrumentAudio() ;
