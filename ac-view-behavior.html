@@ -134,11 +134,11 @@
                 type: Number,
                 value: 0
             },
-            ___acVfinishedLoading: {
+            ___acV_finishedLoading: {
                 type: Boolean,
                 value: false
             },
-            ___acVrotation: {
+            ___acV_rotation: {
                 type: Boolean,
                 value: false
             }
@@ -169,11 +169,11 @@
             this.___acVloadedAcLedGroups++;
             if (this.___acVloadedAcLedGroups === this.___acVtotalAcLedGroups) {
                 this._acViewCallFunction('onACViewAudioLoad', {});
-                this.___acVfinishedLoading = true;
-                this._onFinishedLoadingNotes();
+                this.___acV_finishedLoading = true;
+                this.___acV_onFinishedLoadingNotes();
             }
         },
-        _onFinishedLoadingNotes: function(){
+        ___acV_onFinishedLoadingNotes: function(){
 
         },
         ___acVgetAcLedGroups: function () {
@@ -206,7 +206,7 @@
         },
         ___acVloadAudio: function (audioUrls) {
             this.___acVloadedAcLedGroups = 0;
-            this.___acVfinishedLoading = false;
+            this.___acV_finishedLoading = false;
             if (this.viewAudioCount === undefined) {
                 this.viewAudioCount = []  ;
                 var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
@@ -231,13 +231,13 @@
         ___acVonMIDIEvent: function (e) {
             if (this.___acVorigins[e.origin] === undefined)
                 this.___acVaddOrigin(e.origin) ;
-            if (!this.___acVfinishedLoading)
+            if (!this.___acV_finishedLoading)
                 return;
             if (e.cmd === 'velocity-change') {
                 this.___acV_setVelocity(e.velocity);
             }
             else {
-                this._onMIDIEvent(e);
+                this.___acV_onMIDIEvent(e);
             }
         },
         ___acV_setVelocity: function (velocity) {
@@ -399,7 +399,7 @@
             instrumentDry.gain.value = (100 - synthReverb) / 100;
         },
         ___acVsetRotation: function (rotation) {
-            this.___acVrotation = rotation;
+            this.___acV_rotation = rotation;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].rotation = rotation;
