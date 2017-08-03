@@ -13,7 +13,7 @@
         },
         properties: {
         /* ------------------- Loading ------------------- */
-            ___acV_name: {
+            name: {
                 type: String
             },
             ___acV_totalViewAudios: {
@@ -57,19 +57,19 @@
                 observer: '___acV_setSynthPlaybackVolume'
             },
         /* ------------------- Defaults ------------------- */
-            ___acV_defaultInstrumentPanning: {
+            defaultInstrumentPanning: {
                 type: Number,
                 value: 0
             },
-            ___acV_defaultPlaybackPanning: {
+            defaultPlaybackPanning: {
                 type: Number,
                 value: 0
             },
-            ___acV_defaultInstrumentVolume: {
+            defaultInstrumentVolume: {
                 type: Number,
                 value: 1
             },
-            ___acV_defaultPlaybackVolume: {
+            defaultPlaybackVolume: {
                 type: Number,
                 value: 1
             },
@@ -265,14 +265,14 @@
         ___acV_updateGUI: function () {
             if (this.playbackAcLedActions !== null && this.playbackAcLedActions !== undefined && this.playbackAcLedActions.length > 0) {
                 if (this.playbackAcLedActions.first.value.when < playbackContext.currentTime) {
-                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').render(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note);
+                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note);
                     this.playbackAcLedActions.popFirst();
                 }
             }
             for (var i = 0; i < this.___acV_instruments.length; i++) {
                 var origin = this.___acV_instruments[i] ;
                 if (this[origin+'AcLedActions'].length > 0) {
-                    this.$$('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').render(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note);
+                    this.$$('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note);
                     this[origin+'AcLedActions'].popFirst();
                 }
             }
@@ -280,13 +280,13 @@
         ___acVtoggleNotes: function (origin, value) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].toggleNotes(origin,value) ;
+                nodeList[i].___acVtoggleNotes(origin,value) ;
             }
         },
         ___acVsetOpacity: function (origin, opacity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].setOpacity(origin,opacity) ;
+                nodeList[i].___acVsetOpacity(origin,opacity) ;
             }
         },
         ___acVclearActions: function(origin){
@@ -298,7 +298,7 @@
                     when = playbackContext.currentTime + (this.playbackAcLedActions.first.value.tempo) * (this.playbackAcLedActions.first.value.time - this.playbackAcLedActions.first.value.playbackTime);
                 }
                 if (when < playbackContext.currentTime || this.playbackAcLedActions.first.value.playNow !== undefined) {
-                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').render(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
+                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
                     this.playbackAcLedActions.popFirst();
                 } else {
                     break;
@@ -310,7 +310,7 @@
         ___acVclearGUI: function (origin) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (i = 0; i < nodeList.length; i++) {
-                nodeList[i].clearGUI(origin);
+                nodeList[i].___acVclearGUI(origin);
             }
         },
     /* ----------------- View audio -------------------------- */
@@ -367,11 +367,11 @@
         },
         ___acVgetAcLedGroup: function () {
             return {
-                name: this.___acV_name,
-                defaultPlaybackVolume: this.___acV_defaultPlaybackVolume * 100,
-                defaultInstrumentVolume: this.___acV_defaultInstrumentVolume * 100,
-                defaultInstrumentPanning: this.___acV_defaultInstrumentPanning * 100,
-                defaultPlaybackPanning: this.___acV_defaultPlaybackPanning * 100
+                name: this.name,
+                defaultPlaybackVolume: this.defaultPlaybackVolume * 100,
+                defaultInstrumentVolume: this.defaultInstrumentVolume * 100,
+                defaultInstrumentPanning: this.defaultInstrumentPanning * 100,
+                defaultPlaybackPanning: this.defaultPlaybackPanning * 100
             } ;
         },
         ___acVgetViewAudios: function () {
@@ -392,7 +392,7 @@
             this.___acV_instruments = [] ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (i = 0; i < nodeList.length; i++) {
-                nodeList[i].init();
+                nodeList[i].___acVinit();
             }
         },
         ___acVgetViewAudioCount: function(){
@@ -403,7 +403,7 @@
             this.updateStyles();
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].setTheme(this.customStyle);
+                nodeList[i].___acVsetTheme(this.customStyle);
             }
         },
         ___acVgetDefaultAudioUrls: function () {
@@ -425,7 +425,7 @@
             }
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].addOrigin(origin);
+                nodeList[i].___acVaddOrigin(origin);
             }
             var nodeList2 = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList2.length; j++) {

@@ -7,10 +7,10 @@
 */
     acLedBehavior= {
         properties:{
-            acLedPrototype:{
+            ___acV_prototype:{
                 type:Object
             },
-            acLedRoot:{
+            ___acV_root:{
                 type:Object
             },
             channel:{
@@ -19,25 +19,25 @@
             acId:{
                 type:Number
             },
-            customText:{
+            ___acV_customText:{
                 type:Number,
                 value:-1
             },
-            instruments:{
+            ___acV_instruments:{
                 type:Array
             },
-            showingPlaybackNotes:{
+            ___acV_showingPlaybackNotes:{
                 type:Boolean,
                 value:false
             },
-            showingInstrumentNotes:{
+            ___acV_showingInstrumentNotes:{
                 type:Boolean,
                 value:false
             }
         },
     /* ------------------- Helpers ------------------- */
         // Default colors for acLed
-        _getAcLedColor: function(acLedState){
+        ___acV_getAcLedColor: function(acLedState){
             if (acLedState === 1) {
                 return '--theme-color1' ;
             }
@@ -45,7 +45,7 @@
                 return '--theme-color2' ;
             }
         },
-        _getNoteName: function(note){
+        ___acV_getNoteName: function(note){
             var notes = [
                 'C',
                 'C#',
@@ -66,55 +66,55 @@
             return name;
         },
     /* ------------------- GUI ------------------- */
-        toggleNotes: async function(origin,value){
+        ___acVtoggleNotes: async function(origin,value){
             await this.initAcLed ;
             if (origin === 'playback') {
                 if(!value)
                     this.$$('[playbackNote]').style.visibility = 'hidden' ;
                 else
                     this.$$('[playbackNote]').style.visibility = 'visible' ;
-                this.showingPlaybackNotes = value ;
+                this.___acV_showingPlaybackNotes = value ;
             }
             else {
-                for (var i = 0; i < this.instruments.length; i++) {
-                    var origin = this.instruments[i] ;
+                for (var i = 0; i < this.___acV_instruments.length; i++) {
+                    var origin = this.___acV_instruments[i] ;
                     if(!value)
                         this.$$('['+origin+'Note]').style.visibility = 'hidden' ;
                     else
                         this.$$('['+origin+'Note]').style.visibility = 'visible' ;
                 }
-                this.showingInstrumentNotes = value ;
+                this.___acV_showingInstrumentNotes = value ;
             }
         },
-        setOpacity: async function(origin,opacity){
+        ___acVsetOpacity: async function(origin,opacity){
             await this.initAcLed ;
             if (origin === 'playback') {
                 this.$$('[playbackAcLed]').style.opacity = opacity ;
             }
             else {
-                for (var i = 0; i < this.instruments.length; i++) {
-                    var origin = this.instruments[i] ;
+                for (var i = 0; i < this.___acV_instruments.length; i++) {
+                    var origin = this.___acV_instruments[i] ;
                     this.$$('['+origin+'AcLed]').style.opacity = opacity ;
                 }
             }
         },
-        render: function(origin,acLedState,note){
+        ___acVrender: function(origin,acLedState,note){
             if (acLedState !== 0) {
                 this.$$('['+origin+'AcLed]').style.display = 'block' ;
-                var color = this._getAcLedColor(acLedState) ;
+                var color = this.___acV_getAcLedColor(acLedState) ;
                 if( color.startsWith('--') )
                     color = this.customStyle[color] ;
                 this.$$('['+origin+'AcLed]').style.backgroundColor = color ;
                 if (origin === 'playback') {
-                    if(this['showingPlaybackNotes']){
-                        this.$$('[playbackNote]').innerHTML = this._getNoteName(note) ;
+                    if(this['___acV_showingPlaybackNotes']){
+                        this.$$('[playbackNote]').innerHTML = this.___acV_getNoteName(note) ;
                     }
                 }
                 else {
-                    for (var i = 0; i < this.instruments.length; i++) {
-                        var origin = this.instruments[i] ;
-                        if(this['showingInstrumentNotes']){
-                            this.$$('['+origin+'Note]').innerHTML = this._getNoteName(note) ;
+                    for (var i = 0; i < this.___acV_instruments.length; i++) {
+                        var origin = this.___acV_instruments[i] ;
+                        if(this['___acV_showingInstrumentNotes']){
+                            this.$$('['+origin+'Note]').innerHTML = this.___acV_getNoteName(note) ;
                         }
                     }
                 }
@@ -123,27 +123,27 @@
                 this.$$('['+origin+'AcLed]').style.display = 'none' ;
             }
         },
-        clearGUI: async function(origin){
+        ___acVclearGUI: async function(origin){
             await this.initAcLed ;
             if (this.$$('['+origin+'AcLed]') !== undefined && this.$$('['+origin+'AcLed]') !== null ) {
                 this.$$('['+origin+'AcLed]').style.display = 'none' ;
             }
         },
     /* ------------------- Setup ------------------- */
-        setTheme: function(e){
+        ___acVsetTheme: function(e){
             this.customStyle = e ;
             this.updateStyles() ;
-            if (this.customText === 0 ) {
+            if (this.___acV_customText === 0 ) {
                 var nodeList = Polymer.dom(this.root).querySelectorAll('[note]');
                 for (i = 0; i < nodeList.length; i++) {
                     nodeList[i].style.color = this.customStyle['--content-background'] ;
                 }
             }
         },
-        addOrigin: function(origin){
-            var newOrigin  = this.acLedPrototype.cloneNode(true);
+        ___acVaddOrigin: function(origin){
+            var newOrigin  = this.___acV_prototype.cloneNode(true);
             newOrigin.setAttribute(origin+'AcLed',"") ;
-            this.acLedRoot.appendChild (newOrigin) ;
+            this.___acV_root.appendChild (newOrigin) ;
 
             this.$$('['+origin+'AcLed] [note]').setAttribute(origin+'Note',"") ;
             this.$$('['+origin+'AcLed]').style.display = 'none';
@@ -151,20 +151,20 @@
             if(origin === 'playback')
                 this.$$('['+origin+'AcLed]').style.opacity = this.playbackOpacity;
             else {
-                this.instruments.push(origin) ;
+                this.___acV_instruments.push(origin) ;
                 this.$$('['+origin+'AcLed]').style.opacity = this.instrumentOpacity;
             }
         },
-        init: function(){
-            this.instruments = [] ;
+        ___acVinit: function(){
+            this.___acV_instruments = [] ;
             var acLed = this.$$('[acLed]') ;
             if(acLed.getAttribute('dev') !== null && acLed.getAttribute('dev') !== undefined)
                 return ;
 
             acLed.style.position = 'absolute' ;
-            this.acLedPrototype = acLed.cloneNode(true)  ;
+            this.___acV_prototype = acLed.cloneNode(true)  ;
             if ( this.$$('[acLed] [note]') === null || this.$$('[acLed] [note]') === undefined ) {
-                this.customText = 0 ;
+                this.___acV_customText = 0 ;
                 var noteElement = document.createElement('div') ;
                 noteElement.setAttribute('note',"") ;
                 noteElement.style.width = '100%';
@@ -177,20 +177,20 @@
                 noteElement.style.justifyContent = 'center';
                 noteElement.style.alignItems = 'center';
                 acLed.appendChild(noteElement) ;
-                this.acLedPrototype = acLed.cloneNode(true)  ;
+                this.___acV_prototype = acLed.cloneNode(true)  ;
             }
             else{
-                this.customText = 1 ;
+                this.___acV_customText = 1 ;
             }
 
-            this.acLedRoot = acLed.parentNode ;
-            this.acLedRoot.removeChild(acLed) ;
+            this.___acV_root = acLed.parentNode ;
+            this.___acV_root.removeChild(acLed) ;
 
 
             this.initAcLedR() ;
         },
         ready: function () {
-            this.instruments = [] ;
+            this.___acV_instruments = [] ;
             this.initAcLed = new Promise(resolve => this.initAcLedR = resolve);
         }
     } ;
