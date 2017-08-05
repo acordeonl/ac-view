@@ -37,7 +37,7 @@
         },
     /* ------------------- Helpers ------------------- */
         // Default colors for acLed
-        ___acV_getAcLedColor: function(acLedState){
+        ___acV_acLedColor: function(acLedState){
             if (acLedState === 1) {
                 return '--theme-color1' ;
             }
@@ -101,7 +101,7 @@
         ___acVrender: function(origin,acLedState,note){
             if (acLedState !== 0) {
                 this.$$('['+origin+'AcLed]').style.display = 'block' ;
-                var color = this.___acV_getAcLedColor(acLedState) ;
+                var color = this.___acV_acLedColor(acLedState) ;
                 if( color.startsWith('--') )
                     color = this.customStyle[color] ;
                 this.$$('['+origin+'AcLed]').style.backgroundColor = color ;

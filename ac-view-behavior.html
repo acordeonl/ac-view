@@ -82,7 +82,8 @@
     ACViewBehavior = {
         listeners: {
             'acLedGroup-loaded': '___acV_onAcLedGroupLoaded',
-            'toast':'___acV_handleToast'
+            'toast':'___acV_handleToast',
+            'note-conversion':'___acV_handleRecordingConversion'
         },
         properties: {
             ___acVinstrumentOrigins:{
@@ -113,7 +114,7 @@
                 type:Number
             },
             ___acVrecording: {
-                type: Object
+                type: Array
             },
             ___acVcurrentPlaybackTime: {
                 type: Object
@@ -416,12 +417,43 @@
     /* ------------------- Recording Data ------------------- */
         ___acVsetRecording: function (recording) {
             this.___acVrecording = recording;
+            this.recordingSetPromiseR() ;
         },
         ___acV_requestCurrentPlaybackTime: function () {
             this._acViewCallFunction('setCurrentPlaybackTime', {});
         },
+        ___acV_requestRecording: function () {
+            this._acViewCallFunction('setRecording', {});
+        },
         ___acVsetCurrentPlaybackTime: function (time) {
             this.___acVcurrentPlaybackTime = time;
+        },
+        ___acVGenerateUniversalRecording: async function(){
+            this.recordingSetPromise = new Promise(resolve => this.recordingSetPromiseR = resolve);
+            this.___acV_requestRecording() ;
+            this.universalRecording = [] ;
+            await this.recordingSetPromise ;
+            for (var i = 0; i < this.___acVrecording.length; i++) {
+                if (this.___acVrecording[i].button === -1) {
+                    continue ;
+                }
+                this.___acVonMIDIEvent( {
+                    cmd:this.___acVrecording[i].cmd,
+                    midiNote:this.___acVrecording[i].button,
+                    channel:this.___acVrecording[i].channel,
+                    time:this.___acVrecording[i].time,
+                    origin:'conversion'
+                }) ;
+            }
+            this.universalRecordingSetPromiseR() ;
+        },
+        ___acV_handleRecordingConversion: function(e){
+            this.universalRecording.push({
+                button:e.detail.midiNote,
+                channel:e.detail.channel,
+                cmd:e.detail.cmd,
+                time:e.detail.time
+            })
         },
     /* --------------- Setup ------------------- */
         ___acV_initAcLeds: function () {
@@ -487,7 +519,7 @@
                 nodeList[i].___acVaddOrigin(origin);
             this.___acV_updateMyTheme() ;
         },
-        ready: function () {
+        ready: async function () {
             this.___acVorigins = [] ;
             this.___acVinstrumentOrigins = [] ;
             this.___acVkeyboardOn = [] ;
@@ -536,6 +568,12 @@
                     this[args.data[0]](args.data[1]);
                 } ;
             }
+            this.universalRecordingSetPromise = new Promise(resolve => this.universalRecordingSetPromiseR = resolve);
+            await sleep(1000);
+            this.___acVGenerateUniversalRecording() ;
+            await this.universalRecordingSetPromise ;
+            var obj = {} ; obj.recording  = this.universalRecording ;
+            console.log(JSON.stringify(obj)); 
         }
     };
 </script>

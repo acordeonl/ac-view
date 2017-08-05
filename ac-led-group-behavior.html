@@ -139,19 +139,42 @@
             }
         },
     /* ------------------- MIDIEvents ------------------- */
+        ___acV_midiNoteToRealNote: function(channel,midiNote){
+            var note ;
+            if (this.___acV_MIDIEventToNoteMap[channel] !== undefined && this.___acV_MIDIEventToNoteMap[channel] !== null) {
+                if (this.___acV_MIDIEventToNoteMap[channel][midiNote] !== undefined && this.___acV_MIDIEventToNoteMap[channel][midiNote] !== undefined)
+                    note = this.___acV_MIDIEventToNoteMap[channel][midiNote] ;
+                else
+                    note = midiNote  ;
+            }
+            else {
+                note = midiNote ;
+            }
+            return note ;
+        },
         ___acV_onMIDIEvent: function (e) {
-            if(e.noGUI === null || e.noGUI === undefined)
-                this.___acV_MIDIEventToGUI(e) ;
-            if(e.noAudio === null || e.noAudio === undefined)
-                this.___acV_MIDIEventToAudio(e) ;
+            if (e.origin !== 'conversion') {
+                if(e.noGUI === null || e.noGUI === undefined)
+                    this.___acV_MIDIEventToGUI(e) ;
+                if(e.noAudio === null || e.noAudio === undefined)
+                    this.___acV_MIDIEventToAudio(e) ;
+            }
+            else{
+                var note = this.___acV_midiNoteToRealNote(e.channel,e.midiNote) ;
+                e.midiNote = note ;
+                if (e.channel === 0) {
+                    this.fire('note-conversion',e) ;
+                }
+            }
         },
         ___acV_MIDIEventToGUI: function(e){
+            var note = this.___acV_midiNoteToRealNote(e.channel,e.midiNote) ;
             e.acLedId = this.___acV_mapMIDIEventToAcLedId(e.channel,e.midiNote);
             if (this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
-                this.fire('toast',{msg:'La configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'})  ;
+                this.fire('toast',{msg:'La grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'})  ;
                 return ;
             }
-            e.note = this.___acV_MIDIEventToNoteMap[e.channel][e.midiNote] ;
+            e.note = note ;
             if(e.cmd === 'note-on')
                 e.acLedState = this.___acV_mapMIDIEventToAcLedState(e.channel,e.midiNote);
             else {
@@ -170,9 +193,14 @@
             }
         },
         ___acV_MIDIEventToAudio: function(e){
-            if (e.cmd === 'note-on' && this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[this.___acV_MIDIEventToNoteMap[e.channel][e.midiNote]] !== undefined )
-                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(this.___acV_MIDIEventToNoteMap[e.channel][e.midiNote],e);
-            else if (this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[this.___acV_MIDIEventToNoteMap[e.channel][e.midiNote]] !== undefined){
+            var note = this.___acV_midiNoteToRealNote(e.channel,e.midiNote) ;
+            if (this.$$('VIEW-AUDIO[channel' + e.channel + ']') === undefined) {
+                this.fire('toast',{msg:'La visualización seleccionada no soporta el canal '+e.channel})  ;
+                return ;
+            }
+            if (e.cmd === 'note-on' && this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] !== undefined )
+                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(note,e);
+            else if (e.cmd ==='note-off' && this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] !== undefined){
                 this.$$('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e);
             }
         },
