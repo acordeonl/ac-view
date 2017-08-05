@@ -139,7 +139,7 @@
             }
         },
     /* ------------------- MIDIEvents ------------------- */
-        ___acV_midiNoteToRealNote: function(channel,midiNote){
+        ___acV_midiNoteToAudioNote: function(channel,midiNote){
             var note ;
             if (this.___acV_MIDIEventToNoteMap[channel] !== undefined && this.___acV_MIDIEventToNoteMap[channel] !== null) {
                 if (this.___acV_MIDIEventToNoteMap[channel][midiNote] !== undefined && this.___acV_MIDIEventToNoteMap[channel][midiNote] !== undefined)
@@ -160,15 +160,11 @@
                     this.___acV_MIDIEventToAudio(e) ;
             }
             else{
-                var note = this.___acV_midiNoteToRealNote(e.channel,e.midiNote) ;
-                e.midiNote = note ;
-                if (e.channel === 0) {
-                    this.fire('note-conversion',e) ;
-                }
+                this.fire('note-conversion',{eventId:e.id,mapedNote:this.___acV_midiNoteToAudioNote(e.channel,e.midiNote)}) ;
             }
         },
         ___acV_MIDIEventToGUI: function(e){
-            var note = this.___acV_midiNoteToRealNote(e.channel,e.midiNote) ;
+            var note = this.___acV_midiNoteToAudioNote(e.channel,e.midiNote) ;
             e.acLedId = this.___acV_mapMIDIEventToAcLedId(e.channel,e.midiNote);
             if (this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
                 this.fire('toast',{msg:'La grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'})  ;
@@ -193,7 +189,7 @@
             }
         },
         ___acV_MIDIEventToAudio: function(e){
-            var note = this.___acV_midiNoteToRealNote(e.channel,e.midiNote) ;
+            var note = this.___acV_midiNoteToAudioNote(e.channel,e.midiNote) ;
             if (this.$$('VIEW-AUDIO[channel' + e.channel + ']') === undefined) {
                 this.fire('toast',{msg:'La visualización seleccionada no soporta el canal '+e.channel})  ;
                 return ;

@@ -83,9 +83,17 @@
         listeners: {
             'acLedGroup-loaded': '___acV_onAcLedGroupLoaded',
             'toast':'___acV_handleToast',
-            'note-conversion':'___acV_handleRecordingConversion'
+            'note-conversion':'___acV_onRecordingConversionEvent'
         },
         properties: {
+            ___aV_conversionId:{
+                type:Number,
+                value:0
+            },
+            ___acV_midiEvents:{
+                type:Array,
+                value:[]
+            },
             ___acVinstrumentOrigins:{
                 type:Array,
                 value:[]
@@ -242,6 +250,11 @@
                 this.___acVaddOrigin(e.origin) ;
             if (!this.___acV_finishedLoading)
                 return;
+            if (e.origin ==='conversion') {
+                e.id = this.___aV_conversionId ; 
+                this.___acV_midiEvents[this.___aV_conversionId] = e ; 
+                this.___aV_conversionId ++ ; 
+            }
             if (e.cmd === 'velocity-change') {
                 this.___acV_setVelocity(e.velocity);
             }
@@ -428,15 +441,16 @@
         ___acVsetCurrentPlaybackTime: function (time) {
             this.___acVcurrentPlaybackTime = time;
         },
-        ___acVGenerateUniversalRecording: async function(){
+        ___acV_generateUniversalRecording: async function(){
+            this.___aV_conversionId = 0 ;
+            this.___acV_midiEvents = [] ; 
             this.recordingSetPromise = new Promise(resolve => this.recordingSetPromiseR = resolve);
             this.___acV_requestRecording() ;
             this.universalRecording = [] ;
             await this.recordingSetPromise ;
             for (var i = 0; i < this.___acVrecording.length; i++) {
-                if (this.___acVrecording[i].button === -1) {
+                if (this.___acVrecording[i].button === -1)
                     continue ;
-                }
                 this.___acVonMIDIEvent( {
                     cmd:this.___acVrecording[i].cmd,
                     midiNote:this.___acVrecording[i].button,
@@ -447,13 +461,27 @@
             }
             this.universalRecordingSetPromiseR() ;
         },
-        ___acV_handleRecordingConversion: function(e){
-            this.universalRecording.push({
-                button:e.detail.midiNote,
-                channel:e.detail.channel,
-                cmd:e.detail.cmd,
-                time:e.detail.time
-            })
+        ___acVgetUniversalRecording: async function () {
+            await sleep(2000);
+            this.universalRecordingSetPromise = new Promise(resolve => this.universalRecordingSetPromiseR = resolve);
+            this.___acV_generateUniversalRecording() ;
+            await this.universalRecordingSetPromise ;
+            return this.universalRecording ; 
+        },
+        ___acV_onRecordingConversionEvent: function(e){
+            var ev = this.___acV_midiEvents[e.detail.eventId] ; 
+            var mapedNote = e.detail.mapedNote ; 
+            this.___acV_handleRecordingConversion(ev,mapedNote)
+        },
+        ___acV_handleRecordingConversion: function (midiEvent,mapedNote) {
+            if (midiEvent.channel === 0) {
+                this.universalRecording.push({
+                    button:mapedNote,
+                    channel:midiEvent.channel,
+                    cmd:midiEvent.cmd,
+                    time:midiEvent.time
+                }) ; 
+            }
         },
     /* --------------- Setup ------------------- */
         ___acV_initAcLeds: function () {
@@ -568,12 +596,9 @@
                     this[args.data[0]](args.data[1]);
                 } ;
             }
-            this.universalRecordingSetPromise = new Promise(resolve => this.universalRecordingSetPromiseR = resolve);
-            await sleep(1000);
-            this.___acVGenerateUniversalRecording() ;
-            await this.universalRecordingSetPromise ;
-            var obj = {} ; obj.recording  = this.universalRecording ;
-            console.log(JSON.stringify(obj)); 
+            // var res = await this.___acVgetUniversalRecording() ; 
+            // var obj = {} ; obj.recording  = this.universalRecording ;
+            // console.log(JSON.stringify(obj));
         }
     };
 </script>
