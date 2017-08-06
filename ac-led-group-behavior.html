@@ -211,10 +211,8 @@
         ___acV_mapMIDIEventToAcLedId: function(channel,midiNote){
             return midiNote ;
         },
-        ___acV_mapMIDIEventToAcLedState: function(cmd,channel,midiNote){
-            if (cmd === 'note-on')
-                return 1 ;
-            return 0 ;
+        ___acV_mapMIDIEventToAcLedState: function(channel,midiNote){
+            return 1 ;
         },
         ___acV_handleAddPitch: function (note,channel,diff) {
             return note+diff ;
