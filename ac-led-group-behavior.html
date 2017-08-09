@@ -94,7 +94,6 @@
         },
     /* ----------------  Audio ------------------------- */
         ___acVaddPitch: function (diff) {
-            var res = true ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
@@ -102,11 +101,9 @@
                     if( this.___acV_MIDIEventToNoteMap[channel][i] === null || this.___acV_MIDIEventToNoteMap[channel][i] === undefined )
                         continue ;
                     this.___acV_MIDIEventToNoteMap[channel][i] = this.___acV_handleAddPitch(this.___acV_MIDIEventToNoteMap[channel][i],channel,diff);
-                    res &= nodeList[j].notesBuffers[this.___acV_MIDIEventToNoteMap[channel][i]] !== undefined ;
                 }
             }
             this.___acV_onAddPitch() ;
-            return res ;
         },
         ___acV_onAddPitch: function(){
 
@@ -205,6 +202,8 @@
             else if (e.cmd ==='note-off' && this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] !== undefined){
                 this.$$('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e);
             }
+            if (this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] === undefined )
+                this.fire('toast',{msg:'Algunas notas no pueden ser reproducidas debido a que no se encuentran en el audio de la visualización'}) ; 
         },
         ___acV_mapMIDIEventToNote: function(channel,midiNote,newNote){
             if (!this.___acV_flags[channel]) {
