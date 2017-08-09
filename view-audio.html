@@ -148,10 +148,14 @@
                     this[e.origin+'Actions'][e.midiNote].gain.value = 0.7 ;
                     this[e.origin+'Actions'][e.midiNote].source = instrumentContext.createBufferSource();
                     this[e.origin+'Actions'][e.midiNote].source.buffer = this.notesBuffers[note] ;
-                    this[e.origin+'Actions'][e.midiNote].source.loopStart = this[e.origin+'Actions'][e.midiNote].source.buffer.duration - this.loopDurations[note];
-                    this[e.origin+'Actions'][e.midiNote].source.loopEnd = this[e.origin+'Actions'][e.midiNote].source.buffer.duration;
+                    
+                    if (this.loopDurations[note] !== -1) {
+                        this[e.origin+'Actions'][e.midiNote].source.loopStart = this[e.origin+'Actions'][e.midiNote].source.buffer.duration - this.loopDurations[note];
+                        this[e.origin+'Actions'][e.midiNote].source.loopEnd = this[e.origin+'Actions'][e.midiNote].source.buffer.duration;
+                        this[e.origin+'Actions'][e.midiNote].source.loop = true;
+                    }
+
                     this[e.origin+'Actions'][e.midiNote].source.connect(this[e.origin+'Actions'][e.midiNote].gain);
-                    this[e.origin+'Actions'][e.midiNote].source.loop = true;
                     this[e.origin+'Actions'][e.midiNote].source.start(instrumentContext.currentTime);
                     this[e.origin+'Actions'][e.midiNote].gain.connect(this.instrumentSynthGain) ;
                 }
