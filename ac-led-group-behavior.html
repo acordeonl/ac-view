@@ -99,6 +99,9 @@
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
                 for (var i = 0; i < this.___acV_MIDIEventToNoteMap[channel].length; i++) {
+                    if (this.___acV_MIDIEventToNoteMap[channel] !== undefined && this.___acV_MIDIEventToNoteMap[channel] !== null) {
+                        continue ; 
+                    }
                     if( this.___acV_MIDIEventToNoteMap[channel][i] === null || this.___acV_MIDIEventToNoteMap[channel][i] === undefined )
                         continue ;
                     this.___acV_MIDIEventToNoteMap[channel][i] = this.___acV_handleAddPitch(this.___acV_MIDIEventToNoteMap[channel][i],channel,diff);
