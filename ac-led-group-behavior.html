@@ -483,7 +483,7 @@
                 nodeList[i].setAttribute("channel"+channel, "");
                 var acLeds = Polymer.dom(this.root).querySelectorAll('[channel'+channel+'][acLed]');
                 for (var j = 0; j < acLeds.length; j++) {
-                    var acId = acLeds[j].acId
+                    var acId = acLeds[j].acId ; 
                     acLeds[j].setAttribute("id"+acId, "");
                     this.___acV_MIDIEventToNoteMap[channel][acId] = acId ;
                 }
