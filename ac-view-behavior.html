@@ -116,7 +116,8 @@
             },
             ___acVpitch: {
                 type: Number,
-                value: -1
+                value: -1,
+                observer:'___acV_setLedGroupPitch'
             },
             ___acVreferencePitch:{
                 type:Number
@@ -169,8 +170,8 @@
         },
     /* ------------- Loading --------------------- */
         ___acV_setReferencePitch: function (pitch) {
-            this.___acVpitch = pitch;
             this.___acVreferencePitch = pitch ;
+            this.___acVpitch = pitch;
             this._acViewCallFunction('setReferencePitch', this.___acVreferencePitch) ;
             this.setReferencePitchPromiseR();
         },
@@ -484,6 +485,12 @@
             }
         },
     /* --------------- Setup ------------------- */
+        ___acV_setLedGroupPitch: function () {
+            var nodeList = Polymer.dom(this.root).querySelectorAll("[acLedGroup]");
+            for(let i = 0 ; i < nodeList.length ; i ++ ){
+                nodeList[i].___acVsetPitch(this.___acVpitch,this.___acVreferencePitch) ; 
+            }
+        },
         ___acV_initAcLeds: function () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
