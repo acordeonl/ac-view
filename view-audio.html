@@ -70,15 +70,15 @@
                     value:[]
                 },
                 // instrumentButtonActions
-                instrumentActions:{
-                    type:Array,
-                    value:[]
-                },
                 activePlayback:{
                     type:Array,
                     value:[]
                 },
                 activeInstrument:{
+                    type:Array,
+                    value:[]
+                },
+                origins:{
                     type:Array,
                     value:[]
                 }
@@ -89,7 +89,9 @@
                 this.loopDurations = [] ;
                 this.notesBuffers = [] ;
                 this.playbackActions = [] ;
-                this.instrumentActions = []  ;
+                for(let i = 0 ; i < this.origins.length ; i ++ ){
+                    this[this.origins[i]+'Actions'] = []  ;  
+                }
                 var arrayBuffer = await(await fetch(audioUrl)).arrayBuffer();
                 var bb = new DataView(arrayBuffer);
                 var notesLoaded = 0, totalNotes = bb.getUint32(0);
@@ -245,12 +247,20 @@
                 this.playbackPanner.connect(playbackCompressor);
             },
         /* ------------------- Setup ------------------- */
-            addOrigin: function(origin){
+            addOrigin: async function(origin){
+                await this.originsSetupPromise ; 
+                this.origins.push(origin) ; 
                 this[origin+'Actions'] = [] ;
+            },
+            created: function () {
+                this.originsSetupPromise = new Promise(resolve => this.originsSetupPromiseR = resolve);
             },
             ready: function () {
                 this.loopDurations = [] ;
                 this.notesBuffers = [] ;
+                this.playbackActions = [] ;
+                this.origins = [] ; 
+                this.originsSetupPromiseR() ; 
                 if(this.instrumentSynthGain === undefined)
                     this.instrumentSynthGain = instrumentContext.createGain() ;
                 if(this.playbackSynthGain === undefined )
