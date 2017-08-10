@@ -164,7 +164,7 @@
                 var when =  playbackContext.currentTime ;
                 if((e.tempo)*(e.time-e.playbackTime) > 0)
                     when += (e.tempo)*(e.time-e.playbackTime) ;
-                if(e.origin==='playback' && this.playbackActions[e.midiNote] !== undefined ){
+                if(e.origin==='playback' && this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null){
                     if (this.playbackActions[e.midiNote].gain !== undefined) {
                         this.playbackActions[e.midiNote].gain.gain.cancelScheduledValues(when) ;
                         this.playbackActions[e.midiNote].gain.gain.setValueAtTime(this.playbackActions[e.midiNote].gain.gain.value, when);
@@ -221,7 +221,8 @@
             _updateInstrumentPanning: function(){
                 this.instrumentPanner.pan.value = this.instrumentPanning ;
             },
-            _updateInstrumentVolume: function(){
+            _updateInstrumentVolume: async function(){
+                await sleep(1000);
                 if(this.instrumentSynthGain === undefined)
                     this.instrumentSynthGain = instrumentContext.createGain() ;
                 if(this.instrumentPanner === undefined)
