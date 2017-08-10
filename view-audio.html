@@ -122,6 +122,19 @@
                 this.instrumentSynthGain.gain.value = this.instrumentGain*this.instrumentVelocity ;
             },
             _startAudio: function(note,e){
+                if(this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null){
+                    var when =  playbackContext.currentTime ;
+                    if(e.origin==='playback' && this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null){
+                        if (this.playbackActions[e.midiNote].gain !== undefined) {
+                            this.playbackActions[e.midiNote].gain.gain.cancelScheduledValues(when) ;
+                            this.playbackActions[e.midiNote].gain.gain.setValueAtTime(this.playbackActions[e.midiNote].gain.gain.value, when);
+                            this.playbackActions[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when+0.1);
+                            this.playbackActions[e.midiNote].source.stop(when+0.1) ;
+                            this.playbackActions[e.midiNote] = null ;
+                        }
+                    }
+                }
+                console.log(this.playbackActions[e.midiNote]);
                 if(e.origin ==='playback') {
                     var when = playbackContext.currentTime ;
                     if( (e.tempo)*(e.time-e.playbackTime)> 0)
