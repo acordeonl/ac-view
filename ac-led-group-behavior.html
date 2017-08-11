@@ -166,7 +166,7 @@
                     this.___acV_MIDIEventToAudio(e) ;
             }
             else{
-                this.fire('note-conversion',{eventId:e.id,mapedNote:this.___acV_midiNEventoAudioNote(e.channel,e.midiNote,e.origin)}) ;
+                this.fire('note-conversion',{eventId:e.id,mapedNote:this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin)}) ;
             }
         },
         ___acV_MIDIEventToGUI: function(e){

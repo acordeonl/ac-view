@@ -243,8 +243,7 @@
             _updateInstrumentPanning: function(){
                 this.instrumentPanner.pan.value = this.instrumentPanning ;
             },
-            _updateInstrumentVolume: async function(){
-                await sleep(1000);
+            _updateInstrumentVolume: function(){
                 if(this.instrumentSynthGain === undefined)
                     this.instrumentSynthGain = instrumentContext.createGain() ;
                 if(this.instrumentPanner === undefined)

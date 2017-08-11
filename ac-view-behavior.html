@@ -466,12 +466,11 @@
             }
             this.universalRecordingSetPromiseR() ;
         },
-        ___acVgetUniversalRecording: async function () {
-            await sleep(2000);
+        ___acVgetUniversalViewRecording: async function () {
             this.universalRecordingSetPromise = new Promise(resolve => this.universalRecordingSetPromiseR = resolve);
             this.___acV_generateUniversalRecording() ;
             await this.universalRecordingSetPromise ;
-            return this.universalRecording ; 
+            this._acViewCallFunction('getUniversalViewRecording', this.universalRecording);
         },
         ___acV_onRecordingConversionEvent: function(e){
             var ev = this.___acV_midiEvents[e.detail.eventId] ; 
