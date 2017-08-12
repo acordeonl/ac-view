@@ -100,6 +100,7 @@
                     var loopDuration = bb.getFloat64(currentByte);
                     currentByte += 8 ;
                     var midiNote = bb.getUint32(currentByte) ;
+                    console.log(midiNote);
                     currentByte += 4 ;
                     var byteLength = bb.getUint32(currentByte) ;
                     currentByte += 4 ;
@@ -154,6 +155,8 @@
                     this.playbackActions[e.midiNote].gain.connect(this.playbackSynthGain) ;
                 }
                 else{
+                    if (this[e.origin+'Actions'] === undefined) 
+                        this[e.origin+'Actions'] = [] ;
                      if(this[e.origin+'Actions'][e.midiNote] !== undefined && this[e.origin+'Actions'][e.midiNote] !== null){
                         var when =  instrumentContext.currentTime ;
                         if (this[e.origin+'Actions'][e.midiNote].gain !== undefined) {
@@ -269,7 +272,9 @@
             addOrigin: async function(origin){
                 await this.originsSetupPromise ; 
                 this.origins.push(origin) ; 
-                this[origin+'Actions'] = [] ;
+                if (this[origin+'Actions'] === undefined) {
+                    this[origin+'Actions'] = [] ;
+                }
             },
             created: function () {
                 this.originsSetupPromise = new Promise(resolve => this.originsSetupPromiseR = resolve);

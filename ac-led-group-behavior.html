@@ -169,29 +169,32 @@
                 this.fire('note-conversion',{eventId:e.id,mapedNote:this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin)}) ;
             }
         },
-        ___acV_MIDIEventToGUI: function(e){
-            var note = this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin) ;
-            e.acLedId = this.___acV_mapMIDIEventToAcLedId(e.channel,e.midiNote,e.origin);
-            if (this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
-                this.fire('toast',{msg:'La grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'})  ;
-                return ;
-            }
-            e.note = note ;
-            if(e.cmd === 'note-on')
-                e.acLedState = this.___acV_mapMIDIEventToAcLedState(e.channel,e.midiNote);
-            else {
-                e.acLedState = 0 ;
-            }
-            if (e.origin === 'playback') {
-                if (e.playNow !== undefined) {
-                    e.when = playbackContext.currentTime;
-                } else {
-                    e.when = playbackContext.currentTime + (e.tempo) * (e.time - e.playbackTime);
+        ___acV_MIDIEventToGUI: function(evt){
+            evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin) ;
+            var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin);
+            for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
+                var e = JSON.parse(JSON.stringify(evt))  ; 
+                e.acLedId = acLedIdsArr[i] ;
+                if (this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
+                    this.fire('toast',{msg:'La grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'})  ;
+                    return ;
                 }
-                this.playbackAcLedActions.push(e);
-            }
-            else {
-                this[e.origin+'AcLedActions'].push(e) ;
+                if(e.cmd === 'note-on')
+                    e.acLedState = this.___acV_mapMIDIEventToAcLedState(e.channel,e.midiNote);
+                else {
+                    e.acLedState = 0 ;
+                }
+                if (e.origin === 'playback') {
+                    if (e.playNow !== undefined) {
+                        e.when = playbackContext.currentTime;
+                    } else {
+                        e.when = playbackContext.currentTime + (e.tempo) * (e.time - e.playbackTime);
+                    }
+                    this.playbackAcLedActions.push(e);
+                }
+                else {
+                    this[e.origin+'AcLedActions'].push(e) ;
+                }
             }
         },
         ___acV_MIDIEventToAudio: function(e){
@@ -217,7 +220,7 @@
         },
     /* ------------------- MIDIEvents Default helpers  ------------------- */
         ___acV_mapMIDIEventToAcLedId: function(channel,midiNote,origin){
-            return midiNote ;
+            return [midiNote] ;
         },
         ___acV_mapMIDIEventToAcLedState: function(channel,midiNote){
             return 1 ;
