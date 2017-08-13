@@ -45,20 +45,7 @@
             }
         },
         ___acV_getNoteName: function(note){
-            var notes = [
-                'C',
-                'C#',
-                'D',
-                'Eb',
-                'E',
-                'F',
-                'F#',
-                'G',
-                'Ab',
-                'A',
-                'Bb',
-                'B'
-            ];
+            var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
             var octave = Math.floor(note / 12);
             var name = notes[note % 12];
             name += octave;
@@ -97,7 +84,7 @@
                 }
             }
         },
-        ___acVrender: function(origin,acLedState,note){
+        ___acVrender: function(origin,acLedState,note,channel){
             if (acLedState !== 0) {
                 this.$$('['+origin+'AcLed]').style.display = 'block' ;
                 var color = this.___acV_acLedColor(acLedState) ;
@@ -106,14 +93,14 @@
                 this.$$('['+origin+'AcLed]').style.backgroundColor = color ;
                 if (origin === 'playback') {
                     if(this['___acV_showingPlaybackNotes']){
-                        this.$$('[playbackNote]').innerHTML = this.___acV_getNoteName(note) ;
+                        this.$$('[playbackNote]').innerHTML = this.___acV_getNoteName(note,channel) ;
                     }
                 }
                 else {
                     for (var i = 0; i < this.___acV_instruments.length; i++) {
                         var origin = this.___acV_instruments[i] ;
                         if(this['___acV_showingInstrumentNotes']){
-                            this.$$('['+origin+'Note]').innerHTML = this.___acV_getNoteName(note) ;
+                            this.$$('['+origin+'Note]').innerHTML = this.___acV_getNoteName(note,channel) ;
                         }
                     }
                 }
