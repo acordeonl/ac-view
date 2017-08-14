@@ -422,6 +422,12 @@
                 nodeList[i].___acVtoggleNotes(e.origin, e.value);
             }
         },
+        ___acVsetNoteDisplay: function (value) {
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].___acVsetNoteDisplay(value);
+            }
+        },
         ___acVsetOpacity: function (origin, opacity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
@@ -549,6 +555,7 @@
                 this.___acVsettingsUpdate('instrument_volume_' + i, e['instrument_volume_' + i]);
                 this.___acVsettingsUpdate('instrument_panning_' + i, e['instrument_panning_' + i]);
             }
+            this.___acVsetNoteDisplay(e['displayingNotes']) ; 
             this.___acVtoggleNotes({origin: "playback", value: e['showingPlaybackNotes']});
             this.___acVtoggleNotes({origin: "instrument", value: e['showingInstrumentNotes']});
         },

@@ -7,6 +7,10 @@
 */
     acLedBehavior= {
         properties:{
+            ___acV_displayingNotes:{
+                type:Boolean,
+                value:false
+            },
             originsACLedState:{
                 type:Array,
                 value:[]
@@ -84,6 +88,9 @@
                 }
                 this.___acV_showingInstrumentNotes = value ;
             }
+        },
+        ___acVsetNoteDisplay: function (value) {
+            this.___acV_displayingNotes = value ; 
         },
         ___acVsetOpacity: async function(origin,opacity){
             await this.initAcLed ;
