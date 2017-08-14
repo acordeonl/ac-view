@@ -172,6 +172,7 @@
         ___acV_MIDIEventToGUI: function(evt){
             evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin) ;
             var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin);
+            var acLedStatesArr = this.___acV_mapMIDIEventToAcLedState(evt.channel,evt.midiNote,evt.origin);
             for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
                 var e = JSON.parse(JSON.stringify(evt))  ; 
                 e.acLedId = acLedIdsArr[i] ;
@@ -180,7 +181,7 @@
                     return ;
                 }
                 if(e.cmd === 'note-on')
-                    e.acLedState = this.___acV_mapMIDIEventToAcLedState(e.channel,e.midiNote);
+                    e.acLedState = acLedStatesArr[i];
                 else {
                     e.acLedState = 0 ;
                 }
@@ -223,7 +224,7 @@
             return [midiNote] ;
         },
         ___acV_mapMIDIEventToAcLedState: function(channel,midiNote){
-            return 1 ;
+            return [1] ;
         },
         ___acV_handleAddPitch: function (note,channel,diff) {
             return note+diff ;
@@ -421,6 +422,12 @@
             return viewAudios ;
         },
     /* ------------------- Setup ------------------- */
+        ___acVsetACLedColors: function (colors) {
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
+            for(let i = 0 ; i < nodeList.length ; i ++ ){
+                nodeList[i].___acVsetACLedColors(colors) ; 
+            }
+        },
         ___acVsetPitch: function (referencePitch,pitch) {
             this.___acV_pitch = pitch ; 
             this.___acV_referencePitch = referencePitch ; 

@@ -381,6 +381,12 @@
             this._acViewCallFunction('onACViewChordsOff') ;
         },
     /* ------------- settings controls -------------- */
+        ___acVsetACLedColors: function (colors) {
+            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            for(let i = 0 ; i < nodeList.length ; i ++ ){
+                nodeList[i].___acVsetACLedColors(colors) ; 
+            }
+        },
         ___acVsettingsUpdate: function (origin, value) {
             if (value === null || value === undefined || isNaN(value))
                 return;

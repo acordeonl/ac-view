@@ -7,6 +7,10 @@
 */
     acLedBehavior= {
         properties:{
+            originsACLedState:{
+                type:Array,
+                value:[]
+            },
             ___acV_prototype:{
                 type:Object
             },
@@ -36,13 +40,22 @@
             }
         },
     /* ------------------- Helpers ------------------- */
-        ___acV_acLedColor: function(acLedState){
-            if (acLedState === 1) {
-                return '--theme-color1' ;
+        ___acV_getACLedColor: function(acLedState,origin){
+            if (this.originsACLedState[origin] === undefined || this.originsACLedState[origin][acLedState] === undefined) {
+                if (acLedState === 1) {
+                    return '--theme-color1' ;
+                }
+                if (acLedState === 2) {
+                    return '--theme-color2' ;
+                }
             }
-            if (acLedState === 2) {
-                return '--theme-color2' ;
+            return this.originsACLedState[origin][acLedState]  ; 
+        },
+        ___acV_setACLedColor: function (origin,acLedState,color) {
+            if (this.originsACLedState[origin] === undefined) {
+                this.originsACLedState[origin] = [] ; 
             }
+            this.originsACLedState[origin][acLedState] = color ; 
         },
         ___acV_getNoteName: function(note){
             var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
@@ -87,7 +100,7 @@
         ___acVrender: function(origin,acLedState,note,channel){
             if (acLedState !== 0) {
                 this.$$('['+origin+'AcLed]').style.display = 'block' ;
-                var color = this.___acV_acLedColor(acLedState) ;
+                var color = this.___acV_getACLedColor(acLedState,origin) ;
                 if( color.startsWith('--') )
                     color = this.customStyle[color] ;
                 this.$$('['+origin+'AcLed]').style.backgroundColor = color ;
@@ -116,6 +129,9 @@
             }
         },
     /* ------------------- Setup ------------------- */
+        ___acVsetACLedColors: function (colors) {
+            this.originsACLedState = colors
+        },
         ___acVsetTheme: function(e){
             this.customStyle = e ;
             this.updateStyles() ;
