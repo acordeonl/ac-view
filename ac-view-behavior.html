@@ -86,10 +86,6 @@
             'note-conversion':'___acV_onRecordingConversionEvent'
         },
         properties: {
-            firstLoad:{
-                type:Boolean,
-                value:true
-            },
             ___aV_conversionId:{
                 type:Number,
                 value:0
@@ -257,8 +253,6 @@
         ___acVonMIDIEvent: function (e) {
             if (this.___acVorigins[e.origin] === undefined)
                 this.___acVaddOrigin(e.origin) ;
-            if (!this.___acV_finishedLoading)
-                return;
             if (e.origin ==='conversion') {
                 e.id = this.___aV_conversionId ; 
                 this.___acV_midiEvents[this.___aV_conversionId] = e ; 
@@ -457,18 +451,16 @@
             this._acViewCallFunction('setCurrentPlaybackTime', {});
         },
         ___acV_requestRecording: function () {
-            this._acViewCallFunction('setRecording', {});
+            this._acViewCallFunction('acViewGetRecording', {});
         },
         ___acVsetCurrentPlaybackTime: function (time) {
             this.___acVcurrentPlaybackTime = time;
         },
-        ___acV_generateUniversalRecording: async function(){
+        ___acV_generateUniversalRecording: function(recording){
+            this.___acVrecording = recording;
             this.___aV_conversionId = 0 ;
             this.___acV_midiEvents = [] ; 
-            this.recordingSetPromise = new Promise(resolve => this.recordingSetPromiseR = resolve);
-            this.___acV_requestRecording() ;
             this.universalRecording = [] ;
-            await this.recordingSetPromise ;
             for (var i = 0; i < this.___acVrecording.length; i++) {
                 if (this.___acVrecording[i].button === -1)
                     continue ;
@@ -482,11 +474,12 @@
             }
             this.universalRecordingSetPromiseR() ;
         },
-        ___acVgetUniversalViewRecording: async function () {
+        ___acVgetUniversalViewRecording: async function (recording) {
+            await this.setReferencePitchPromise ;
             this.universalRecordingSetPromise = new Promise(resolve => this.universalRecordingSetPromiseR = resolve);
-            this.___acV_generateUniversalRecording() ;
+            this.___acV_generateUniversalRecording(recording) ;
             await this.universalRecordingSetPromise ;
-            this._acViewCallFunction('getUniversalViewRecording', this.universalRecording);
+            this._acViewCallFunction('acViewSetUniversalRecording', this.universalRecording);
         },
         ___acV_onRecordingConversionEvent: function(e){
             var ev = this.___acV_midiEvents[e.detail.eventId] ; 
@@ -539,10 +532,6 @@
         ___acVsetPreferences: async function (e) {
             await playbackAudioContextInit ;
             await instrumentAudioContextInit ;
-            if (this.firstLoad) {
-                await sleep(100);
-                this.firstLoad = false ;
-            }
             this.___acVsetReverb(e['reverb']);
             this.___acVreverb = e['reverb'];
             this.___acVsetRotation(e['rotation']);
@@ -623,17 +612,6 @@
                     this[args.data[0]](args.data[1]);
                 } ;
             }
-            // var res = await this.___acVgetUniversalRecording() ; 
-            // var markedNotes = [] ; 
-            // var recordingNotes = [] ; 
-            // console.log(this.universalRecording);
-            // for(let i = 0 ; i < this.universalRecording.length ; i ++ ){
-            //     if(markedNotes[this.universalRecording[i].button] === undefined) {
-            //         recordingNotes.push(this.universalRecording[i].button) ;
-            //         markedNotes[this.universalRecording[i].button] = 1 ; 
-            //     }
-            // }
-            // console.log(recordingNotes);
         }   
     };
 </script>
