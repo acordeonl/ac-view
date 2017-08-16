@@ -171,8 +171,8 @@
         },
         ___acV_MIDIEventToGUI: function(evt){
             evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin) ;
-            var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin);
-            var acLedStatesArr = this.___acV_mapMIDIEventToAcLedState(evt.channel,evt.midiNote,evt.origin);
+            var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin,evt.msg);
+            var acLedStatesArr = this.___acV_mapMIDIEventToAcLedState(evt.channel,evt.midiNote,evt.origin,evt.msg);
             for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
                 var e = JSON.parse(JSON.stringify(evt))  ; 
                 e.acLedId = acLedIdsArr[i] ;
