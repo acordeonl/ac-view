@@ -253,8 +253,13 @@
                 if(this.instrumentGain !==undefined) {
                     this.instrumentSynthGain.gain.value = this.instrumentGain ;
                 }
-                this.instrumentSynthGain.connect(this.instrumentPanner);
-                this.instrumentPanner.connect(instrumentCompressor);
+                try {
+                    this.instrumentSynthGain.connect(this.instrumentPanner);
+                    this.instrumentPanner.connect(instrumentCompressor);
+                } catch (error) {
+                    location.reload() ; 
+                }
+
             },
             _updatePlaybackVolume: function(){
                 if(!this.playbackSynthGain)
@@ -264,8 +269,12 @@
                 if(this.playbackGain !==undefined) {
                     this.playbackSynthGain.gain.value = this.playbackGain;
                 }
-                this.playbackSynthGain.connect(this.playbackPanner);
-                this.playbackPanner.connect(playbackCompressor);
+                try {
+                    this.playbackSynthGain.connect(this.playbackPanner);
+                    this.playbackPanner.connect(playbackCompressor);
+                } catch (error) {
+                    location.reload() ; 
+                }
             },
         /* ------------------- Setup ------------------- */
             addOrigin: async function(origin){
