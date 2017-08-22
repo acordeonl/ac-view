@@ -512,6 +512,9 @@
         ___acV_updateMyTheme: function(){
             this._acViewCallFunction('updateACViewTheme') ;
         },
+        ___acVsetReferencePitch: function (pitch) {
+            this.___acV_setReferencePitch(pitch);
+        },
         ___acVsetPitch: async function(pitch){
             await this.setReferencePitchPromise ;
             var diff = pitch - this.___acVpitch;
