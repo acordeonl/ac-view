@@ -9,7 +9,8 @@
 */
     acLedGroupBehavior = {
         listeners:{
-            'view-audio-load':'___acV_onLoadViewAudio'
+            'view-audio-load':'___acV_onLoadViewAudio',
+            'gui-action':'___acV_displayMonophonicNote'
         },
         properties: {
         /* ------------------- Loading ------------------- */
@@ -348,9 +349,33 @@
             // this.instrumentAcLedActions.clear();
         },
         ___acVclearGUI: function (origin) {
+            if (origin === 'playback') {
+                if(this.$$('[playbackNote]') !== undefined && this.$$('[playbackNote]') !== null ) 
+                    this.$$('[playbackNote]').innerHTML = '' ;
+            }
+            else{
+                if (this.$$('[instrumentNote]') !== undefined && this.$$('[instrumentNote]') !== null) 
+                    this.$$('[instrumentNote]').innerHTML = '' ;
+            }
+
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVclearGUI(origin);
+            }
+        },
+        ___acV_displayMonophonicNote: function (e) {
+            if(this.$$('[playbackNote]') !== undefined && this.$$('[playbackNote]') !== null ) { 
+                if (e.detail.cmd === 'playbackNoteOn') 
+                    this.$$('[playbackNote]').innerHTML = e.detail.note ;
+                if (e.detail.cmd === 'playbackNoteOff') {
+                    this.$$('[playbackNote]').innerHTML = '' ;
+                }
+            }
+            if (this.$$('[instrumentNote]') !== undefined && this.$$('[instrumentNote]') !== null) {
+                if (e.detail.cmd === 'instrumentNoteOn') 
+                    this.$$('[instrumentNote]').innerHTML = e.detail.note ;
+                if (e.detail.cmd === 'instrumentNoteOff') 
+                    this.$$('[instrumentNote]').innerHTML = '' ;
             }
         },
     /* ----------------- View audio -------------------------- */

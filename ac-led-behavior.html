@@ -7,6 +7,10 @@
 */
     acLedBehavior= {
         properties:{
+            ___acV_isMonophonic:{
+                type:Boolean,
+                value:false
+            },
             ___acV_displayingNotes:{
                 type:Boolean,
                 value:false
@@ -113,19 +117,35 @@
                 this.$$('['+origin+'AcLed]').style.backgroundColor = color ;
                 if (origin === 'playback') {
                     if(this['___acV_showingPlaybackNotes']){
-                        this.$$('[playbackNote]').innerHTML = this.___acV_getNoteName(note,channel) ;
+                        if (this.___acV_isMonophonic) {
+                            this.fire('gui-action',{cmd:'playbackNoteOn',note:this.___acV_getNoteName(note,channel) }) ; 
+                        }
+                        else{
+                            this.$$('[playbackNoteOn]').innerHTML = this.___acV_getNoteName(note,channel) ;
+                        }
                     }
                 }
                 else {
                     for (var i = 0; i < this.___acV_instruments.length; i++) {
                         var origin = this.___acV_instruments[i] ;
                         if(this['___acV_showingInstrumentNotes']){
-                            this.$$('['+origin+'Note]').innerHTML = this.___acV_getNoteName(note,channel) ;
+                            if (this.___acV_isMonophonic) {
+                                this.fire('gui-action',{cmd:'instrumentNoteOn',note:this.___acV_getNoteName(note,channel) }) ; 
+                            }
+                            else{
+                                this.$$('['+origin+'Note]').innerHTML = this.___acV_getNoteName(note,channel) ;
+                            }
                         }
                     }
                 }
             }
             else {
+                if (origin === 'playback') {
+                    this.fire('gui-action' , {cmd:'playbackNoteOff'}) ; 
+                }
+                else{
+                    this.fire('gui-action' , {cmd:'instrumentNoteOff'}) ; 
+                }
                 this.$$('['+origin+'AcLed]').style.display = 'none' ;
             }
         },
