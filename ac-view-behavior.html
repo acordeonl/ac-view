@@ -1,4 +1,4 @@
-<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/polymer/polymer-element.html">
 <script>
     var playbackContext,
         playbackConvolver,
@@ -74,108 +74,51 @@
             setTimeout( () => { resolve() }, 100);
         });
     }
-    /**
-* Behavior that highlights stuff.
-*
-* @polymerBehavior
-*/
-    ACViewBehavior = {
-        listeners: {
-            'acLedGroup-loaded': '___acV_onAcLedGroupLoaded',
-            'toast':'___acV_handleToast',
-            'note-conversion':'___acV_onRecordingConversionEvent'
-        },
-        properties: {
-            ___aV_conversionId:{
-                type:Number,
-                value:0
-            },
-            ___acV_midiEvents:{
-                type:Array,
-                value:[]
-            },
-            ___acVinstrumentOrigins:{
-                type:Array,
-                value:[]
-            },
-            ___acVkeyboardEnabled:{
-                type:Boolean,
-                value:false
-            },
-            ___acVkeyboardOn:{
-                type:Array,
-                value:[]
-            },
-            ___acVorigins:{
-                type:Array,
-                value:[]
-            },
-            ___acVplayingChords:{
-                type:Boolean,
-                value:false
-            },
-            ___acVpitch: {
-                type: Number,
-                value: -1,
-                observer:'___acV_setLedGroupPitch'
-            },
-            ___acVreferencePitch:{
-                type:Number
-            },
-            ___acVrecording: {
-                type: Array
-            },
-            ___acVcurrentPlaybackTime: {
-                type: Object
-            },
-            ___acVdefaultReverb: {
-                type: Number,
-                value: 0
-            },
-            ___acVreverb: {
-                type: Number,
-                value: 0
-            },
-            ___acVtotalAcLedGroups: {
-                type: Number,
-                value: 0
-            },
-            ___acVloadedAcLedGroups: {
-                type: Number,
-                value: 0
-            },
-            ___acV_finishedLoading: {
-                type: Boolean,
-                value: false
-            },
-            ___acV_rotation: {
-                type: Boolean,
-                value: false
-            }
-        },
+    
+    class ACViewBehavior extends Polymer.Element {
+        static get is() { return 'ac-view-behavior'; }
+        static get properties() {return {
+            ___aV_conversionId:{type:Number,value:0},
+            ___acV_midiEvents:{type:Array,value:[]},
+            ___acVinstrumentOrigins:{type:Array,value:[]},
+            ___acVkeyboardEnabled:{type:Boolean,value:false},
+            ___acVkeyboardOn:{type:Array,value:[]},
+            ___acVorigins:{type:Array,value:[]},
+            ___acVplayingChords:{type:Boolean,value:false},
+            ___acVpitch: {type: Number,value: -1,observer:'___acV_setLedGroupPitch'},
+            ___acVreferencePitch:{type:Number},
+            ___acVrecording: {type: Array},
+            ___acVcurrentPlaybackTime: {type: Object},
+            ___acVdefaultReverb: {type: Number,value: 0},
+            ___acVreverb: {type: Number,value: 0},
+            ___acVtotalAcLedGroups: {type: Number,value: 0},
+            ___acVloadedAcLedGroups: {type: Number,value: 0},
+            ___acV_finishedLoading: {type: Boolean,value: false},
+            ___acV_rotation: {type: Boolean,value: false}
+        }}
     /* ------------------- acView Communication ------------------- */
-        _acViewCallFunction: function (functionName, args) {
+        _acViewCallFunction (functionName, args) {
             if (parent !== window) {
                 parent.postMessage([
                     functionName, args
                 ], '*');
             } else {
                 Polymer.RenderStatus.afterNextRender(this, function () {
-                    this.fire('ac-view-call', {
+                    this.dispatchEvent(new CustomEvent('ac-view-call', {detail:{
                         functionName: functionName,
                         args: args
-                    });
+                    }, bubbles: true, composed: true }));
                 });
             }
-        },
+        }
     /* ------------- Loading --------------------- */
-        ___acV_setReferencePitch: function (pitch) {
+        ___acV_setReferencePitch (pitch) {
             this.___acVreferencePitch = pitch ;
             this.___acVpitch = pitch;
             this._acViewCallFunction('setReferencePitch', this.___acVreferencePitch) ;
             this.setReferencePitchPromiseR();
-        },
-        ___acV_onAcLedGroupLoaded: function () {
+        }
+        ___acV_onAcLedGroupLoaded () {
             this.___acVloadedAcLedGroups++;
             if (this.___acVloadedAcLedGroups === this.___acVtotalAcLedGroups) {
                 this._acViewCallFunction('onACViewAudioLoad', {});
@@ -183,11 +126,11 @@
                 this.___acV_setAcLedGroupsDisplay('visible') ;
                 this.___acV_onFinishedLoadingNotes();
             }
-        },
-        ___acV_onFinishedLoadingNotes: function(){
+        }
+        ___acV_onFinishedLoadingNotes(){
 
-        },
-        ___acV_setAcLedGroupsDisplay: function(val){
+        }
+        ___acV_setAcLedGroupsDisplay(val){
             var nodeList = Polymer.dom(this.root).querySelectorAll("[acLedGroup]");
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].style.visibility = val;
@@ -196,15 +139,15 @@
                     nodeList[i].style.display = 'none' ;
                 }
             }
-        },
-        ___acVgetAcLedGroups: function () {
+        }
+        ___acVgetAcLedGroups () {
             var acLedGroups = [] ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++)
                 acLedGroups.push (nodeList[i].___acVgetAcLedGroup() ) ;
             this._acViewCallFunction('getAcLedGroupsResponse', acLedGroups);
-        },
-        ___acVgetViewAudios: function () {
+        }
+        ___acVgetViewAudios () {
             var viewAudios = [] ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (let i = 0; i < nodeList.length; i++) {
@@ -214,8 +157,8 @@
                 }
             }
             this._acViewCallFunction('getViewAudiosResponse', viewAudios);
-        },
-        ___acVgetDefaultAudioUrls: function () {
+        }
+        ___acVgetDefaultAudioUrls () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             var defaultAudioUrls = [];
             for (var i = 0; i < nodeList.length; i++) {
@@ -224,8 +167,8 @@
                     defaultAudioUrls.push(res);
                 }
             this._acViewCallFunction('getDefaultAudioUrlsResponse', defaultAudioUrls);
-        },
-        ___acVloadAudio: function (audioUrls) {
+        }
+        ___acVloadAudio (audioUrls) {
             this.___acVloadedAcLedGroups = 0;
             this.___acV_finishedLoading = false;
             this.___acV_setAcLedGroupsDisplay('hidden') ;
@@ -248,9 +191,9 @@
                 if (nodeList[ledGroup] !== undefined)
                     nodeList[ledGroup].___acVloadAudio(i-cnt, audioUrls[i]);
             }
-        },
+        }
     /* ------------- MIDI --------------------- */
-        ___acVonMIDIEvent: function (e) {
+        ___acVonMIDIEvent (e) {
             if (this.___acVorigins[e.origin] === undefined)
                 this.___acVaddOrigin(e.origin) ;
             if (e.origin ==='conversion') {
@@ -264,8 +207,8 @@
             else {
                 this.___acV_handleMIDIEvent(e);
             }
-        },
-        ___acV_setVelocity: function (velocity) {
+        }
+        ___acV_setVelocity (velocity) {
             if (this.___acVinstrumentOrigins === undefined)
                 return ;
                 if (this.___acVinstrumentOrigins.length >1 || this.___acVplayingChords)
@@ -274,9 +217,9 @@
                 for (var i = 0; i < nodeList.length; i++) {
                     nodeList[i].___acVsetVelocity(velocity / 127);
             }
-        },
+        }
     /* ------------------- Keyboard ------------------- */
-        ___acVkeyPress: function(e){
+        ___acVkeyPress(e){
             if (!this.___acVkeyboardEnabled)
                 return ;
             var nodeList = Polymer.dom(this.root).querySelectorAll("[acLedGroup]");
@@ -286,8 +229,8 @@
                     nodeList[i].___acV_onKeyboardNoteOn(e.key) ;
                 }
             }
-        },
-        ___acVkeyUp: function(e){
+        }
+        ___acVkeyUp(e){
             if (!this.___acVkeyboardEnabled)
                 return ;
             var nodeList = Polymer.dom(this.root).querySelectorAll("[acLedGroup]");
@@ -297,12 +240,12 @@
                     nodeList[i].___acV_onKeyboardNoteOff(e.key) ;
                 }
             }
-        },
+        }
     /* ------------------- Instrument ------------------- */
-        ___acV_handleToast: function(e){
+        ___acV_handleToast(e){
             this._acViewCallFunction('toast',e.detail.msg) ;
-        },
-        ___acVstopInstrumentAudio: async function(){
+        }
+        async ___acVstopInstrumentAudio (){
             this.___acVclearGUI('instrument') ;
             await stopInstrumentAudio() ;
             instrumentContext.close();
@@ -313,14 +256,14 @@
             }
             this.___acVsetReverb(this.___acVreverb);
             this._acViewCallFunction('onStopedInstrumentAudio') ;
-        },
-        ___acVclearInstrumentsGUI: function(){
+        }
+        ___acVclearInstrumentsGUI(){
             for (var i = 0; i < this.___acVinstrumentOrigins.length; i++) {
                 this.___acVclearGUI(this.___acVinstrumentOrigins[i]);
             }
-        },
+        }
     /* ------------- playback controls -------------- */
-        ___acVstop: async function () {
+        async ___acVstop() {
             this.___acVclearActions('playback') ;
             await stopPlaybackAudio() ;
             playbackContext.close();
@@ -332,21 +275,21 @@
                 nodeList[i].___acVinitPlaybackAudio();
             this.___acVsetReverb(this.___acVreverb);
             this._acViewCallFunction('onACViewReadyToPlay', {});
-        },
-        ___acVclearGUI: function (origin) {
+        }
+        ___acVclearGUI (origin) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVclearGUI(origin);
             }
-        },
-        ___acVclearActions: function(origin){
+        }
+        ___acVclearActions(origin){
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVclearActions(origin);
             }
-        },
+        }
     /* ------------------- Chords ------------------- */
-        ___acVsetCurrentChord: function (arg) {
+        ___acVsetCurrentChord (arg) {
             this.currentChord = arg ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             var midiNote = this.midiNameToNumber[arg.substr(0,arg.indexOf(' '))] ;
@@ -355,13 +298,13 @@
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetCurrentChord(midiNote-diff,description);
             }
-        },
-        ___acVrestartChord: function(){
+        }
+        ___acVrestartChord(){
             if (this.currentChord !== undefined) {
                 this.___acVsetCurrentChord(this.currentChord) ;
             }
-        },
-        ___acVtoggleChords: function(playingChords){
+        }
+        ___acVtoggleChords(playingChords){
             if (this.___acVplayingChords === playingChords)
                 return ;
             this.___acVplayingChords = playingChords ;
@@ -373,15 +316,15 @@
                 nodeList[i].___acVtoggleChords(playingChords) ;
             }
             this._acViewCallFunction('onACViewChordsOff') ;
-        },
+        }
     /* ------------- settings controls -------------- */
-        ___acVsetACLedColors: function (colors) {
+        ___acVsetACLedColors (colors) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for(let i = 0 ; i < nodeList.length ; i ++ ){
                 nodeList[i].___acVsetACLedColors(colors) ; 
             }
-        },
-        ___acVsettingsUpdate: function (origin, value) {
+        }
+        ___acVsettingsUpdate (origin, value) {
             if (value === null || value === undefined || isNaN(value))
                 return;
             var arr = origin.split('_');
@@ -409,54 +352,54 @@
                     this.___acVsetReverb(value);
                 }
             }
-        },
-        ___acVtoggleNotes: function (e) {
+        }
+        ___acVtoggleNotes (e) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVtoggleNotes(e.origin, e.value);
             }
-        },
-        ___acVsetNoteDisplay: function (value) {
+        }
+        ___acVsetNoteDisplay (value) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetNoteDisplay(value);
             }
-        },
-        ___acVsetOpacity: function (origin, opacity) {
+        }
+        ___acVsetOpacity (origin, opacity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetOpacity(origin, opacity / 100);
             }
-        },
-        ___acVsetReverb: function (value) {
-            synthReverb = value;
+        }
+        ___acVsetReverb (value) {
+            let synthReverb = value;
             playbackWet.gain.value = (1.0 - ((100 - synthReverb) / 100));
             playbackDry.gain.value = (100 - synthReverb) / 100;
             instrumentWet.gain.value = (1.0 - ((100 - synthReverb) / 100));
             instrumentDry.gain.value = (100 - synthReverb) / 100;
-        },
-        ___acVsetRotation: function (rotation) {
+        }
+        ___acVsetRotation (rotation) {
             this.___acV_rotation = rotation;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acV_rotation = rotation;
             }
-        },
+        }
     /* ------------------- Recording Data ------------------- */
-        ___acVsetRecording: function (recording) {
+        ___acVsetRecording (recording) {
             this.___acVrecording = recording;
             this.recordingSetPromiseR() ;
-        },
-        ___acV_requestCurrentPlaybackTime: function () {
+        }
+        ___acV_requestCurrentPlaybackTime () {
             this._acViewCallFunction('setCurrentPlaybackTime', {});
-        },
-        ___acV_requestRecording: function () {
+        }
+        ___acV_requestRecording () {
             this._acViewCallFunction('acViewGetRecording', {});
-        },
-        ___acVsetCurrentPlaybackTime: function (time) {
+        }
+        ___acVsetCurrentPlaybackTime (time) {
             this.___acVcurrentPlaybackTime = time;
-        },
-        ___acV_generateUniversalRecording: function(recording){
+        }
+        ___acV_generateUniversalRecording(recording){
             this.___acVrecording = recording;
             this.___aV_conversionId = 0 ;
             this.___acV_midiEvents = [] ; 
@@ -473,20 +416,20 @@
                 }) ;
             }
             this.universalRecordingSetPromiseR() ;
-        },
-        ___acVgetUniversalViewRecording: async function (recording) {
+        }
+        async ___acVgetUniversalViewRecording (recording) {
             await this.setReferencePitchPromise ;
             this.universalRecordingSetPromise = new Promise(resolve => this.universalRecordingSetPromiseR = resolve);
             this.___acV_generateUniversalRecording(recording) ;
             await this.universalRecordingSetPromise ;
             this._acViewCallFunction('acViewSetUniversalRecording', this.universalRecording);
-        },
-        ___acV_onRecordingConversionEvent: function(e){
+        }
+        ___acV_onRecordingConversionEvent(e){
             var ev = this.___acV_midiEvents[e.detail.eventId] ; 
             var mapedNote = e.detail.mapedNote ; 
             this.___acV_handleRecordingConversion(ev,mapedNote)
-        },
-        ___acV_handleRecordingConversion: function (midiEvent,mapedNote) {
+        }
+        ___acV_handleRecordingConversion (midiEvent,mapedNote) {
             if (midiEvent.channel === 0) {
                 this.universalRecording.push({
                     button:mapedNote,
@@ -495,27 +438,27 @@
                     time:midiEvent.time
                 }) ; 
             }
-        },
+        }
     /* --------------- Setup ------------------- */
-        ___acV_setLedGroupPitch: function () {
+        ___acV_setLedGroupPitch () {
             var nodeList = Polymer.dom(this.root).querySelectorAll("[acLedGroup]");
             for(let i = 0 ; i < nodeList.length ; i ++ ){
                 nodeList[i].___acVsetPitch(this.___acVpitch,this.___acVreferencePitch) ; 
             }
-        },
-        ___acV_initAcLeds: function () {
+        }
+        ___acV_initAcLeds () {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVinitAcLeds();
             }
-        },
-        ___acV_updateMyTheme: function(){
+        }
+        ___acV_updateMyTheme(){
             this._acViewCallFunction('updateACViewTheme') ;
-        },
-        ___acVsetReferencePitch: function (pitch) {
+        }
+        ___acVsetReferencePitch (pitch) {
             this.___acV_setReferencePitch(pitch);
-        },
-        ___acVsetPitch: async function(pitch){
+        }
+        async ___acVsetPitch(pitch){
             await this.setReferencePitchPromise ;
             var diff = pitch - this.___acVpitch;
             this.___acVpitch += diff;
@@ -523,16 +466,19 @@
             for (var i = 0; i < nodeList.length; i++)
                nodeList[i].___acVaddPitch(diff);
             this._acViewCallFunction('onACViewPitchUpdate') ;
-        },
-        ___acVsetTheme: function (e) {
-            this.customStyle = e;
-            this.updateStyles();
-            var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
-            for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].___acVsetTheme(this.customStyle);
+        }
+        ___acVsetTheme (e) {
+            for(k in e) {
+                let arg = {} ; 
+                arg[k] = e[k] ; 
+                this.updateStyles(arg);
             }
-        },
-        ___acVsetPreferences: async function (e) {
+            // var nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');
+            // for (var i = 0; i < nodeList.length; i++) {
+            //     nodeList[i].___acVsetTheme(this.customStyle);
+            // }
+        }
+        async ___acVsetPreferences (e) {
             await playbackAudioContextInit ;
             await instrumentAudioContextInit ;
             this.___acVsetReverb(e['reverb']);
@@ -550,12 +496,12 @@
             this.___acVsetNoteDisplay(e['displayingNotes']) ; 
             this.___acVtoggleNotes({origin: "playback", value: e['showingPlaybackNotes']});
             this.___acVtoggleNotes({origin: "instrument", value: e['showingInstrumentNotes']});
-        },
-        ___acV_setDefaultReverb: function (reverb) {
+        }
+        ___acV_setDefaultReverb (reverb) {
             this.___acVdefaultReverb = reverb ;
             this._acViewCallFunction('setReverb', this.___acVdefaultReverb);
-        },
-        ___acVaddOrigin: function(origin){
+        }
+        ___acVaddOrigin(origin){
             if (this.___acVorigins[origin] !==undefined)
                 return ;
             this.___acVorigins[origin] = 1 ;
@@ -565,8 +511,12 @@
             for (var i = 0; i < nodeList.length; i++)
                 nodeList[i].___acVaddOrigin(origin);
             this.___acV_updateMyTheme() ;
-        },
-        ready: function () {
+        }
+        constructor() {
+            super();
+        }
+        ready() {
+            super.ready() ;
             this.___acVorigins = [] ;
             this.___acVinstrumentOrigins = [] ;
             this.___acVkeyboardOn = [] ;
@@ -615,6 +565,12 @@
                     this[args.data[0]](args.data[1]);
                 } ;
             }
-        }   
-    };
+            Polymer.RenderStatus.afterNextRender(this, function() {
+                this.addEventListener('acLedGroup-loaded', e => this.___acV_onAcLedGroupLoaded(e));
+                this.addEventListener('toast', e => this.___acV_handleToast(e));
+                this.addEventListener('note-conversion', e => this.___acV_onRecordingConversionEvent(e));
+            });
+        }
+    }
+    customElements.define('ac-view-behavior', ACViewBehavior);
 </script>

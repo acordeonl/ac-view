@@ -1,100 +1,36 @@
-
-<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/polymer/polymer-element.html">
 <script src='./LinkedList.js'></script>
+
 <script>
-    /**
-* Behavior that highlights stuff.
-*
-* @polymerBehavior
-*/
-    acLedGroupBehavior = {
-        listeners:{
-            'view-audio-load':'___acV_onLoadViewAudio',
-            'gui-action':'___acV_displayMonophonicNote'
-        },
-        properties: {
+    class ACLedGroup extends Polymer.Element {
+        static get is() { return 'ac-led-group'; }
+        static get properties() {return {
         /* ------------------- Loading ------------------- */
-            name: {
-                type: String
-            },
-            ___acV_totalViewAudios: {
-                type: Number,
-                value: 0
-            },
-            ___acV_loadedViewAudios: {
-                type: Number,
-                value: 0
-            },
+            name: {type: String},
+            ___acV_totalViewAudios: {type: Number,value: 0},
+            ___acV_loadedViewAudios: {type: Number,value: 0},
         /* ------------------- Setup ------------------- */
-            ___acV_flags:{
-                type:Array,
-                value:[]
-            },
-            ___acV_index: {
-                type: Number
-            },
-            ___acV_rotation: {
-                type: Boolean,
-                value: false
-            },
-            ___acV_instrumentPanning: {
-                type: Number,
-                value: 0,
-                observer: '___acV_setSynthInstrumentPanning'
-            },
-            ___acV_playbackPanning: {
-                type: Number,
-                value: 0,
-                observer: '___acV_setSynthPlaybackPanning'
-            },
-            ___acV_instrumentVolume: {
-                type: Number,
-                value: 1,
-                observer: '___acV_setSynthInstrumentVolume'
-            },
-            ___acV_playbackVolume: {
-                type: Number,
-                value: 1,
-                observer: '___acV_setSynthPlaybackVolume'
-            },
-            ___acV_pitch:{
-                type:Number
-            },
-            ___acV_referencePitch:{
-                type:Number
-            },
+            ___acV_flags:{type:Array,value:[]},
+            ___acV_index: {type: Number},
+            ___acV_rotation: {type: Boolean,value: false},
+            ___acV_instrumentPanning: {type: Number,value: 0,observer: '___acV_setSynthInstrumentPanning'},
+            ___acV_playbackPanning: {type: Number,value: 0,observer: '___acV_setSynthPlaybackPanning'},
+            ___acV_instrumentVolume: {type: Number,value: 1,observer: '___acV_setSynthInstrumentVolume'},
+            ___acV_playbackVolume: {type: Number,value: 1,observer: '___acV_setSynthPlaybackVolume'},
+            ___acV_pitch:{type:Number},
+            ___acV_referencePitch:{type:Number},
         /* ------------------- Defaults ------------------- */
-            defaultInstrumentPanning: {
-                type: Number,
-                value: 0
-            },
-            defaultPlaybackPanning: {
-                type: Number,
-                value: 0
-            },
-            defaultInstrumentVolume: {
-                type: Number,
-                value: 1
-            },
-            defaultPlaybackVolume: {
-                type: Number,
-                value: 1
-            },
+            defaultInstrumentPanning: {type: Number,value: 0},
+            defaultPlaybackPanning: {type: Number,value: 0},
+            defaultInstrumentVolume: {type: Number,value: 1},
+            defaultPlaybackVolume: {type: Number,value: 1},
         /* ------------------- Action ------------------- */
-            ___acV_instruments:{
-                type:Array
-            },
-            ___acV_MIDIEventToNoteMap:{
-                type:Array,
-                value:[]
-            },
-            ___acV_mapKeyboardToNote:{
-                type:Array,
-                value:[]
-            }
-        },
+            ___acV_instruments:{type:Array},
+            ___acV_MIDIEventToNoteMap:{type:Array,value:[]},
+            ___acV_mapKeyboardToNote:{type:Array,value:[]}
+        }}
     /* ----------------  Audio ------------------------- */
-        ___acVaddPitch: function (diff) {
+        ___acVaddPitch(diff) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
@@ -105,15 +41,15 @@
                 }
             }
             this.___acV_onAddPitch() ;
-        },
-        ___acV_onAddPitch: function(){
+        }
+        ___acV_onAddPitch(){
 
-        },
+        }
     /* ------------------- Keyboard ------------------- */
-        ___acV_setKeyboardToNote: function(key,arg){
+        ___acV_setKeyboardToNote(key,arg){
             this.___acV_mapKeyboardToNote[key] = arg ;
-        },
-        ___acV_onKeyboardNoteOn: function(key){
+        }
+        ___acV_onKeyboardNoteOn(key){
             if (this.___acV_mapKeyboardToNote[key] !== undefined) {
                 var e = {};
                 e.playNow = 1;
@@ -123,8 +59,8 @@
                 e.cmd = 'note-on';
                 this.___acV_onMIDIEvent(e) ;
             }
-        },
-        ___acV_onKeyboardNoteOff: function(key){
+        }
+        ___acV_onKeyboardNoteOff(key){
             if (this.___acV_mapKeyboardToNote[key] !== undefined) {
                 var e = {};
                 e.playNow = 1;
@@ -134,19 +70,19 @@
                 e.cmd = 'note-off';
                 this.___acV_onMIDIEvent(e) ;
             }
-        },
+        }
     /* ------------------- Instrument ------------------- */
-        ___acVinitInstrumentVolume: function(){
+        ___acVinitInstrumentVolume(){
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].initInstrumentVolume() ;
             }
-        },
+        }
     /* ------------------- MIDIEvents ------------------- */
-        ___acV_midiEventToAudioNote: function(channel,midiNote,origin){
+        ___acV_midiEventToAudioNote(channel,midiNote,origin){
             return this.___acV_midiEventToAudioNoteDefault(channel,midiNote,origin) ; 
-        },
-        ___acV_midiEventToAudioNoteDefault: function (channel,midiNote,origin) {
+        }
+        ___acV_midiEventToAudioNoteDefault(channel,midiNote,origin) {
             var note ;
             if (this.___acV_MIDIEventToNoteMap[channel] !== undefined && this.___acV_MIDIEventToNoteMap[channel] !== null) {
                 if (this.___acV_MIDIEventToNoteMap[channel][midiNote] !== undefined && this.___acV_MIDIEventToNoteMap[channel][midiNote] !== undefined)
@@ -158,8 +94,8 @@
                 note = midiNote ;
             }
             return note ;
-        },
-        ___acV_onMIDIEvent: function (e) {
+        }
+        ___acV_onMIDIEvent(e) {
             if (e.origin !== 'conversion') {
                 if(e.noGUI === null || e.noGUI === undefined)
                     this.___acV_MIDIEventToGUI(e) ;
@@ -167,18 +103,23 @@
                     this.___acV_MIDIEventToAudio(e) ;
             }
             else{
-                this.fire('note-conversion',{eventId:e.id,mapedNote:this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin)}) ;
+                this.dispatchEvent(new CustomEvent('note-conversion', {detail:{
+                    eventId:e.id,
+                    mapedNote:this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin)
+                }, bubbles: true, composed: true }));
             }
-        },
-        ___acV_MIDIEventToGUI: function(evt){
+        }
+        ___acV_MIDIEventToGUI(evt){
             evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin) ;
             var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin);
             var acLedStatesArr = this.___acV_mapMIDIEventToAcLedState(evt.channel,evt.midiNote,evt.origin);
             for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
                 var e = JSON.parse(JSON.stringify(evt))  ; 
                 e.acLedId = acLedIdsArr[i] ;
-                if (this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.$$('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
-                    this.fire('toast',{msg:'La grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'})  ;
+                if (this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
+                    this.dispatchEvent(new CustomEvent('toast', {detail:{
+                        msg:'La grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'
+                    }, bubbles: true, composed: true }));
                     return ;
                 }
                 if(e.cmd === 'note-on')
@@ -198,48 +139,52 @@
                     this[e.origin+'AcLedActions'].push(e) ;
                 }
             }
-        },
-        ___acV_MIDIEventToAudio: function(e){
+        }
+        ___acV_MIDIEventToAudio(e){
             var note = this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin) ;
-            if (this.$$('VIEW-AUDIO[channel' + e.channel + ']') === undefined) {
-                this.fire('toast',{msg:'La visualización seleccionada no soporta el canal '+e.channel})  ;
+            if (this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === undefined) {
+                this.dispatchEvent(new CustomEvent('toast', {detail:{
+                    msg:'La visualización seleccionada no soporta el canal '+e.channel
+                }, bubbles: true, composed: true }));
                 return ;
             }
-            if (e.cmd === 'note-on' && this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] !== undefined )
-                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(note,e);
-            else if (e.cmd ==='note-off' && this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] !== undefined){
-                this.$$('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e);
+            if (e.cmd === 'note-on' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] !== undefined )
+                this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(note,e);
+            else if (e.cmd ==='note-off' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] !== undefined){
+                this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e);
             }
-            if (this.$$('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] === undefined )
-                this.fire('toast',{msg:'Algunas notas no pueden ser reproducidas debido a que no se encuentran en el audio de la visualización'}) ; 
-        },
-        ___acV_mapMIDIEventToNote: function(channel,midiNote,newNote){
+            if (this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] === undefined )
+                this.dispatchEvent(new CustomEvent('toast', {detail:{
+                    msg:'Algunas notas no pueden ser reproducidas debido a que no se encuentran en el audio de la visualización'
+                }, bubbles: true, composed: true }));
+        }
+        ___acV_mapMIDIEventToNote(channel,midiNote,newNote){
             if (!this.___acV_flags[channel]) {
                 this.___acV_flags[channel]=true ;
                 this.___acV_MIDIEventToNoteMap[channel] = [] ;
             }
             this.___acV_MIDIEventToNoteMap[channel][midiNote] = newNote;
-        },
+        }
     /* ------------------- MIDIEvents Default helpers  ------------------- */
-        ___acV_mapMIDIEventToAcLedId: function(channel,midiNote,origin){
+        ___acV_mapMIDIEventToAcLedId(channel,midiNote,origin){
             return [midiNote] ;
-        },
-        ___acV_mapMIDIEventToAcLedState: function(channel,midiNote){
+        }
+        ___acV_mapMIDIEventToAcLedState(channel,midiNote){
             return [1] ;
-        },
-        ___acV_handleAddPitch: function (note,channel,diff) {
+        }
+        ___acV_handleAddPitch(note,channel,diff) {
             return note+diff ;
-        },
+        }
     /* ------------------- Chords ------------------- */
         // arr: channel, midinote1 ,midinote 2 ...
-        ___acV_setChord: function(midiNote,description,arr){
+        ___acV_setChord(midiNote,description,arr){
             if (this.chords === undefined)
                 this.chords = [] ;
             if (this.chords[midiNote] === undefined)
                 this.chords[midiNote] = [] ;
             this.chords[midiNote][description] = arr ;
-        },
-        ___acVtoggleChords: function(playingChords){
+        }
+        ___acVtoggleChords(playingChords){
             this.playingChords = playingChords ;
             if (this.playingChords) {
                 this.___acV_playCurrentChord() ;
@@ -247,8 +192,8 @@
             else {
                 this.___acV_stopCurrentChord() ;
             }
-        },
-        ___acVsetCurrentChord: function (midiNote,description) {
+        }
+        ___acVsetCurrentChord(midiNote,description) {
             if (this.chords === undefined)
                 return ;
             if (this.playingChords) {
@@ -265,8 +210,8 @@
                 else
                     this.currentChord = undefined ;
             }
-        },
-        ___acV_playCurrentChord: function(){
+        }
+        ___acV_playCurrentChord(){
             if (this.currentChord === undefined)
                 return ;
             for (let i = 0; i < this.currentChord.length; i++) {
@@ -280,8 +225,8 @@
                     this.___acV_onMIDIEvent(e) ;
                 }
             }
-        },
-        ___acV_stopCurrentChord: function(){
+        }
+        ___acV_stopCurrentChord(){
             if (this.currentChord === undefined)
                 return ;
             for (let i = 0; i < this.currentChord.length; i++) {
@@ -295,42 +240,42 @@
                     this.___acV_onMIDIEvent(e) ;
                 }
             }
-        },
+        }
     /* -------------------- GUI ------------------------- */
-        ___acV_updateGUI: function () {
+        ___acV_updateGUI() {
             if (this.playbackAcLedActions !== null && this.playbackAcLedActions !== undefined && this.playbackAcLedActions.length > 0) {
                 if (this.playbackAcLedActions.first.value.when < playbackContext.currentTime) {
-                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel);
+                    this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel);
                     this.playbackAcLedActions.popFirst();
                 }
             }
             for (var i = 0; i < this.___acV_instruments.length; i++) {
                 var origin = this.___acV_instruments[i] ;
                 if (this[origin+'AcLedActions'].length > 0) {
-                    this.$$('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note);
+                    this.shadowRoot.querySelector('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note);
                     this[origin+'AcLedActions'].popFirst();
                 }
             }
-        },
-        ___acVtoggleNotes: function (origin, value) {
+        }
+        ___acVtoggleNotes(origin, value) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVtoggleNotes(origin,value) ;
             }
-        },
-        ___acVsetNoteDisplay: function (value) {
+        }
+        ___acVsetNoteDisplay(value) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetNoteDisplay(value) ;
             }
-        },
-        ___acVsetOpacity: function (origin, opacity) {
+        }
+        ___acVsetOpacity(origin, opacity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetOpacity(origin,opacity) ;
             }
-        },
-        ___acVclearActions: function(origin){
+        }
+        ___acVclearActions(origin){
             while (this.playbackAcLedActions.length > 0) {
                 var when;
                 if (this.playbackAcLedActions.first.value.playNow !== undefined) {
@@ -339,7 +284,7 @@
                     when = playbackContext.currentTime + (this.playbackAcLedActions.first.value.tempo) * (this.playbackAcLedActions.first.value.time - this.playbackAcLedActions.first.value.playbackTime);
                 }
                 if (when < playbackContext.currentTime || this.playbackAcLedActions.first.value.playNow !== undefined) {
-                    this.$$('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
+                    this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
                     this.playbackAcLedActions.popFirst();
                 } else {
                     break;
@@ -347,90 +292,90 @@
             }
             this.playbackAcLedActions.clear();
             // this.instrumentAcLedActions.clear();
-        },
-        ___acVclearGUI: function (origin) {
+        }
+        ___acVclearGUI(origin) {
             if (origin === 'playback') {
-                if(this.$$('[playbackNote]') !== undefined && this.$$('[playbackNote]') !== null ) 
-                    this.$$('[playbackNote]').innerHTML = '' ;
+                if(this.shadowRoot.querySelector('[playbackNote]') !== undefined && this.shadowRoot.querySelector('[playbackNote]') !== null ) 
+                    this.shadowRoot.querySelector('[playbackNote]').innerHTML = '' ;
             }
             else{
-                if (this.$$('[instrumentNote]') !== undefined && this.$$('[instrumentNote]') !== null) 
-                    this.$$('[instrumentNote]').innerHTML = '' ;
+                if (this.shadowRoot.querySelector('[instrumentNote]') !== undefined && this.shadowRoot.querySelector('[instrumentNote]') !== null) 
+                    this.shadowRoot.querySelector('[instrumentNote]').innerHTML = '' ;
             }
 
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
-            for (i = 0; i < nodeList.length; i++) {
+            for (let i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVclearGUI(origin);
             }
-        },
-        ___acV_displayMonophonicNote: function (e) {
-            if(this.$$('[playbackNote]') !== undefined && this.$$('[playbackNote]') !== null ) { 
+        }
+        ___acV_displayMonophonicNote(e) {
+            if(this.shadowRoot.querySelector('[playbackNote]') !== undefined && this.shadowRoot.querySelector('[playbackNote]') !== null ) { 
                 if (e.detail.cmd === 'playbackNoteOn') 
-                    this.$$('[playbackNote]').innerHTML = e.detail.note ;
+                    this.shadowRoot.querySelector('[playbackNote]').innerHTML = e.detail.note ;
                 if (e.detail.cmd === 'playbackNoteOff') {
-                    this.$$('[playbackNote]').innerHTML = '' ;
+                    this.shadowRoot.querySelector('[playbackNote]').innerHTML = '' ;
                 }
             }
-            if (this.$$('[instrumentNote]') !== undefined && this.$$('[instrumentNote]') !== null) {
+            if (this.shadowRoot.querySelector('[instrumentNote]') !== undefined && this.shadowRoot.querySelector('[instrumentNote]') !== null) {
                 if (e.detail.cmd === 'instrumentNoteOn') 
-                    this.$$('[instrumentNote]').innerHTML = e.detail.note ;
+                    this.shadowRoot.querySelector('[instrumentNote]').innerHTML = e.detail.note ;
                 if (e.detail.cmd === 'instrumentNoteOff') 
-                    this.$$('[instrumentNote]').innerHTML = '' ;
+                    this.shadowRoot.querySelector('[instrumentNote]').innerHTML = '' ;
             }
-        },
+        }
     /* ----------------- View audio -------------------------- */
-        ___acVinitPlaybackAudio: function () {
+        ___acVinitPlaybackAudio() {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].initPlaybackAudio();
             }
-        },
-        ___acVsetVelocity: function (velocity) {
+        }
+        ___acVsetVelocity(velocity) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setVelocity(velocity);
             }
-        },
-        ___acV_setSynthInstrumentPanning: function (panning) {
+        }
+        ___acV_setSynthInstrumentPanning(panning) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setInstrumentPanning(panning);
             }
-        },
-        ___acV_setSynthPlaybackPanning: function (panning) {
+        }
+        ___acV_setSynthPlaybackPanning(panning) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setPlaybackPanning(panning);
             }
-        },
-        ___acV_setSynthPlaybackVolume: function (volume) {
+        }
+        ___acV_setSynthPlaybackVolume(volume) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setPlaybackGain(volume);
             }
-        },
-        ___acV_setSynthInstrumentVolume: function (volume) {
+        }
+        ___acV_setSynthInstrumentVolume(volume) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setInstrumentGain(volume);
             }
-        },
+        }
     /* -------------- Loading -------------------- */
-        ___acVloadAudio: function (viewAudioIndex, audioUrl) {
+        ___acVloadAudio(viewAudioIndex, audioUrl) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             if (nodeList[viewAudioIndex].audioUrl !== audioUrl)
                 nodeList[viewAudioIndex].loadAudio(audioUrl);
             else
                 this.___acV_onLoadViewAudio() ;
-        },
-        ___acV_onLoadViewAudio: function () {
+        }
+        ___acV_onLoadViewAudio() {
             this.___acV_loadedViewAudios++;
             if (this.___acV_loadedViewAudios === this.___acV_totalViewAudios) {
-                this.fire('acLedGroup-loaded');
+                this.dispatchEvent(new CustomEvent('acLedGroup-loaded', { bubbles: true, composed: true }));
                 this.___acV_loadedViewAudios = 0 ;
             }
-        },
-        ___acVgetAcLedGroup: function () {
+        }
+        ___acVgetAcLedGroup() {
             return {
                 name: this.name,
                 defaultPlaybackVolume: this.defaultPlaybackVolume * 100,
@@ -438,8 +383,8 @@
                 defaultInstrumentPanning: this.defaultInstrumentPanning * 100,
                 defaultPlaybackPanning: this.defaultPlaybackPanning * 100
             } ;
-        },
-        ___acVgetViewAudios: function () {
+        }
+        ___acVgetViewAudios() {
             var viewAudios = [] ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
@@ -451,37 +396,37 @@
                 }) ;
             }
             return viewAudios ;
-        },
+        }
     /* ------------------- Setup ------------------- */
-        ___acVsetACLedColors: function (colors) {
+        ___acVsetACLedColors(colors) {
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for(let i = 0 ; i < nodeList.length ; i ++ ){
                 nodeList[i].___acVsetACLedColors(colors) ; 
             }
-        },
-        ___acVsetPitch: function (referencePitch,pitch) {
+        }
+        ___acVsetPitch(referencePitch,pitch) {
             this.___acV_pitch = pitch ; 
             this.___acV_referencePitch = referencePitch ; 
-        },
-        ___acVinitAcLeds: function(){
+        }
+        ___acVinitAcLeds(){
             this.___acV_instruments = [] ;
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
-            for (i = 0; i < nodeList.length; i++) {
+            for (let i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVinit();
             }
-        },
-        ___acVgetViewAudioCount: function(){
+        }
+        ___acVgetViewAudioCount(){
             return Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO').length;
-        },
-        ___acVsetTheme: function(e){
+        }
+        ___acVsetTheme(e){
             this.customStyle =  e ;
             this.updateStyles();
             var nodeList = Polymer.dom(this.root).querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetTheme(this.customStyle);
             }
-        },
-        ___acVgetDefaultAudioUrls: function () {
+        }
+        ___acVgetDefaultAudioUrls() {
             var nodeList = Polymer.dom(this.root).querySelectorAll('VIEW-AUDIO');
             var defaultAudioUrls = [];
             for (var i = 0; i < nodeList.length; i++) {
@@ -489,11 +434,11 @@
                     defaultAudioUrls.push(nodeList[i].defaultAudioUrl);
                 }
             return defaultAudioUrls;
-        },
-        ___acVsetIndex: function (index) {
+        }
+        ___acVsetIndex(index) {
             this.___acV_index = index;
-        },
-        ___acVaddOrigin: async function(origin){
+        }
+        async ___acVaddOrigin (origin){
             this[origin+'AcLedActions'] = new LinkedList() ;
             if (origin !== 'playback') {
                 this.___acV_instruments.push(origin) ;
@@ -506,8 +451,12 @@
             for (var j = 0; j < nodeList2.length; j++) {
                 nodeList2[j].addOrigin(origin) ;
             }
-        },
-        ready: function () {
+        }
+        constructor() {
+            super();
+        }
+        ready() {
+            super.ready() ;
             this.___acV_MIDIEventToNoteMap = [] ;
             this.___acV_flags = []  ;
             this.___acV_instruments = [] ;
@@ -535,6 +484,11 @@
             }
             this.___acV_loadedViewAudios = 0;
             setInterval(this.___acV_updateGUI.bind(this), 5);
+            Polymer.RenderStatus.afterNextRender(this, function() {
+                this.addEventListener('view-audio-load', e => this.___acV_onLoadViewAudio(e));
+                this.addEventListener('gui-action', e => this.___acV_displayMonophonicNote(e));
+            });
         }
-    };
+    }
+    customElements.define('ac-led-group', ACLedGroup);
 </script>
