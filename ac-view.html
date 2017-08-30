@@ -78,6 +78,7 @@
     class ACView extends Polymer.Element {
         static get is() { return 'ac-view'; }
         static get properties() {return {
+            ___acV_displayingNotes:{type:Boolean,value:false},
             ___aV_conversionId:{type:Number,value:0},
             ___acV_midiEvents:{type:Array,value:[]},
             ___acVinstrumentOrigins:{type:Array,value:[]},
@@ -318,6 +319,9 @@
             this._acViewCallFunction('onACViewChordsOff') ;
         }
     /* ------------- settings controls -------------- */
+        ___acV_acViewDisplaysNotes(value) {
+            this._acViewCallFunction('setACViewDisplaysNotes',value) ;
+        }
         ___acVsetACLedColors (colors) {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for(let i = 0 ; i < nodeList.length ; i ++ ){
@@ -512,6 +516,12 @@
                 nodeList[i].___acVaddOrigin(origin);
             this.___acV_updateMyTheme() ;
         }
+        ___acVgetNotesInfo() {
+            this._acViewCallFunction('setChords', {
+                chords:this.chords , 
+                displayingNotes:this.___acV_displayingNotes
+            });
+        }
         constructor() {
             super();
         }
@@ -547,7 +557,6 @@
                 }
                 nodeList[i].style.visibility = 'hidden' ;
             }
-            this._acViewCallFunction('setChords', this.chords);
             this.midiNameToNumber = [] ;
             for (let i = 0; i < 200; i++) {
                 var noteName = "C C#D EbE F F#G AbA BbB ";
