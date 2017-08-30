@@ -1,8 +1,8 @@
-<link rel="import" href="/bower_components/polymer/polymer-element.html">
+<link rel="import" href="../polymer/polymer-element.html">
 <script>
 
     class ACLed extends Polymer.Element {
-        static get is() { return 'ac-led-behavior'; }
+        static get is() { return 'ac-led'; }
         static get properties() {return {
             ___acV_isMonophonic:{type:Boolean,value:false},
             ___acV_displayingNotes:{type:Boolean,value:false},
@@ -150,7 +150,7 @@
             this.customStyle = e ;
             this.updateStyles() ;
             if (this.___acV_customText === 0 ) {
-                var nodeList = Polymer.dom(this.root).querySelectorAll('[note]');
+                var nodeList = this.shadowRoot.querySelectorAll('[note]');
                 for (i = 0; i < nodeList.length; i++) {
                     nodeList[i].style.color = this.customStyle['--content-background'] ;
                 }
@@ -217,5 +217,5 @@
             this.initAcLed = new Promise(resolve => this.initAcLedR = resolve);
         }
     }
-    customElements.define('ac-led-behavior', ACLedBehavior);
+    customElements.define('ac-led', ACLed);
 </script>
