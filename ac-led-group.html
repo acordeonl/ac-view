@@ -256,7 +256,6 @@
                     this[origin+'AcLedActions'].popFirst();
                 }
             }
-            requestAnimationFrame(this.___acV_updateGUI.bind(this)) ; 
         }
         ___acVtoggleNotes(origin, value) {
             var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
@@ -484,8 +483,7 @@
                 }
             }
             this.___acV_loadedViewAudios = 0;
-            // setInterval(this.___acV_updateGUI.bind(this), 5);
-            requestAnimationFrame(this.___acV_updateGUI.bind(this)) ; 
+            setInterval(this.___acV_updateGUI.bind(this), 5);
             this.addEventListener('view-audio-load', e => this.___acV_onLoadViewAudio(e));
             this.addEventListener('gui-action', e => this.___acV_displayMonophonicNote(e));
         }
