@@ -96,18 +96,24 @@
             return note ;
         }
         ___acV_onMIDIEvent(e) {
-            if (e.origin !== 'conversion') {
-                if(e.noGUI === null || e.noGUI === undefined)
-                    this.___acV_MIDIEventToGUI(e) ;
-                if(e.noAudio === null || e.noAudio === undefined)
-                    this.___acV_MIDIEventToAudio(e) ;
+            if (e.origin === 'recording-playback-conversion') {
+                this.dispatchEvent(new CustomEvent('recording-playback-conversion', {detail:{
+                    evt:e
+                }, bubbles: true, composed: true }));
+                return ; 
             }
-            else{
+            if (e.origin === 'conversion') {
                 this.dispatchEvent(new CustomEvent('note-conversion', {detail:{
                     eventId:e.id,
                     mapedNote:this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin)
                 }, bubbles: true, composed: true }));
+                return ; 
             }
+            if(e.noGUI === null || e.noGUI === undefined)
+                    this.___acV_MIDIEventToGUI(e) ;
+            if(e.noAudio === null || e.noAudio === undefined)
+                this.___acV_MIDIEventToAudio(e) ;
+
         }
         ___acV_MIDIEventToGUI(evt){
             evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin) ;
