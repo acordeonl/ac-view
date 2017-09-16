@@ -409,11 +409,9 @@
             this.___acV_midiEvents = [] ; 
             this.universalRecording = [] ;
             for (var i = 0; i < this.___acVrecording.length; i++) {
-                if (this.___acVrecording[i].button === -1)
-                    continue ;
                 this.___acVonMIDIEvent( {
                     cmd:this.___acVrecording[i].cmd,
-                    midiNote:this.___acVrecording[i].button,
+                    midiNote:this.___acVrecording[i].midiNote,
                     channel:this.___acVrecording[i].channel,
                     time:this.___acVrecording[i].time,
                     origin:'conversion'
@@ -436,7 +434,7 @@
         ___acV_handleRecordingConversion (midiEvent,mapedNote) {
             if (midiEvent.channel === 0) {
                 this.universalRecording.push({
-                    button:mapedNote,
+                    midiNote:mapedNote,
                     channel:midiEvent.channel,
                     cmd:midiEvent.cmd,
                     time:midiEvent.time
