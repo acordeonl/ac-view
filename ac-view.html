@@ -78,6 +78,8 @@
     class ACView extends Polymer.Element {
         static get is() { return 'ac-view'; }
         static get properties() {return {
+            ___acV_viewKey:{type:Number,value:55},
+            ___acV_hasKey:{type:Boolean,value:false},
             ___acV_recordingPlayback:{type:Array,value:[]},
             ___acV_displayingNotes:{type:Boolean,value:false},
             ___aV_conversionId:{type:Number,value:0},
@@ -480,13 +482,15 @@
         ___acVsetReferencePitch (pitch) {
             this.___acV_setReferencePitch(pitch);
         }
-        async ___acVsetPitch(pitch){
+        async ___acVsetPitch(e){
+            let pitch = e.pitch ; 
+            this.___acV_viewKey = e.viewKey ; 
             await this.setReferencePitchPromise ;
             var diff = pitch - this.___acVpitch;
             this.___acVpitch += diff;
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++)
-               nodeList[i].___acVaddPitch(diff);
+               nodeList[i].___acVaddPitch(diff,this.___acV_viewKey,this.___acVpitch);
             this._acViewCallFunction('onACViewPitchUpdate') ;
         }
         ___acVsetTheme (e) {

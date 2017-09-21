@@ -18,7 +18,8 @@
             ___acV_instrumentVolume: {type: Number,value: 1,observer: '___acV_setSynthInstrumentVolume'},
             ___acV_playbackVolume: {type: Number,value: 1,observer: '___acV_setSynthPlaybackVolume'},
             ___acV_pitch:{type:Number},
-            ___acV_referencePitch:{type:Number},
+            ___acV_referencePitch:{type:Number,value:55},
+            ___acV_viewKey:{type:Number,value:55},
         /* ------------------- Defaults ------------------- */
             defaultInstrumentPanning: {type: Number,value: 0},
             defaultPlaybackPanning: {type: Number,value: 0},
@@ -30,7 +31,9 @@
             ___acV_mapKeyboardToNote:{type:Array,value:[]}
         }}
     /* ----------------  Audio ------------------------- */
-        ___acVaddPitch(diff) {
+        ___acVaddPitch(diff,viewKey,pitch) {
+            this.___acV_pitch = pitch ; 
+            this.___acV_viewKey = viewKey ;
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
@@ -79,6 +82,9 @@
             }
         }
     /* ------------------- MIDIEvents ------------------- */
+        ___acVSetViewKey(viewKey) {
+            this.___acV_viewKey = viewKey ; 
+        }
         ___acV_midiEventToAudioNote(channel,midiNote,origin){
             return this.___acV_midiEventToAudioNoteDefault(channel,midiNote,origin) ; 
         }
@@ -412,6 +418,9 @@
         }
         ___acVsetPitch(referencePitch,pitch) {
             this.___acV_pitch = pitch ; 
+            // console.log('cambiando reference pitch');
+            // if(this.___acV_referencePitch !== 55 )
+                
             this.___acV_referencePitch = referencePitch ; 
         }
         ___acVinitAcLeds(){
