@@ -122,6 +122,10 @@
             this._acViewCallFunction('setReferencePitch', this.___acVreferencePitch) ;
             this.setReferencePitchPromiseR();
         }
+        ___acV_setDefaultViewKey(value) {
+            this.___acV_viewKey = value ; 
+            this._acViewCallFunction('setViewDefaultKey', this.___acV_viewKey) ;
+        }
         ___acV_onAcLedGroupLoaded () {
             this.___acVloadedAcLedGroups++;
             if (this.___acVloadedAcLedGroups === this.___acVtotalAcLedGroups) {
@@ -484,7 +488,8 @@
         }
         async ___acVsetPitch(e){
             let pitch = e.pitch ; 
-            this.___acV_viewKey = e.viewKey ; 
+            if(e.viewKey !== null && e.viewKey !== undefined)
+                this.___acV_viewKey = e.viewKey ; 
             await this.setReferencePitchPromise ;
             var diff = pitch - this.___acVpitch;
             this.___acVpitch += diff;
