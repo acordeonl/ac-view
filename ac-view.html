@@ -78,7 +78,7 @@
     class ACView extends Polymer.Element {
         static get is() { return 'ac-view'; }
         static get properties() {return {
-            ___acV_viewPitch:{type:Number,value:55},
+            ___acV_viewPitchDiff:{type:Number,value:0},
             ___acV_hasKey:{type:Boolean,value:false},
             ___acV_recordingPlayback:{type:Array,value:[]},
             ___acV_displayingNotes:{type:Boolean,value:false},
@@ -89,7 +89,7 @@
             ___acVkeyboardOn:{type:Array,value:[]},
             ___acVorigins:{type:Array,value:[]},
             ___acVplayingChords:{type:Boolean,value:false},
-            ___acV_recordingPitch: {type: Number,value: -1},
+            ___acV_recordingPitchDiff: {type: Number,value: 0},
             ___acV_default_viewPitch:{type:Number},
             ___acVrecording: {type: Array},
             ___acVcurrentPlaybackTime: {type: Object},
@@ -292,7 +292,7 @@
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             var midiNote = this.midiNameToNumber[arg.substr(0,arg.indexOf(' '))] ;
             var description = arg.substr(arg.indexOf(' ')+1);
-            var diff = this.___acV_recordingPitch-this.___acV_default_viewPitch+(this.___acV_viewPitch-this.___acV_default_viewPitch) ;
+            var diff = this.___acV_recordingPitchDiff-this.___acV_default_viewPitch+(this.___acV_viewPitchDiff-this.___acV_default_viewPitch) ;
             
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetCurrentChord(midiNote-diff,description);
@@ -469,15 +469,10 @@
             this._acViewCallFunction('updateACViewTheme') ;
         }
         ___acVsetViewPitch(value) {
-            this.___acV_viewPitch = value ;
+            // this.___acV_viewPitchDiff = value ;
         }
         ___acV_setDefaultViewPitch (pitch) {
             this.___acV_default_viewPitch = pitch ;
-            this.___acV_viewPitch = pitch ; 
-            this.___acV_recordingPitch = pitch ; 
-            console.log('%c mira en default setting', 'background: #222; color: #bada55');
-            console.log('recording pitch',this.___acV_recordingPitch,'viewPitch',this.___acV_viewPitch);
-
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetDefaultViewPitch(this.___acV_default_viewPitch);
@@ -489,14 +484,13 @@
             this._acViewCallFunction('setDefaultViewPitch', this.___acV_default_viewPitch) ;
         }
         async ___acVsetPitch(e){
+            console.log('pillave men',e);
             await this.setDefaultViewPitchPromise ;
-            console.log('setting pitch',e.pitch,e.viewPitch);
-            this.___acV_recordingPitch = e.pitch ; 
-            if(e.viewPitch !== null && e.viewPitch !== undefined) 
-                this.___acV_viewPitch = e.viewPitch ; 
+            this.___acV_recordingPitchDiff += e.pitchDiff ; 
+            this.___acV_viewPitchDiff = e.viewPitch-this.___acV_default_viewPitch ; 
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++)
-               nodeList[i].___acVaddPitch(this.___acV_viewPitch,this.___acV_recordingPitch,e.recordingDefaultPitch);
+               nodeList[i].___acVaddPitch(e.viewPitch,e.pitchDiff);
             this._acViewCallFunction('onACViewPitchUpdate') ;
         }
         ___acVsetTheme (e) {

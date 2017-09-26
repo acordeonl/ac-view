@@ -17,8 +17,8 @@
             ___acV_playbackPanning: {type: Number,value: 0,observer: '___acV_setSynthPlaybackPanning'},
             ___acV_instrumentVolume: {type: Number,value: 1,observer: '___acV_setSynthInstrumentVolume'},
             ___acV_playbackVolume: {type: Number,value: 1,observer: '___acV_setSynthPlaybackVolume'},
-            ___acV_recordingPitch:{type:Number},
-            ___acV_viewPitch:{type:Number},
+            ___acV_recordingPitchDiff:{type:Number,value:0},
+            ___acV_viewPitchDiff:{type:Number,value:0},
             ___acV_default_viewPitch:{type:Number},
         /* ------------------- Defaults ------------------- */
             defaultInstrumentPanning: {type: Number,value: 0},
@@ -31,39 +31,21 @@
             ___acV_mapKeyboardToNote:{type:Array,value:[]}
         }}
     /* ----------------  Audio ------------------------- */
-        ___acVaddPitch(viewPitch,pitch) {
-            let diff ; 
-            console.log('%c default view pitch', 'background: #222; color: #bada55');
-            console.log(this.___acV_default_viewPitch);
-            console.log('recording pitch',this.___acV_recordingPitch,'viewPitch',this.___acV_viewPitch);
-            if(this.___acV_viewPitch === -1)
-                diff = pitch - viewPitch ; 
-            else 
-                diff = pitch - this.___acV_recordingPitch  ;
-                
-            // if(this.___acV_viewPitch === undefined) {
-            //     // visualization has pitch
-            //     if (this.___acV_default_viewPitch !== -1) 
-            //         diff = viewPitch - this.___acV_default_viewPitch 
-            //     else 
-            //         diff = pitch - viewPitch ; 
-            // }
-            // else {
-                // diff = pitch - this.___acV_recordingPitch  ;
-            // }
-                
-            console.log('PITCH VALUE',diff);
-            this.___acV_recordingPitch = pitch ; 
-            this.___acV_viewPitch = viewPitch ; 
+        ___acVaddPitch(viewPitch,pitchDiff) {
+            console.log('HHFDK;ALSFJHSAD;LKJFKLADSJFL;KASDJF;LKASDJFKLAFDJLK',viewPitch);
+            this.___acV_recordingPitchDiff += pitchDiff ; 
+            this.___acV_viewPitchDiff = viewPitch-this.___acV_default_viewPitch ; 
+            console.log('___acV_default_viewPitch',this.___acV_default_viewPitch) ; 
+            console.log('___acV_recordingPitchDiff',this.___acV_recordingPitchDiff,
+                '___acV_viewPitchDiff',this.___acV_viewPitchDiff);
 
-           
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
                 for (var i = 0; i < this.___acV_MIDIEventToNoteMap[channel].length; i++) {
                     if( this.___acV_MIDIEventToNoteMap[channel][i] === null || this.___acV_MIDIEventToNoteMap[channel][i] === undefined )
                         continue ;
-                    this.___acV_MIDIEventToNoteMap[channel][i] = this.___acV_handleAddPitch(this.___acV_MIDIEventToNoteMap[channel][i],channel,diff);
+                    this.___acV_MIDIEventToNoteMap[channel][i] = this.___acV_handleAddPitch(this.___acV_MIDIEventToNoteMap[channel][i],channel,pitchDiff);
                 }
             }
             this.___acV_onAddPitch() ;
@@ -73,8 +55,7 @@
         }
         ___acVsetDefaultViewPitch(default_viewPitch) {
             this.___acV_default_viewPitch  = default_viewPitch ;
-            this.___acV_viewPitch = default_viewPitch ; 
-            this.___acV_recordingPitch = default_viewPitch ; 
+            console.log('SETTING DEFUALT VIEW PITCH --------------',this.___acV_default_viewPitch) ; 
         }
     /* ------------------- Keyboard ------------------- */
         ___acV_setKeyboardToNote(key,arg){
@@ -111,7 +92,7 @@
         }
     /* ------------------- MIDIEvents ------------------- */
         ___acVSetViewPitch(viewPitch) {
-            this.___acV_viewPitch = viewPitch ; 
+            this.___acV_viewPitchDiff = viewPitch ; 
         }
         ___acV_midiEventToAudioNote(channel,midiNote,origin){
             return this.___acV_midiEventToAudioNoteDefault(channel,midiNote,origin) ; 
