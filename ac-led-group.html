@@ -17,9 +17,9 @@
             ___acV_playbackPanning: {type: Number,value: 0,observer: '___acV_setSynthPlaybackPanning'},
             ___acV_instrumentVolume: {type: Number,value: 1,observer: '___acV_setSynthInstrumentVolume'},
             ___acV_playbackVolume: {type: Number,value: 1,observer: '___acV_setSynthPlaybackVolume'},
-            ___acV_pitch:{type:Number},
-            ___acV_referencePitch:{type:Number,value:55},
-            ___acV_viewKey:{type:Number,value:55},
+            ___acV_recordingPitch:{type:Number},
+            ___acV_viewPitch:{type:Number},
+            ___acV_default_viewPitch:{type:Number},
         /* ------------------- Defaults ------------------- */
             defaultInstrumentPanning: {type: Number,value: 0},
             defaultPlaybackPanning: {type: Number,value: 0},
@@ -31,9 +31,24 @@
             ___acV_mapKeyboardToNote:{type:Array,value:[]}
         }}
     /* ----------------  Audio ------------------------- */
-        ___acVaddPitch(diff,viewKey,pitch) {
-            this.___acV_pitch = pitch ; 
-            this.___acV_viewKey = viewKey ;
+        ___acVaddPitch(viewPitch,pitch) {
+            let diff = 0 ;
+            if(this.___acV_viewPitch === undefined) {
+                // visualization has pitch
+                if (this.___acV_default_viewPitch !== -1) 
+                    diff = viewPitch - this.___acV_default_viewPitch 
+                else 
+                    diff = pitch - viewPitch ; 
+            }
+            else {
+                diff = pitch - this.___acV_recordingPitch  ;
+            }
+            
+            console.log('PITCH VALUE',diff);
+            this.___acV_recordingPitch = pitch ; 
+            this.___acV_viewPitch = viewPitch ; 
+
+           
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
@@ -47,6 +62,9 @@
         }
         ___acV_onAddPitch(){
 
+        }
+        ___acVsetDefaultViewPitch(default_viewPitch) {
+            this.___acV_default_viewPitch  = default_viewPitch ;
         }
     /* ------------------- Keyboard ------------------- */
         ___acV_setKeyboardToNote(key,arg){
@@ -82,8 +100,8 @@
             }
         }
     /* ------------------- MIDIEvents ------------------- */
-        ___acVSetViewKey(viewKey) {
-            this.___acV_viewKey = viewKey ; 
+        ___acVSetViewPitch(viewPitch) {
+            this.___acV_viewPitch = viewPitch ; 
         }
         ___acV_midiEventToAudioNote(channel,midiNote,origin){
             return this.___acV_midiEventToAudioNoteDefault(channel,midiNote,origin) ; 
@@ -122,9 +140,9 @@
 
         }
         ___acV_MIDIEventToGUI(evt){
-            evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin) ;
-            var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin);
-            var acLedStatesArr = this.___acV_mapMIDIEventToAcLedState(evt.channel,evt.midiNote,evt.origin);
+            evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin,evt.initiator) ;
+            var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin,evt.initiator);
+            var acLedStatesArr = this.___acV_mapMIDIEventToAcLedState(evt.channel,evt.midiNote,evt.origin,evt.initiator);
             for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
                 var e = JSON.parse(JSON.stringify(evt))  ; 
                 e.acLedId = acLedIdsArr[i] ;
@@ -153,7 +171,7 @@
             }
         }
         ___acV_MIDIEventToAudio(e){
-            var note = this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin) ;
+            var note = this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin,e.initiator) ;
             if (this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === undefined) {
                 this.dispatchEvent(new CustomEvent('toast', {detail:{
                     msg:'La visualización seleccionada no soporta el canal '+e.channel
@@ -415,13 +433,6 @@
             for(let i = 0 ; i < nodeList.length ; i ++ ){
                 nodeList[i].___acVsetACLedColors(colors) ; 
             }
-        }
-        ___acVsetPitch(referencePitch,pitch) {
-            this.___acV_pitch = pitch ; 
-            // console.log('cambiando reference pitch');
-            // if(this.___acV_referencePitch !== 55 )
-                
-            this.___acV_referencePitch = referencePitch ; 
         }
         ___acVinitAcLeds(){
             this.___acV_instruments = [] ;

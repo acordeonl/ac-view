@@ -78,7 +78,7 @@
     class ACView extends Polymer.Element {
         static get is() { return 'ac-view'; }
         static get properties() {return {
-            ___acV_viewKey:{type:Number,value:55},
+            ___acV_viewPitch:{type:Number,value:55},
             ___acV_hasKey:{type:Boolean,value:false},
             ___acV_recordingPlayback:{type:Array,value:[]},
             ___acV_displayingNotes:{type:Boolean,value:false},
@@ -89,8 +89,8 @@
             ___acVkeyboardOn:{type:Array,value:[]},
             ___acVorigins:{type:Array,value:[]},
             ___acVplayingChords:{type:Boolean,value:false},
-            ___acVpitch: {type: Number,value: -1,observer:'___acV_setLedGroupPitch'},
-            ___acVreferencePitch:{type:Number},
+            ___acV_recordingPitch: {type: Number,value: -1},
+            ___acV_default_viewPitch:{type:Number},
             ___acVrecording: {type: Array},
             ___acVcurrentPlaybackTime: {type: Object},
             ___acVdefaultReverb: {type: Number,value: 0},
@@ -116,16 +116,6 @@
             }
         }
     /* ------------- Loading --------------------- */
-        ___acV_setReferencePitch (pitch) {
-            this.___acVreferencePitch = pitch ;
-            this.___acVpitch = pitch;
-            this._acViewCallFunction('setReferencePitch', this.___acVreferencePitch) ;
-            this.setReferencePitchPromiseR();
-        }
-        ___acV_setDefaultViewKey(value) {
-            this.___acV_viewKey = value ; 
-            this._acViewCallFunction('setViewDefaultKey', this.___acV_viewKey) ;
-        }
         ___acV_onAcLedGroupLoaded () {
             this.___acVloadedAcLedGroups++;
             if (this.___acVloadedAcLedGroups === this.___acVtotalAcLedGroups) {
@@ -302,7 +292,8 @@
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             var midiNote = this.midiNameToNumber[arg.substr(0,arg.indexOf(' '))] ;
             var description = arg.substr(arg.indexOf(' ')+1);
-            var diff = this.___acVpitch-this.___acVreferencePitch ;
+            var diff = this.___acV_recordingPitch-this.___acV_default_viewPitch+(this.___acV_viewPitch-this.___acV_default_viewPitch) ;
+            
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetCurrentChord(midiNote-diff,description);
             }
@@ -427,7 +418,7 @@
             this.universalRecordingSetPromiseR() ;
         }
         async ___acVgetUniversalViewRecording (recording) {
-            await this.setReferencePitchPromise ;
+            await this.setDefaultViewPitchPromise ;
             this.universalRecordingSetPromise = new Promise(resolve => this.universalRecordingSetPromiseR = resolve);
             this.___acV_generateUniversalRecording(recording) ;
             await this.universalRecordingSetPromise ;
@@ -468,12 +459,6 @@
             this.___acV_recordingPlayback.push(e.detail.evt) ; 
         }
     /* --------------- Setup ------------------- */
-        ___acV_setLedGroupPitch () {
-            var nodeList = this.shadowRoot.querySelectorAll("[acLedGroup]");
-            for(let i = 0 ; i < nodeList.length ; i ++ ){
-                nodeList[i].___acVsetPitch(this.___acVpitch,this.___acVreferencePitch) ; 
-            }
-        }
         ___acV_initAcLeds () {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
@@ -483,19 +468,30 @@
         ___acV_updateMyTheme(){
             this._acViewCallFunction('updateACViewTheme') ;
         }
-        ___acVsetReferencePitch (pitch) {
-            this.___acV_setReferencePitch(pitch);
+        ___acVsetViewPitch(value) {
+            this.___acV_viewPitch = value ;
+        }
+        ___acV_setDefaultViewPitch (pitch) {
+            this.___acV_default_viewPitch = pitch ;
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].___acVsetDefaultViewPitch(this.___acV_default_viewPitch);
+            }
+            this.setDefaultViewPitchPromiseR();
+        }
+        async ___acV_getDefaultViewPitch() {
+            await this.setDefaultViewPitchPromise ;
+            this._acViewCallFunction('setDefaultViewPitch', this.___acV_default_viewPitch) ;
         }
         async ___acVsetPitch(e){
-            let pitch = e.pitch ; 
-            if(e.viewKey !== null && e.viewKey !== undefined)
-                this.___acV_viewKey = e.viewKey ; 
-            await this.setReferencePitchPromise ;
-            var diff = pitch - this.___acVpitch;
-            this.___acVpitch += diff;
+            await this.setDefaultViewPitchPromise ;
+            console.log('setting pitch',e.pitch,e.viewPitch);
+            this.___acV_recordingPitch = e.pitch ; 
+            if(e.viewPitch !== null && e.viewPitch !== undefined) 
+                this.___acV_viewPitch = e.viewPitch ; 
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++)
-               nodeList[i].___acVaddPitch(diff,this.___acV_viewKey,this.___acVpitch);
+               nodeList[i].___acVaddPitch(this.___acV_viewPitch,this.___acV_recordingPitch,e.recordingDefaultPitch);
             this._acViewCallFunction('onACViewPitchUpdate') ;
         }
         ___acVsetTheme (e) {
@@ -557,7 +553,7 @@
             this.___acVorigins = [] ;
             this.___acVinstrumentOrigins = [] ;
             this.___acVkeyboardOn = [] ;
-            this.setReferencePitchPromise = new Promise(resolve => this.setReferencePitchPromiseR = resolve);
+            this.setDefaultViewPitchPromise = new Promise(resolve => this.setDefaultViewPitchPromiseR = resolve);
             this.___acVloadedAcLedGroups = 0;
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             this.___acVtotalAcLedGroups = nodeList.length;
