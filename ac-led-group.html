@@ -32,18 +32,26 @@
         }}
     /* ----------------  Audio ------------------------- */
         ___acVaddPitch(viewPitch,pitch) {
-            let diff = 0 ;
-            if(this.___acV_viewPitch === undefined) {
-                // visualization has pitch
-                if (this.___acV_default_viewPitch !== -1) 
-                    diff = viewPitch - this.___acV_default_viewPitch 
-                else 
-                    diff = pitch - viewPitch ; 
-            }
-            else {
+            let diff ; 
+            console.log('%c default view pitch', 'background: #222; color: #bada55');
+            console.log(this.___acV_default_viewPitch);
+            console.log('recording pitch',this.___acV_recordingPitch,'viewPitch',this.___acV_viewPitch);
+            if(this.___acV_viewPitch === -1)
+                diff = pitch - viewPitch ; 
+            else 
                 diff = pitch - this.___acV_recordingPitch  ;
-            }
-            
+                
+            // if(this.___acV_viewPitch === undefined) {
+            //     // visualization has pitch
+            //     if (this.___acV_default_viewPitch !== -1) 
+            //         diff = viewPitch - this.___acV_default_viewPitch 
+            //     else 
+            //         diff = pitch - viewPitch ; 
+            // }
+            // else {
+                // diff = pitch - this.___acV_recordingPitch  ;
+            // }
+                
             console.log('PITCH VALUE',diff);
             this.___acV_recordingPitch = pitch ; 
             this.___acV_viewPitch = viewPitch ; 
@@ -65,6 +73,8 @@
         }
         ___acVsetDefaultViewPitch(default_viewPitch) {
             this.___acV_default_viewPitch  = default_viewPitch ;
+            this.___acV_viewPitch = default_viewPitch ; 
+            this.___acV_recordingPitch = default_viewPitch ; 
         }
     /* ------------------- Keyboard ------------------- */
         ___acV_setKeyboardToNote(key,arg){

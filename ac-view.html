@@ -473,6 +473,11 @@
         }
         ___acV_setDefaultViewPitch (pitch) {
             this.___acV_default_viewPitch = pitch ;
+            this.___acV_viewPitch = pitch ; 
+            this.___acV_recordingPitch = pitch ; 
+            console.log('%c mira en default setting', 'background: #222; color: #bada55');
+            console.log('recording pitch',this.___acV_recordingPitch,'viewPitch',this.___acV_viewPitch);
+
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetDefaultViewPitch(this.___acV_default_viewPitch);
