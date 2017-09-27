@@ -32,13 +32,8 @@
         }}
     /* ----------------  Audio ------------------------- */
         ___acVaddPitch(viewPitch,pitchDiff) {
-            console.log('HHFDK;ALSFJHSAD;LKJFKLADSJFL;KASDJF;LKASDJFKLAFDJLK',viewPitch);
             this.___acV_recordingPitchDiff += pitchDiff ; 
             this.___acV_viewPitchDiff = viewPitch-this.___acV_default_viewPitch ; 
-            console.log('___acV_default_viewPitch',this.___acV_default_viewPitch) ; 
-            console.log('___acV_recordingPitchDiff',this.___acV_recordingPitchDiff,
-                '___acV_viewPitchDiff',this.___acV_viewPitchDiff);
-
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
@@ -55,7 +50,6 @@
         }
         ___acVsetDefaultViewPitch(default_viewPitch) {
             this.___acV_default_viewPitch  = default_viewPitch ;
-            console.log('SETTING DEFUALT VIEW PITCH --------------',this.___acV_default_viewPitch) ; 
         }
     /* ------------------- Keyboard ------------------- */
         ___acV_setKeyboardToNote(key,arg){

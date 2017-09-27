@@ -292,10 +292,14 @@
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             var midiNote = this.midiNameToNumber[arg.substr(0,arg.indexOf(' '))] ;
             var description = arg.substr(arg.indexOf(' ')+1);
-            var diff = this.___acV_recordingPitchDiff-this.___acV_default_viewPitch+(this.___acV_viewPitchDiff-this.___acV_default_viewPitch) ;
-            
+            var diff = 0 ; 
+            if(this.___acV_default_viewPitch !== -1)
+                diff = this.___acV_viewPitchDiff ; 
+            console.log('%c coleto mira pa aca', 'background: #222; color: #bada55');
+            console.log(this.___acV_default_viewPitch,diff);
+
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].___acVsetCurrentChord(midiNote-diff,description);
+                nodeList[i].___acVsetCurrentChord(midiNote-this.___acV_viewPitchDiff,description);
             }
         }
         ___acVrestartChord(){
@@ -484,7 +488,6 @@
             this._acViewCallFunction('setDefaultViewPitch', this.___acV_default_viewPitch) ;
         }
         async ___acVsetPitch(e){
-            console.log('pillave men',e);
             await this.setDefaultViewPitchPromise ;
             this.___acV_recordingPitchDiff += e.pitchDiff ; 
             this.___acV_viewPitchDiff = e.viewPitch-this.___acV_default_viewPitch ; 
