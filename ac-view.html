@@ -292,14 +292,8 @@
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             var midiNote = this.midiNameToNumber[arg.substr(0,arg.indexOf(' '))] ;
             var description = arg.substr(arg.indexOf(' ')+1);
-            var diff = 0 ; 
-            if(this.___acV_default_viewPitch !== -1)
-                diff = this.___acV_viewPitchDiff ; 
-            console.log('%c coleto mira pa aca', 'background: #222; color: #bada55');
-            console.log(this.___acV_default_viewPitch,diff);
-
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].___acVsetCurrentChord(midiNote-this.___acV_viewPitchDiff,description);
+                nodeList[i].___acVsetCurrentChord(midiNote-this.___acV_recordingPitchDiff,description);
             }
         }
         ___acVrestartChord(){
