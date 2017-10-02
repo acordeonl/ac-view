@@ -78,10 +78,10 @@
     class ACView extends Polymer.Element {
         static get is() { return 'ac-view'; }
         static get properties() {return {
+            ___acV_rotates:{type:Boolean,value:false},
+            ___acV_displaysNotes:{type:Boolean,value:false},
             ___acV_viewPitchDiff:{type:Number,value:0},
-            ___acV_hasKey:{type:Boolean,value:false},
             ___acV_recordingPlayback:{type:Array,value:[]},
-            ___acV_displayingNotes:{type:Boolean,value:false},
             ___aV_conversionId:{type:Number,value:0},
             ___acV_midiEvents:{type:Array,value:[]},
             ___acVinstrumentOrigins:{type:Array,value:[]},
@@ -466,9 +466,6 @@
         ___acV_updateMyTheme(){
             this._acViewCallFunction('updateACViewTheme') ;
         }
-        ___acVsetViewPitch(value) {
-            // this.___acV_viewPitchDiff = value ;
-        }
         ___acV_setDefaultViewPitch (pitch) {
             this.___acV_default_viewPitch = pitch ;
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
@@ -520,6 +517,12 @@
             this.___acVtoggleNotes({origin: "playback", value: e['showingPlaybackNotes']});
             this.___acVtoggleNotes({origin: "instrument", value: e['showingInstrumentNotes']});
         }
+        ___acV_canDisplayNotes(value) {
+            this.___acV_displaysNotes = value ; 
+        }
+        ___acV_canRotate(value) {
+            this.___acV_rotates = value ; 
+        }
         ___acV_setDefaultReverb (reverb) {
             this.___acVdefaultReverb = reverb ;
             this._acViewCallFunction('setReverb', this.___acVdefaultReverb);
@@ -535,10 +538,11 @@
                 nodeList[i].___acVaddOrigin(origin);
             this.___acV_updateMyTheme() ;
         }
-        ___acVgetNotesInfo() {
-            this._acViewCallFunction('setChords', {
+        ___acVgetACViewInfo() {
+            this._acViewCallFunction('setACViewInfo', {
                 chords:this.chords , 
-                displayingNotes:this.___acV_displayingNotes
+                displaysNotes:this.___acV_displaysNotes,
+                rotates:this.___acV_rotates
             });
         }
         constructor() {
