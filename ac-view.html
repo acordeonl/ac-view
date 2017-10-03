@@ -78,6 +78,7 @@
     class ACView extends Polymer.Element {
         static get is() { return 'ac-view'; }
         static get properties() {return {
+            ___acV_name:{type:String},
             ___acV_rotates:{type:Boolean,value:false},
             ___acV_displaysNotes:{type:Boolean,value:false},
             ___acV_viewPitchDiff:{type:Number,value:0},
@@ -457,6 +458,9 @@
             this.___acV_recordingPlayback.push(e.detail.evt) ; 
         }
     /* --------------- Setup ------------------- */
+        ___acV_setName(name) {
+            this.___acV_name = name ; 
+        }
         ___acV_initAcLeds () {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
@@ -540,6 +544,7 @@
         }
         ___acVgetACViewInfo() {
             this._acViewCallFunction('setACViewInfo', {
+                name: this.___acV_name,
                 chords:this.chords , 
                 displaysNotes:this.___acV_displaysNotes,
                 rotates:this.___acV_rotates
