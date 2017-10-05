@@ -81,7 +81,6 @@
             ___acV_name:{type:String},
             ___acV_rotates:{type:Boolean,value:false},
             ___acV_displaysNotes:{type:Boolean,value:false},
-            ___acV_viewPitchDiff:{type:Number,value:0},
             ___acV_recordingPlayback:{type:Array,value:[]},
             ___aV_conversionId:{type:Number,value:0},
             ___acV_midiEvents:{type:Array,value:[]},
@@ -482,10 +481,17 @@
             await this.setDefaultViewPitchPromise ;
             this._acViewCallFunction('setDefaultViewPitch', this.___acV_default_viewPitch) ;
         }
+        async ___acVresetPitchState() {
+            await this.setDefaultViewPitchPromise ;
+            let pitchDiff = this.___acV_recordingPitchDiff ;
+            this.___acV_recordingPitchDiff = 0 ; 
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++)
+               nodeList[i].___acVaddPitch(this.___acV_default_viewPitch,-pitchDiff);
+        }
         async ___acVsetPitch(e){
             await this.setDefaultViewPitchPromise ;
             this.___acV_recordingPitchDiff += e.pitchDiff ; 
-            this.___acV_viewPitchDiff = e.viewPitch-this.___acV_default_viewPitch ; 
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++)
                nodeList[i].___acVaddPitch(e.viewPitch,e.pitchDiff);
