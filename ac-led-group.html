@@ -260,8 +260,11 @@
         ___acV_updateGUI() {
             if (this.playbackAcLedActions !== null && this.playbackAcLedActions !== undefined && this.playbackAcLedActions.length > 0) {
                 if (this.playbackAcLedActions.first.value.when < playbackContext.currentTime) {
-                    this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel);
-                    this.playbackAcLedActions.popFirst();
+                    let timeRef = this.playbackAcLedActions.first.value.when ; 
+                    while (this.playbackAcLedActions.length > 0 &&  this.playbackAcLedActions.first.value.when === timeRef) { 
+                        this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel);
+                        this.playbackAcLedActions.popFirst();
+                    }
                 }
             }
             for (var i = 0; i < this.___acV_instruments.length; i++) {
