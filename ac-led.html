@@ -81,8 +81,8 @@
             }
         }
         ___acVrender(origin,acLedState,note,channel){
-            if(note === undefined || channel === undefined )
-                return ; 
+            // if(note === undefined || channel === undefined )
+                // return ; 
             if (acLedState !== 0) {
                 this.shadowRoot.querySelector('['+origin+'AcLed]').style.display = 'block' ;
                 var color = this.___acV_getACLedColor(acLedState,origin) ;
