@@ -78,6 +78,7 @@
     class ACView extends Polymer.Element {
         static get is() { return 'ac-view'; }
         static get properties() {return {
+            ___acV_userPreferences:{type:Object},
             ___acV_name:{type:String},
             ___acV_rotates:{type:Boolean,value:false},
             ___acV_displaysNotes:{type:Boolean,value:false},
@@ -365,6 +366,15 @@
                 nodeList[i].___acVsetNoteDisplay(value);
             }
         }
+        ___acVmutePlayback() {
+            this.___acVsetOpacity('playback', 0 ) ; 
+            playbackMasterGain.gain.setValueAtTime(playbackMasterGain.gain.value, playbackContext.currentTime);
+            playbackMasterGain.gain.exponentialRampToValueAtTime(0.00001, playbackContext.currentTime + 1);
+        }
+        ___acVunMutePlayback() {
+            this.___acVsetOpacity('playback', 100 ) ; 
+            playbackMasterGain.gain.value = 1 ; 
+        }
         ___acVsetOpacity (origin, opacity) {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
@@ -398,6 +408,18 @@
         }
         ___acVsetCurrentPlaybackTime (time) {
             this.___acVcurrentPlaybackTime = time;
+        }
+        ___acVdim() {
+            let nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');   
+            for(let i = 0 ; i < nodeList.length ; i ++ ){
+                this.___acVsettingsUpdate('playback_opacity',50) ; 
+            }
+        }
+        ___acVunDim() {
+            let nodeList = Polymer.dom(this.root).querySelectorAll('[acLedGroup]');   
+            for(let i = 0 ; i < nodeList.length ; i ++ ){
+                this.___acVsettingsUpdate('playback_opacity',this.___acV_userPreferences['playback_opacity']) ; 
+            }
         }
         ___acV_generateUniversalRecording(recording){
             this.___acVrecording = recording;
@@ -511,6 +533,7 @@
         async ___acVsetPreferences (e) {
             await playbackAudioContextInit ;
             await instrumentAudioContextInit ;
+            this.___acV_userPreferences = e ; 
             this.___acVsetReverb(e['reverb']);
             this.___acVreverb = e['reverb'];
             this.___acVsetRotation(e['rotation']);
