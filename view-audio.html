@@ -139,7 +139,7 @@
             for (let i = 0; i < this.origins.length; i++) {
                 this[this.origins[i] + 'Actions'] = [];
             }
-            var rec_zippedBlob = await (await fetch('/data/piano_c.sfz.zip')).blob();
+            var rec_zippedBlob = await (await fetch('/data/Flute_hq.csfz.zip')).blob();
             let audioArrayBuffers ; 
             zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
                 zipReader.getEntries(async entries => {
@@ -169,6 +169,7 @@
                                 var bufferPart = fR.result.slice(40, 48);
                                 let bufferView = new Uint32Array(bufferPart);
                                 sampleRate = bufferView[0];
+                                // sampleRate = 44100 ; 
                                 audioBuffer = await playbackContext.decodeAudioData(fR.result);
                                 this.entryReadR();
                             }
@@ -181,7 +182,7 @@
                                 this.sfz[0].regions[i].audioBuffer = audioBuffer;
                                 if (this.sfz[0].regions[i].loop_start !== undefined) {
                                     let loop_start = parseInt(this.sfz[0].regions[i].loop_start);
-                                    let loop_end = parseInt(this.sfz[0].regions[i].loop_end);
+                                    let loop_end = parseInt(this.sfz[0].regions[i].loop_end)+1;
                                     this.sfz[0].regions[i].loopStart = loop_start / sampleRate;
                                     this.sfz[0].regions[i].loopEnd = loop_end / sampleRate;
                                 }
