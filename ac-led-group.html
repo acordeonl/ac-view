@@ -163,12 +163,12 @@
                 }, bubbles: true, composed: true }));
                 return ;
             }
-            if (e.cmd === 'note-on' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] !== undefined )
+            if (e.cmd === 'note-on' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note] )
                 this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(note,e);
-            else if (e.cmd ==='note-off' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] !== undefined){
+            else if (e.cmd ==='note-off' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note]){
                 this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e);
             }
-            if (this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').notesBuffers[note] === undefined )
+            if (!this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note] )
                 this.dispatchEvent(new CustomEvent('toast', {detail:{
                     msg:'Algunas notas no pueden ser reproducidas debido a que no se encuentran en el audio de la visualización'
                 }, bubbles: true, composed: true }));

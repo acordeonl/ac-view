@@ -7,14 +7,14 @@
         }
         static get properties() {
             return {
-                /* ------------------- Loading ------------------- */
+            /* ------------------- Loading ------------------- */
                 defaultAudioUrl: {
                     type: String
                 },
                 audioUrl: {
                     type: String
                 },
-                /* ------------------- Initialization ------------------- */
+            /* ------------------- Initialization ------------------- */
                 sfz: {
                     type: Object,
                     value: {}
@@ -22,15 +22,7 @@
                 channel: {
                     type: Number
                 },
-                samples: {
-                    type: Array,
-                    value: []
-                },
-                loopDurations: {
-                    type: Array,
-                    value: []
-                },
-                /* ------------------- Volume ------------------- */
+            /* ------------------- Volume ------------------- */
                 instrumentVelocity: {
                     type: Number,
                     value: 1
@@ -63,7 +55,7 @@
                     type: Number,
                     value: 0
                 },
-                /* ------------------- Action ------------------- */
+            /* ------------------- Action ------------------- */
                 // playbackButtonActions
                 playbackActions: {
                     type: Array,
@@ -137,104 +129,93 @@
             return groups;
         }
         async loadAudio(audioUrl) {
-                this.audioUrl = audioUrl;
-                this.loopDurations = [];
-                this.samples = [];
-                this.playbackActions = [];
-                this.sfz = {};
-                for (let i = 0; i < this.origins.length; i++) {
-                    this[this.origins[i] + 'Actions'] = [];
-                }
-                var rec_zippedBlob = await (await fetch('/data/piano_c.sfz.zip')).blob();
-
-                let audioArrayBuffers
-                zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
-                    zipReader.getEntries(async entries => {
-                        this.withSFZ = new Promise(resolve => this.withSFZR = resolve);
-                        for (let i = 0; i < entries.length; i++) {
-                            if (entries[i].filename.endsWith('.sfz')) {
-                                entries[i].getData(new zip.BlobWriter("text/plain"), textBlob => {
-                                    let fR = new FileReader();
-                                    fR.readAsText(textBlob);
-                                    fR.onload = () => {
-                                        this.sfz = this.sfzParse(fR.result);
-                                        this.withSFZR();
-                                    }
-                                });
-                            }
-                        }
-                        await this.withSFZ;
-                        for (let i = 0; i < entries.length; i++) {
-                            if (entries[i].filename.endsWith('.sfz') || entries[i].filename.endsWith('/'))
-                                continue;
-                            let audioBuffer, sampleRate;
-                            this.entryRead = new Promise(resolve => this.entryReadR = resolve);
-                            entries[i].getData(new zip.BlobWriter('audio/wav'), wavBlob => {
+            this.audioUrl = audioUrl;
+            this.playbackActions = [];
+            this.hasNote = [] ; 
+            for(let i = 0 ; i < 256 ; i ++ ){
+                this.hasNote[i] = false ;
+            }
+            this.sfz = {};
+            for (let i = 0; i < this.origins.length; i++) {
+                this[this.origins[i] + 'Actions'] = [];
+            }
+            var rec_zippedBlob = await (await fetch('/data/piano_c.sfz.zip')).blob();
+            let audioArrayBuffers ; 
+            zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
+                zipReader.getEntries(async entries => {
+                    this.withSFZ = new Promise(resolve => this.withSFZR = resolve);
+                    for (let i = 0; i < entries.length; i++) {
+                        if (entries[i].filename.endsWith('.sfz')) {
+                            entries[i].getData(new zip.BlobWriter("text/plain"), textBlob => {
                                 let fR = new FileReader();
-                                fR.readAsArrayBuffer(wavBlob);
-                                fR.onload = async() => {
-                                    var bufferPart = fR.result.slice(40, 48);
-                                    let bufferView = new Uint32Array(bufferPart);
-                                    sampleRate = bufferView[0];
-                                    audioBuffer = await playbackContext.decodeAudioData(fR.result);
-                                    this.entryReadR();
+                                fR.readAsText(textBlob);
+                                fR.onload = () => {
+                                    this.sfz = this.sfzParse(fR.result);
+                                    this.withSFZR();
                                 }
                             });
-                            await this.entryRead;
-                            let tmp = entries[i].filename.split('/');
-                            let filename = tmp[tmp.length - 1].slice(0, -3) + 'wav';
-                            for (let i = 0; i < this.sfz[0].regions.length; i++) {
-                                if (this.sfz[0].regions[i].sample.endsWith(filename)) {
-                                    this.sfz[0].regions[i].audioBuffer = audioBuffer;
-                                    if (this.sfz[0].regions[i].loop_start !== undefined) {
-                                        let loop_start = parseInt(this.sfz[0].regions[i].loop_start);
-                                        let loop_end = parseInt(this.sfz[0].regions[i].loop_end);
-                                        this.sfz[0].regions[i].loopStart = loop_start / sampleRate;
-                                        this.sfz[0].regions[i].loopEnd = loop_end / sampleRate;
-                                    }
-                                }
-
-                            }
                         }
-                        console.log(this.sfz);
-                        zipReader.close();
-                    });
+                    }
+                    await this.withSFZ;
+                    for (let i = 0; i < entries.length; i++) {
+                        if (entries[i].filename.endsWith('.sfz') || entries[i].filename.endsWith('/'))
+                            continue;
+                        let audioBuffer, sampleRate;
+                        this.entryRead = new Promise(resolve => this.entryReadR = resolve);
+                        entries[i].getData(new zip.BlobWriter('audio/wav'), wavBlob => {
+                            let fR = new FileReader();
+                            fR.readAsArrayBuffer(wavBlob);
+                            fR.onload = async() => {
+                                var bufferPart = fR.result.slice(40, 48);
+                                let bufferView = new Uint32Array(bufferPart);
+                                sampleRate = bufferView[0];
+                                audioBuffer = await playbackContext.decodeAudioData(fR.result);
+                                this.entryReadR();
+                            }
+                        });
+                        await this.entryRead;
+                        let tmp = entries[i].filename.split('/');
+                        let filename = tmp[tmp.length - 1].slice(0, -3) + 'wav';
+                        for (let i = 0; i < this.sfz[0].regions.length; i++) {
+                            if (this.sfz[0].regions[i].sample.endsWith(filename)) {
+                                this.sfz[0].regions[i].audioBuffer = audioBuffer;
+                                if (this.sfz[0].regions[i].loop_start !== undefined) {
+                                    let loop_start = parseInt(this.sfz[0].regions[i].loop_start);
+                                    let loop_end = parseInt(this.sfz[0].regions[i].loop_end);
+                                    this.sfz[0].regions[i].loopStart = loop_start / sampleRate;
+                                    this.sfz[0].regions[i].loopEnd = loop_end / sampleRate;
+                                }
+                            }
+
+                        }
+                    }
+                    for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
+                        let low = parseInt(this.sfz[0].regions[i].lokey) ;
+                        let high = parseInt(this.sfz[0].regions[i].hikey) ;
+                        for(let j = low ; j <= high ; j ++ )
+                            this.hasNote[j] = true ; 
+                    }
+                    this.dispatchEvent(new CustomEvent('view-audio-load', {
+                        bubbles: true,
+                        composed: true
+                    }));
+                    zipReader.close();
                 });
-
-
-                var bb = new DataView(arrayBuffer);
-                var notesLoaded = 0,
-                    totalNotes = bb.getUint32(0);
-                var currentByte = 4;
-                for (var i = 0; i < totalNotes; i++) {
-                    var loopDuration = bb.getFloat64(currentByte);
-                    currentByte += 8;
-                    var midiNote = bb.getUint32(currentByte);
-                    currentByte += 4;
-                    var byteLength = bb.getUint32(currentByte);
-                    currentByte += 4;
-
-                    var dstU8 = new Uint8Array(byteLength);
-                    var srcU8 = new Uint8Array(arrayBuffer, currentByte, byteLength);
-                    currentByte += byteLength;
-                    dstU8.set(srcU8);
-                    var sound = dstU8;
-                    var audioBuffer = await playbackContext.decodeAudioData(sound.buffer);
-                    this.samples[midiNote] = audioBuffer;
-                    this.loopDurations[midiNote] = loopDuration;
-                    if (++notesLoaded === totalNotes)
-                        this.dispatchEvent(new CustomEvent('view-audio-load', {
-                            bubbles: true,
-                            composed: true
-                        }));
-                }
-            }
-            /* ------------- Audio synth ------------------ */
+            });
+        }
+    /* ------------- Audio synth ------------------ */
         setVelocity(velocity) {
             this.instrumentVelocity = velocity;
             this.instrumentSynthGain.gain.value = this.instrumentGain * this.instrumentVelocity;
         }
+        getSample(note) { 
+            for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
+                if(parseInt(this.sfz[0].regions[i].lokey) <= note && note <= parseInt(this.sfz[0].regions[i].hikey) )
+                    return this.sfz[0].regions[i] ;                     
+            }
+        }
         _startAudio(note, e) {
+            let sample = this.getSample(note) ;
             if (e.origin === 'playback') {
                 if (this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null) {
                     var when = playbackContext.currentTime;
@@ -254,11 +235,12 @@
                 this.playbackActions[e.midiNote].gain = playbackContext.createGain();
                 this.playbackActions[e.midiNote].gain.value = 0.7;
                 this.playbackActions[e.midiNote].source = playbackContext.createBufferSource();
-                this.playbackActions[e.midiNote].source.buffer = this.samples[note];
 
-                if (this.loopDurations[note] !== -1) {
-                    this.playbackActions[e.midiNote].source.loopStart = this.playbackActions[e.midiNote].source.buffer.duration - this.loopDurations[note];
-                    this.playbackActions[e.midiNote].source.loopEnd = this.playbackActions[e.midiNote].source.buffer.duration;
+                this.playbackActions[e.midiNote].source.buffer = sample.audioBuffer ; 
+                this.playbackActions[e.midiNote].source.detune.value = (note-sample.pitch_keycenter)*100 ;
+                if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
+                    this.playbackActions[e.midiNote].source.loopStart = sample.loopStart;
+                    this.playbackActions[e.midiNote].source.loopEnd = sample.loopEnd ; 
                     this.playbackActions[e.midiNote].source.loop = true;
                 }
 
@@ -283,11 +265,11 @@
                 this[e.origin + 'Actions'][e.midiNote].gain = instrumentContext.createGain();
                 this[e.origin + 'Actions'][e.midiNote].gain.value = 0.7;
                 this[e.origin + 'Actions'][e.midiNote].source = instrumentContext.createBufferSource();
-                this[e.origin + 'Actions'][e.midiNote].source.buffer = this.samples[note];
-
-                if (this.loopDurations[note] !== -1) {
-                    this[e.origin + 'Actions'][e.midiNote].source.loopStart = this[e.origin + 'Actions'][e.midiNote].source.buffer.duration - this.loopDurations[note];
-                    this[e.origin + 'Actions'][e.midiNote].source.loopEnd = this[e.origin + 'Actions'][e.midiNote].source.buffer.duration;
+                this[e.origin + 'Actions'][e.midiNote].source.buffer = sample.audioBuffer;
+                this[e.origin + 'Actions'][e.midiNote].source.detune.value = (e.midiNote-sample.pitch_keycenter)*100 ;
+                if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
+                    this[e.origin + 'Actions'][e.midiNote].source.loopStart = sample.loopStart ; 
+                    this[e.origin + 'Actions'][e.midiNote].source.loopEnd = sample.loopEnd ; 
                     this[e.origin + 'Actions'][e.midiNote].source.loop = true;
                 }
 
@@ -397,10 +379,10 @@
         }
         ready() {
             super.ready();
-            this.loopDurations = [];
-            this.samples = [];
             this.playbackActions = [];
             this.origins = [];
+            this.hasNote = [] ; 
+            
             this.originsSetupPromiseR();
             if (this.instrumentSynthGain === undefined)
                 this.instrumentSynthGain = instrumentContext.createGain();
