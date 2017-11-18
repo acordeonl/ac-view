@@ -139,7 +139,7 @@
             for (let i = 0; i < this.origins.length; i++) {
                 this[this.origins[i] + 'Actions'] = [];
             }
-            var rec_zippedBlob = await (await fetch('/data/Flute-ogg.zip')).blob();
+            var rec_zippedBlob = await (await fetch('/data/Flute.zip')).blob();
             let audioArrayBuffers ; 
             zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
                 zipReader.getEntries(async entries => {
@@ -160,6 +160,8 @@
                     for (let i = 0; i < entries.length; i++) {
                         if (entries[i].filename.endsWith('.sfz') || entries[i].filename.endsWith('/'))
                             continue;
+                        if(!entries[i].filename.endsWith('.wav') && !entries[i].filename.endsWith('ogg') )
+                            continue ; 
                         let audioBuffer, sampleRate;
                         let fileType = entries[i].filename.slice(-3) ; 
                         this.entryRead = new Promise(resolve => this.entryReadR = resolve);
