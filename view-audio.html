@@ -139,7 +139,7 @@
             for (let i = 0; i < this.origins.length; i++) {
                 this[this.origins[i] + 'Actions'] = [];
             }
-            var rec_zippedBlob = await (await fetch('/data/Flute_hq.csfz.zip')).blob();
+            var rec_zippedBlob = await (await fetch('/data/Flute-ogg.zip')).blob();
             let audioArrayBuffers ; 
             zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
                 zipReader.getEntries(async entries => {
@@ -161,15 +161,16 @@
                         if (entries[i].filename.endsWith('.sfz') || entries[i].filename.endsWith('/'))
                             continue;
                         let audioBuffer, sampleRate;
+                        let fileType = entries[i].filename.slice(-3) ; 
                         this.entryRead = new Promise(resolve => this.entryReadR = resolve);
                         entries[i].getData(new zip.BlobWriter('audio/wav'), wavBlob => {
                             let fR = new FileReader();
                             fR.readAsArrayBuffer(wavBlob);
                             fR.onload = async() => {
-                                var bufferPart = fR.result.slice(40, 48);
+                                let bufferPart ; 
+                                bufferPart = (fileType === 'wav') ? fR.result.slice(24, 28) : fR.result.slice(40, 48) ; 
                                 let bufferView = new Uint32Array(bufferPart);
                                 sampleRate = bufferView[0];
-                                // sampleRate = 44100 ; 
                                 audioBuffer = await playbackContext.decodeAudioData(fR.result);
                                 this.entryReadR();
                             }
@@ -238,7 +239,10 @@
                 this.playbackActions[e.midiNote].source = playbackContext.createBufferSource();
 
                 this.playbackActions[e.midiNote].source.buffer = sample.audioBuffer ; 
-                this.playbackActions[e.midiNote].source.detune.value = (note-sample.pitch_keycenter)*100 ;
+                // this.playbackActions[e.midiNote].source.detune.value = (note-sample.pitch_keycenter)*100 ;
+                let semitones = note-sample.pitch_keycenter ; 
+                let semitoneRatio = Math.pow(2,1/12) ; 
+                this.playbackActions[e.midiNote].source.playbackRate.value = Math.pow(semitoneRatio,semitones) ; 
                 if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
                     this.playbackActions[e.midiNote].source.loopStart = sample.loopStart;
                     this.playbackActions[e.midiNote].source.loopEnd = sample.loopEnd ; 
@@ -267,7 +271,10 @@
                 this[e.origin + 'Actions'][e.midiNote].gain.value = 0.7;
                 this[e.origin + 'Actions'][e.midiNote].source = instrumentContext.createBufferSource();
                 this[e.origin + 'Actions'][e.midiNote].source.buffer = sample.audioBuffer;
-                this[e.origin + 'Actions'][e.midiNote].source.detune.value = (e.midiNote-sample.pitch_keycenter)*100 ;
+                // this[e.origin + 'Actions'][e.midiNote].source.detune.value = (e.midiNote-sample.pitch_keycenter)*100 ;
+                let semitones = e.midiNote-sample.pitch_keycenter ; 
+                let semitoneRatio = Math.pow(2,1/12) ; 
+                this[e.origin + 'Actions'][e.midiNote].source.playbackRate.value = Math.pow(semitoneRatio,semitones) ; 
                 if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
                     this[e.origin + 'Actions'][e.midiNote].source.loopStart = sample.loopStart ; 
                     this[e.origin + 'Actions'][e.midiNote].source.loopEnd = sample.loopEnd ; 
