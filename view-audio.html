@@ -139,7 +139,7 @@
             for (let i = 0; i < this.origins.length; i++) {
                 this[this.origins[i] + 'Actions'] = [];
             }
-            var rec_zippedBlob = await (await fetch('/data/Flute.zip')).blob();
+            var rec_zippedBlob = await (await fetch('/data/treble-ogg.zip')).blob();
             let audioArrayBuffers ; 
             zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
                 zipReader.getEntries(async entries => {
@@ -188,6 +188,10 @@
                                     let loop_end = parseInt(this.sfz[0].regions[i].loop_end)+1;
                                     this.sfz[0].regions[i].loopStart = loop_start / sampleRate;
                                     this.sfz[0].regions[i].loopEnd = loop_end / sampleRate;
+                                }
+                                if(this.sfz[0].regions[i].lokey === undefined && this.sfz[0].regions[i].hikey === undefined) {
+                                    this.sfz[0].regions[i].lokey = this.sfz[0].regions[i].pitch_keycenter ; 
+                                    this.sfz[0].regions[i].hikey = this.sfz[0].regions[i].pitch_keycenter ; 
                                 }
                             }
 
