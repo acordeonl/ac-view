@@ -133,7 +133,7 @@
                 e.acLedId = acLedIdsArr[i] ;
                 if (this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
                     this.dispatchEvent(new CustomEvent('toast', {detail:{
-                        msg:'La grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'
+                        msg:'La tonalidad de la grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'
                     }, bubbles: true, composed: true }));
                     return ;
                 }

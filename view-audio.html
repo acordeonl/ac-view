@@ -139,7 +139,7 @@
             for (let i = 0; i < this.origins.length; i++) {
                 this[this.origins[i] + 'Actions'] = [];
             }
-            var rec_zippedBlob = await (await fetch('/data/treble-ogg.zip')).blob();
+            var rec_zippedBlob = await (await fetch(audioUrl)).blob();
             let audioArrayBuffers ; 
             zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
                 zipReader.getEntries(async entries => {
@@ -193,16 +193,18 @@
                                     this.sfz[0].regions[i].lokey = this.sfz[0].regions[i].pitch_keycenter ; 
                                     this.sfz[0].regions[i].hikey = this.sfz[0].regions[i].pitch_keycenter ; 
                                 }
+                                this.sfz[0].regions[i].lokey = parseInt(this.sfz[0].regions[i].lokey) ; 
+                                this.sfz[0].regions[i].hikey = parseInt(this.sfz[0].regions[i].hikey) ; 
                             }
-
                         }
                     }
                     for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
-                        let low = parseInt(this.sfz[0].regions[i].lokey) ;
-                        let high = parseInt(this.sfz[0].regions[i].hikey) ;
+                        let low = this.sfz[0].regions[i].lokey ;
+                        let high = this.sfz[0].regions[i].hikey ;
                         for(let j = low ; j <= high ; j ++ )
                             this.hasNote[j] = true ; 
                     }
+                    this.updateSFZNoteRange() ; 
                     this.dispatchEvent(new CustomEvent('view-audio-load', {
                         bubbles: true,
                         composed: true
@@ -218,8 +220,32 @@
         }
         getSample(note) { 
             for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
-                if(parseInt(this.sfz[0].regions[i].lokey) <= note && note <= parseInt(this.sfz[0].regions[i].hikey) )
+                if(this.sfz[0].regions[i].lokey <= note && note <= this.sfz[0].regions[i].hikey )
                     return this.sfz[0].regions[i] ;                     
+            }
+        }
+        updateSFZNoteRange(){
+            for(let key = 0 ; key < 128 ; key ++ ){
+                let diff = 10000 , pos = -1 ; 
+                if(!this.hasNote[key]) {
+                    for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
+                        if(Math.abs(this.sfz[0].regions[i].lokey-key) < diff || Math.abs(this.sfz[0].regions[i].hikey-key) < diff){
+                            diff = Math.min(Math.abs(this.sfz[0].regions[i].lokey-key) , Math.abs(this.sfz[0].regions[i].hikey-key) )   ; 
+                            pos = i ; 
+                        }
+                    }
+                    if(key < this.sfz[0].regions[pos].lokey) {
+                        for(let i = key ; i < this.sfz[0].regions[pos].lokey ; i ++ )
+                            this.hasNote[i] = true ; 
+                        this.sfz[0].regions[pos].lokey = key ;
+                    } 
+                    if(key > this.sfz[0].regions[pos].hikey) { 
+                        for(let i = this.sfz[0].regions[pos].hikey+1 ; i <= key ; i ++ )
+                            this.hasNote[i] = true ; 
+                        this.sfz[0].regions[pos].hikey = key ; 
+                    }
+                    
+                }
             }
         }
         _startAudio(note, e) {
