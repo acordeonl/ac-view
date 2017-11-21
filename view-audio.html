@@ -16,8 +16,8 @@
                 },
             /* ------------------- Initialization ------------------- */
                 sfz: {
-                    type: Object,
-                    value: {}
+                    type: Array,
+                    value: []
                 },
                 channel: {
                     type: Number
@@ -132,18 +132,26 @@
             this.audioUrl = audioUrl;
             this.playbackActions = [];
             this.hasNote = [] ; 
-            for(let i = 0 ; i < 256 ; i ++ ){
+            this.sfz = [] ; 
+            for(let i = 0 ; i < 256 ; i ++ )
                 this.hasNote[i] = false ;
-            }
-            this.sfz = {};
-            for (let i = 0; i < this.origins.length; i++) {
+            for (let i = 0; i < this.origins.length; i++) 
                 this[this.origins[i] + 'Actions'] = [];
+
+            if(audioUrl !== '/data/accordion_synth_sfz/bass_chords-ogg.zip') { 
+                this.dispatchEvent(new CustomEvent('view-audio-load', {
+                    bubbles: true,
+                    composed: true
+                }));
+                return ; 
             }
+                
             var rec_zippedBlob = await (await fetch(audioUrl)).blob();
             let audioArrayBuffers ; 
             zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
                 zipReader.getEntries(async entries => {
-                    this.withSFZ = new Promise(resolve => this.withSFZR = resolve);
+                    let withSFZR = function (){} ; 
+                    let withSFZ = new Promise(resolve => withSFZR = resolve);
                     for (let i = 0; i < entries.length; i++) {
                         if (entries[i].filename.endsWith('.sfz')) {
                             entries[i].getData(new zip.BlobWriter("text/plain"), textBlob => {
@@ -151,20 +159,24 @@
                                 fR.readAsText(textBlob);
                                 fR.onload = () => {
                                     this.sfz = this.sfzParse(fR.result);
-                                    this.withSFZR();
+                                    withSFZR();
                                 }
                             });
                         }
                     }
-                    await this.withSFZ;
+                    await withSFZ;
+                    console.log('with sfz',audioUrl);
                     for (let i = 0; i < entries.length; i++) {
                         if (entries[i].filename.endsWith('.sfz') || entries[i].filename.endsWith('/'))
                             continue;
                         if(!entries[i].filename.endsWith('.wav') && !entries[i].filename.endsWith('ogg') )
                             continue ; 
+                        console.log('%c started reading', 'background: #222; color: #bada55');
+                        console.log(entries[i].filename);
                         let audioBuffer, sampleRate;
                         let fileType = entries[i].filename.slice(-3) ; 
-                        this.entryRead = new Promise(resolve => this.entryReadR = resolve);
+                        let entryReadR = function(){} ; 
+                        let entryRead = new Promise(resolve => entryReadR = resolve);
                         entries[i].getData(new zip.BlobWriter('audio/wav'), wavBlob => {
                             let fR = new FileReader();
                             fR.readAsArrayBuffer(wavBlob);
@@ -174,10 +186,13 @@
                                 let bufferView = new Uint32Array(bufferPart);
                                 sampleRate = bufferView[0];
                                 audioBuffer = await playbackContext.decodeAudioData(fR.result);
-                                this.entryReadR();
+                                console.log('with audio buffer for ', entries[i].filename);
+                                console.log(audioBuffer);
+                                entryReadR();
                             }
                         });
-                        await this.entryRead;
+                        await entryRead;
+                        console.log('entry read ', entries[i].filename);
                         let tmp = entries[i].filename.split('/');
                         let filename = tmp[tmp.length - 1].slice(0, -3) + 'wav';
                         for (let i = 0; i < this.sfz[0].regions.length; i++) {
@@ -197,6 +212,7 @@
                                 this.sfz[0].regions[i].hikey = parseInt(this.sfz[0].regions[i].hikey) ; 
                             }
                         }
+                        console.log('updated sfz with ', entries[i].filename ,'info');
                     }
                     for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
                         let low = this.sfz[0].regions[i].lokey ;
@@ -250,6 +266,10 @@
         }
         _startAudio(note, e) {
             let sample = this.getSample(note) ;
+            if(e.channel === 3) { 
+                console.log(sample);
+                console.log(note,sample.audioBuffer);
+            }
             if (e.origin === 'playback') {
                 if (this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null) {
                     var when = playbackContext.currentTime;
@@ -271,8 +291,9 @@
                 this.playbackActions[e.midiNote].source = playbackContext.createBufferSource();
 
                 this.playbackActions[e.midiNote].source.buffer = sample.audioBuffer ; 
-                // this.playbackActions[e.midiNote].source.detune.value = (note-sample.pitch_keycenter)*100 ;
-                let semitones = note-sample.pitch_keycenter ; 
+                let semitones = note-parseInt(sample.pitch_keycenter) ; 
+                if(e.channel === 3)
+                    console.log('MIRA VE',semitones);
                 let semitoneRatio = Math.pow(2,1/12) ; 
                 this.playbackActions[e.midiNote].source.playbackRate.value = Math.pow(semitoneRatio,semitones) ; 
                 if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
@@ -303,8 +324,7 @@
                 this[e.origin + 'Actions'][e.midiNote].gain.value = 0.7;
                 this[e.origin + 'Actions'][e.midiNote].source = instrumentContext.createBufferSource();
                 this[e.origin + 'Actions'][e.midiNote].source.buffer = sample.audioBuffer;
-                // this[e.origin + 'Actions'][e.midiNote].source.detune.value = (e.midiNote-sample.pitch_keycenter)*100 ;
-                let semitones = e.midiNote-sample.pitch_keycenter ; 
+                let semitones = e.midiNote-parseInt(sample.pitch_keycenter) ; 
                 let semitoneRatio = Math.pow(2,1/12) ; 
                 this[e.origin + 'Actions'][e.midiNote].source.playbackRate.value = Math.pow(semitoneRatio,semitones) ; 
                 if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
@@ -422,6 +442,7 @@
             this.playbackActions = [];
             this.origins = [];
             this.hasNote = [] ; 
+            this.sfz = [] ; 
             
             this.originsSetupPromiseR();
             if (this.instrumentSynthGain === undefined)
