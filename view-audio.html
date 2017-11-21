@@ -137,15 +137,7 @@
                 this.hasNote[i] = false ;
             for (let i = 0; i < this.origins.length; i++) 
                 this[this.origins[i] + 'Actions'] = [];
-
-            if(audioUrl !== '/data/accordion_synth_sfz/bass_chords-ogg.zip') { 
-                this.dispatchEvent(new CustomEvent('view-audio-load', {
-                    bubbles: true,
-                    composed: true
-                }));
-                return ; 
-            }
-                
+            
             var rec_zippedBlob = await (await fetch(audioUrl)).blob();
             let audioArrayBuffers ; 
             zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
@@ -165,14 +157,11 @@
                         }
                     }
                     await withSFZ;
-                    console.log('with sfz',audioUrl);
                     for (let i = 0; i < entries.length; i++) {
                         if (entries[i].filename.endsWith('.sfz') || entries[i].filename.endsWith('/'))
                             continue;
                         if(!entries[i].filename.endsWith('.wav') && !entries[i].filename.endsWith('ogg') )
                             continue ; 
-                        console.log('%c started reading', 'background: #222; color: #bada55');
-                        console.log(entries[i].filename);
                         let audioBuffer, sampleRate;
                         let fileType = entries[i].filename.slice(-3) ; 
                         let entryReadR = function(){} ; 
@@ -186,33 +175,34 @@
                                 let bufferView = new Uint32Array(bufferPart);
                                 sampleRate = bufferView[0];
                                 audioBuffer = await playbackContext.decodeAudioData(fR.result);
-                                console.log('with audio buffer for ', entries[i].filename);
-                                console.log(audioBuffer);
                                 entryReadR();
                             }
                         });
                         await entryRead;
-                        console.log('entry read ', entries[i].filename);
                         let tmp = entries[i].filename.split('/');
-                        let filename = tmp[tmp.length - 1].slice(0, -3) + 'wav';
-                        for (let i = 0; i < this.sfz[0].regions.length; i++) {
-                            if (this.sfz[0].regions[i].sample.endsWith(filename)) {
-                                this.sfz[0].regions[i].audioBuffer = audioBuffer;
-                                if (this.sfz[0].regions[i].loop_start !== undefined) {
-                                    let loop_start = parseInt(this.sfz[0].regions[i].loop_start);
-                                    let loop_end = parseInt(this.sfz[0].regions[i].loop_end)+1;
-                                    this.sfz[0].regions[i].loopStart = loop_start / sampleRate;
-                                    this.sfz[0].regions[i].loopEnd = loop_end / sampleRate;
+                        let entry_filename = tmp[tmp.length - 1].slice(0, -3) + 'wav';
+                        for (let j = 0; j < this.sfz[0].regions.length; j++) {
+                            let sample_prop = this.sfz[0].regions[j].sample ;  
+                            let sample_filename = "" ; 
+                            for(let k = sample_prop.length-1 ; sample_prop[k] !== '/' && sample_prop[k] !== "\\" && k >= 0; k -- )
+                                sample_filename += sample_prop[k] ; 
+                            sample_filename = sample_filename.split("").reverse().join("");
+                            if (sample_filename === entry_filename) {
+                                this.sfz[0].regions[j].audioBuffer = audioBuffer;
+                                if (this.sfz[0].regions[j].loop_start !== undefined) {
+                                    let loop_start = parseInt(this.sfz[0].regions[j].loop_start);
+                                    let loop_end = parseInt(this.sfz[0].regions[j].loop_end)+1;
+                                    this.sfz[0].regions[j].loopStart = loop_start / sampleRate;
+                                    this.sfz[0].regions[j].loopEnd = loop_end / sampleRate;
                                 }
-                                if(this.sfz[0].regions[i].lokey === undefined && this.sfz[0].regions[i].hikey === undefined) {
-                                    this.sfz[0].regions[i].lokey = this.sfz[0].regions[i].pitch_keycenter ; 
-                                    this.sfz[0].regions[i].hikey = this.sfz[0].regions[i].pitch_keycenter ; 
+                                if(this.sfz[0].regions[j].lokey === undefined && this.sfz[0].regions[j].hikey === undefined) {
+                                    this.sfz[0].regions[j].lokey = this.sfz[0].regions[j].pitch_keycenter ; 
+                                    this.sfz[0].regions[j].hikey = this.sfz[0].regions[j].pitch_keycenter ; 
                                 }
-                                this.sfz[0].regions[i].lokey = parseInt(this.sfz[0].regions[i].lokey) ; 
-                                this.sfz[0].regions[i].hikey = parseInt(this.sfz[0].regions[i].hikey) ; 
+                                this.sfz[0].regions[j].lokey = parseInt(this.sfz[0].regions[j].lokey) ; 
+                                this.sfz[0].regions[j].hikey = parseInt(this.sfz[0].regions[j].hikey) ; 
                             }
                         }
-                        console.log('updated sfz with ', entries[i].filename ,'info');
                     }
                     for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
                         let low = this.sfz[0].regions[i].lokey ;
@@ -228,6 +218,7 @@
                     zipReader.close();
                 });
             });
+            
         }
     /* ------------- Audio synth ------------------ */
         setVelocity(velocity) {
@@ -266,10 +257,6 @@
         }
         _startAudio(note, e) {
             let sample = this.getSample(note) ;
-            if(e.channel === 3) { 
-                console.log(sample);
-                console.log(note,sample.audioBuffer);
-            }
             if (e.origin === 'playback') {
                 if (this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null) {
                     var when = playbackContext.currentTime;
@@ -292,8 +279,6 @@
 
                 this.playbackActions[e.midiNote].source.buffer = sample.audioBuffer ; 
                 let semitones = note-parseInt(sample.pitch_keycenter) ; 
-                if(e.channel === 3)
-                    console.log('MIRA VE',semitones);
                 let semitoneRatio = Math.pow(2,1/12) ; 
                 this.playbackActions[e.midiNote].source.playbackRate.value = Math.pow(semitoneRatio,semitones) ; 
                 if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
