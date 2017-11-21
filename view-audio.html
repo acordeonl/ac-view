@@ -42,6 +42,12 @@
             for(let i = 0 ; i < this.origins.length ; i ++ ){
                 this[this.origins[i]+'Actions'] = []  ;  
             }
+
+            if(audioUrl !== '/data/accordion_synth/bass_chords.mp3') { 
+                this.dispatchEvent(new CustomEvent('view-audio-load', { bubbles: true, composed: true }));
+                return ;
+            }
+                
             var arrayBuffer = await(await fetch(audioUrl)).arrayBuffer();
             var bb = new DataView(arrayBuffer);
             var notesLoaded = 0, totalNotes = bb.getUint32(0);
@@ -72,6 +78,8 @@
             this.instrumentSynthGain.gain.value = this.instrumentGain*this.instrumentVelocity ;
         }
         _startAudio(note,e){
+            if(e.channel === 3)
+                console.log(note);
             if(e.origin ==='playback') {
                 if(this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null){
                     var when =  playbackContext.currentTime ;
