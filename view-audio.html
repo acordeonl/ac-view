@@ -88,7 +88,7 @@
         }
         sfzParse(file) {
             let regions = []  ; 
-            file = file.replace(new RegExp('(<\\w+>)','g'),'</region> $1') +'</region>' ; 
+            file = file.replace(new RegExp('(<\\w+>)','g'),'</region> $1') +' </region>' ; 
             file = file.replace(new RegExp('\r?\n|\r','g'), ' ') ; 
             let region_props = file.match(new RegExp("<region>(.*?)<\/region>","g")) ; 
             for(let i = 0 ; i < region_props.length ; i ++ ){
