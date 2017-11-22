@@ -15,10 +15,6 @@
                     type: String
                 },
             /* ------------------- Initialization ------------------- */
-                sfz: {
-                    type: Array,
-                    value: []
-                },
                 channel: {
                     type: Number
                 },
@@ -80,59 +76,38 @@
                 super();
                 this.originsSetupPromise = new Promise(resolve => this.originsSetupPromiseR = resolve);
             }
-            /* --------- audio loading ----------------- */
-        sfzParse(file) {
-            const groups = [];
-            let group;
-            let region;
-            let afterGlobal = false;
-            for (let line of file.split("\n")) {
-                line = line.trim();
-                if (line === "") {} else if (line.startsWith("//")) {
-
-                } else if (line.startsWith("<") && line.endsWith(">")) {
-                    const tag = line.slice(1, -1);
-
-                    if (tag === "group") {
-                        afterGlobal = true;
-                        group = {
-                            regions: []
-                        };
-
-                        groups.push(group);
-
-                        region = null;
-                    } else if (tag === "region") {
-                        afterGlobal = true;
-                        region = {};
-
-                        group.regions.push(region);
-                    } else if (tag !== 'global') {
-                        throw new Error(`tag '${tag}' unrecognised`);
-                    }
-                } else if (afterGlobal) {
-                    if (!line.includes('wav')) {
-                        for (let pair of line.split(" ")) {
-                            const [key, value] = pair.split("=");
-                            if (region) {
-                                region[key] = value;
-                            } else {
-                                group[key] = value;
-                            }
-                        }
-                    } else {
-                        const [key, value] = line.split('=');
-                        region[key] = value;
-                    }
-                }
+    /* --------- audio loading ----------------- */
+        getTextBetweenWords(str,word1,word2) { 
+            let re2 = new RegExp(word1+'(.*?)'+word2,'g') ; 
+            let res = str.match(re2) ; 
+            if(res !== null) {
+                res = res[0].replace(new RegExp(word1,'g') , '') ; 
+                res = res.replace(new RegExp(word2,'g'),'') ;  
             }
-            return groups;
+            return res ; 
+        }
+        sfzParse(file) {
+            let regions = []  ; 
+            file = file.replace(new RegExp('(<\\w+>)','g'),'</region> $1') +'</region>' ; 
+            file = file.replace(new RegExp('\r?\n|\r','g'), ' ') ; 
+            let region_props = file.match(new RegExp("<region>(.*?)<\/region>","g")) ; 
+            for(let i = 0 ; i < region_props.length ; i ++ ){
+                regions[i] = {} ; 
+                regions[i].sample = this.getTextBetweenWords(region_props[i],'sample=','.wav')+'.wav' ; 
+                regions[i].lokey = parseInt(this.getTextBetweenWords(region_props[i],'lokey=',' ')) ; 
+                regions[i].hikey = parseInt(this.getTextBetweenWords(region_props[i],'hikey=',' ')) ; 
+                regions[i].pitch_keycenter = parseInt(this.getTextBetweenWords(region_props[i],'pitch_keycenter=',' ')) ; 
+                regions[i].loop_start = parseInt(this.getTextBetweenWords(region_props[i],'loop_start=',' ')) ; 
+                regions[i].loop_end = parseInt(this.getTextBetweenWords(region_props[i],'loop_end=',' ')) ; 
+                regions[i].tune = parseInt(this.getTextBetweenWords(region_props[i],'tune=',' ')) ; 
+            }
+            return regions ; 
         }
         async loadAudio(audioUrl) {
             this.audioUrl = audioUrl;
             this.playbackActions = [];
             this.hasNote = [] ; 
-            this.sfz = [] ; 
+            this.regions = [] ; 
             for(let i = 0 ; i < 256 ; i ++ )
                 this.hasNote[i] = false ;
             for (let i = 0; i < this.origins.length; i++) 
@@ -150,10 +125,11 @@
                                 let fR = new FileReader();
                                 fR.readAsText(textBlob);
                                 fR.onload = () => {
-                                    this.sfz = this.sfzParse(fR.result);
+                                    this.regions = this.sfzParse(fR.result);
                                     withSFZR();
                                 }
                             });
+                            break; 
                         }
                     }
                     await withSFZ;
@@ -181,32 +157,30 @@
                         await entryRead;
                         let tmp = entries[i].filename.split('/');
                         let entry_filename = tmp[tmp.length - 1].slice(0, -3) + 'wav';
-                        for (let j = 0; j < this.sfz[0].regions.length; j++) {
-                            let sample_prop = this.sfz[0].regions[j].sample ;  
+                        for (let j = 0; j < this.regions.length; j++) {
+                            let sample_prop = this.regions[j].sample ;  
                             let sample_filename = "" ; 
                             for(let k = sample_prop.length-1 ; sample_prop[k] !== '/' && sample_prop[k] !== "\\" && k >= 0; k -- )
                                 sample_filename += sample_prop[k] ; 
                             sample_filename = sample_filename.split("").reverse().join("");
                             if (sample_filename === entry_filename) {
-                                this.sfz[0].regions[j].audioBuffer = audioBuffer;
-                                if (this.sfz[0].regions[j].loop_start !== undefined) {
-                                    let loop_start = parseInt(this.sfz[0].regions[j].loop_start);
-                                    let loop_end = parseInt(this.sfz[0].regions[j].loop_end)+1;
-                                    this.sfz[0].regions[j].loopStart = loop_start / sampleRate;
-                                    this.sfz[0].regions[j].loopEnd = loop_end / sampleRate;
+                                this.regions[j].audioBuffer = audioBuffer;
+                                if (!isNaN(this.regions[j].loop_start)) {
+                                    let loop_start = this.regions[j].loop_start;
+                                    let loop_end = this.regions[j].loop_end+1;
+                                    this.regions[j].loopStart = loop_start / sampleRate;
+                                    this.regions[j].loopEnd = loop_end / sampleRate;
                                 }
-                                if(this.sfz[0].regions[j].lokey === undefined && this.sfz[0].regions[j].hikey === undefined) {
-                                    this.sfz[0].regions[j].lokey = this.sfz[0].regions[j].pitch_keycenter ; 
-                                    this.sfz[0].regions[j].hikey = this.sfz[0].regions[j].pitch_keycenter ; 
+                                if( isNaN(this.regions[j].lokey) && isNaN(this.regions[j].hikey)) {
+                                    this.regions[j].lokey = this.regions[j].pitch_keycenter ; 
+                                    this.regions[j].hikey = this.regions[j].pitch_keycenter ; 
                                 }
-                                this.sfz[0].regions[j].lokey = parseInt(this.sfz[0].regions[j].lokey) ; 
-                                this.sfz[0].regions[j].hikey = parseInt(this.sfz[0].regions[j].hikey) ; 
                             }
                         }
                     }
-                    for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
-                        let low = this.sfz[0].regions[i].lokey ;
-                        let high = this.sfz[0].regions[i].hikey ;
+                    for(let i = 0 ; i < this.regions.length ; i ++ ){
+                        let low = this.regions[i].lokey ;
+                        let high = this.regions[i].hikey ;
                         for(let j = low ; j <= high ; j ++ )
                             this.hasNote[j] = true ; 
                     }
@@ -226,30 +200,30 @@
             this.instrumentSynthGain.gain.value = this.instrumentGain * this.instrumentVelocity;
         }
         getSample(note) { 
-            for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
-                if(this.sfz[0].regions[i].lokey <= note && note <= this.sfz[0].regions[i].hikey )
-                    return this.sfz[0].regions[i] ;                     
+            for(let i = 0 ; i < this.regions.length ; i ++ ){
+                if(this.regions[i].lokey <= note && note <= this.regions[i].hikey )
+                    return this.regions[i] ;                     
             }
         }
         updateSFZNoteRange(){
             for(let key = 0 ; key < 128 ; key ++ ){
                 let diff = 10000 , pos = -1 ; 
                 if(!this.hasNote[key]) {
-                    for(let i = 0 ; i < this.sfz[0].regions.length ; i ++ ){
-                        if(Math.abs(this.sfz[0].regions[i].lokey-key) < diff || Math.abs(this.sfz[0].regions[i].hikey-key) < diff){
-                            diff = Math.min(Math.abs(this.sfz[0].regions[i].lokey-key) , Math.abs(this.sfz[0].regions[i].hikey-key) )   ; 
+                    for(let i = 0 ; i < this.regions.length ; i ++ ){
+                        if(Math.abs(this.regions[i].lokey-key) < diff || Math.abs(this.regions[i].hikey-key) < diff){
+                            diff = Math.min(Math.abs(this.regions[i].lokey-key) , Math.abs(this.regions[i].hikey-key) )   ; 
                             pos = i ; 
                         }
                     }
-                    if(key < this.sfz[0].regions[pos].lokey) {
-                        for(let i = key ; i < this.sfz[0].regions[pos].lokey ; i ++ )
+                    if(key < this.regions[pos].lokey) {
+                        for(let i = key ; i < this.regions[pos].lokey ; i ++ )
                             this.hasNote[i] = true ; 
-                        this.sfz[0].regions[pos].lokey = key ;
+                        this.regions[pos].lokey = key ;
                     } 
-                    if(key > this.sfz[0].regions[pos].hikey) { 
-                        for(let i = this.sfz[0].regions[pos].hikey+1 ; i <= key ; i ++ )
+                    if(key > this.regions[pos].hikey) { 
+                        for(let i = this.regions[pos].hikey+1 ; i <= key ; i ++ )
                             this.hasNote[i] = true ; 
-                        this.sfz[0].regions[pos].hikey = key ; 
+                        this.regions[pos].hikey = key ; 
                     }
                     
                 }
@@ -427,7 +401,7 @@
             this.playbackActions = [];
             this.origins = [];
             this.hasNote = [] ; 
-            this.sfz = [] ; 
+            this.regions = [] ; 
             
             this.originsSetupPromiseR();
             if (this.instrumentSynthGain === undefined)
