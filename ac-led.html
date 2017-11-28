@@ -37,9 +37,9 @@
             }
             this.originsACLedState[origin][acLedState] = color ; 
         }
-        ___acV_getNoteName(note){
+        ___acV_getMIDINoteName(note){
             var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
-            var octave = Math.floor(note / 12);
+            var octave = Math.floor(note / 12)-1;
             var name = notes[note % 12];
             name += octave;
             return name;
@@ -83,6 +83,27 @@
         ___acVrender(origin,acLedState,note,channel){
             if(note === undefined )
                 return ; 
+
+            // if(channel === undefined)
+            //     channel = 0 ; 
+
+            // let cmd = 8 ; 
+            // if (acLedState > 0) 
+            //     cmd = 9 ; 
+            // var when = 0 ; 
+            // let velocity = 70 ; 
+
+            // for (let output of midiOutputs.values()) {
+            //     if(output.name !== 'Midi Through Port-0')
+            //         continue ; 
+            //     let outputEvent = [] ; 
+            //     outputEvent[0] = cmd << 4 ; 
+            //     outputEvent[0] |= 9 ; 
+            //     outputEvent[1] = note ; 
+            //     outputEvent[2] = velocity ; 
+            //     output.send(outputEvent); 
+            // }
+
             if (acLedState !== 0) {
                 this.shadowRoot.querySelector('['+origin+'AcLed]').style.display = 'block' ;
                 var color = this.___acV_getACLedColor(acLedState,origin) ;
@@ -99,11 +120,11 @@
                         if (this.___acV_isMonophonic) {
                             this.dispatchEvent(new CustomEvent('gui-action', {detail:{
                                 cmd:'playbackNoteOn',
-                                note:this.___acV_getNoteName(note,channel)
+                                note:this.___acV_getMIDINoteName(note,channel)
                             }, bubbles: true, composed: true }));
                         }
                         else{
-                            this.shadowRoot.querySelector('[playbackNote]').innerHTML = this.___acV_getNoteName(note,channel) ;
+                            this.shadowRoot.querySelector('[playbackNote]').innerHTML = this.___acV_getMIDINoteName(note,channel) ;
                         }
                     }
                 }
@@ -114,11 +135,11 @@
                             if (this.___acV_isMonophonic) {
                                 this.dispatchEvent(new CustomEvent('gui-action', {detail:{
                                     cmd:'instrumentNoteOn',
-                                    note:this.___acV_getNoteName(note,channel)
+                                    note:this.___acV_getMIDINoteName(note,channel)
                                 }, bubbles: true, composed: true }));
                             }
                             else{
-                                this.shadowRoot.querySelector('['+origin+'Note]').innerHTML = this.___acV_getNoteName(note,channel) ;
+                                this.shadowRoot.querySelector('['+origin+'Note]').innerHTML = this.___acV_getMIDINoteName(note,channel) ;
                             }
                         }
                     }

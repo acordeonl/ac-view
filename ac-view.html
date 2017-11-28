@@ -192,6 +192,13 @@
             }
         }
     /* ------------- MIDI --------------------- */
+        ___acV_getMIDINoteName(note){
+            var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+            var octave = Math.floor(note / 12)-1;
+            var name = notes[note % 12];
+            name += octave;
+            return name;
+        }
         ___acVonMIDIEvent (e) {
             if (this.___acVorigins[e.origin] === undefined)
                 this.___acVaddOrigin(e.origin) ;
@@ -615,11 +622,8 @@
                 nodeList[i].style.visibility = 'hidden' ;
             }
             this.midiNameToNumber = [] ;
-            for (let i = 0; i < 200; i++) {
-                var noteName = "C C#D EbE F F#G AbA BbB ";
-                noteName = (noteName.substring((i % 12) * 2, (i % 12) * 2 + 2) + (Math.floor(i / 12) ).toString()).replace(" ", "");
-                this.midiNameToNumber[noteName] = i ;
-            }
+            for (let i = 0; i < 200; i++) 
+                this.midiNameToNumber[this.___acV_getMIDINoteName(i)] = i ;
             this.___acV_initAcLeds();
             this.___acVaddOrigin('chord') ;
             this.___acVaddOrigin('keyboard') ;

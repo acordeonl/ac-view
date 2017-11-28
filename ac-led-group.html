@@ -85,6 +85,13 @@
             }
         }
     /* ------------------- MIDIEvents ------------------- */
+        ___acV_getMIDINoteName(note){
+            var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+            var octave = Math.floor(note / 12)-1;
+            var name = notes[note % 12];
+            name += octave;
+            return name;
+        }
         ___acVSetViewPitch(viewPitch) {
             this.___acV_viewPitchDiff = viewPitch ; 
         }
@@ -156,13 +163,13 @@
             }
         }
         ___acV_MIDIEventToAudio(e){
-            var note = this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin,e.initiator) ;
-            if (this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === undefined) {
-                this.dispatchEvent(new CustomEvent('toast', {detail:{
-                    msg:'La visualización seleccionada no soporta el canal '+e.channel
-                }, bubbles: true, composed: true }));
-                return ;
-            }
+            // var note = this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin,e.initiator) ;
+            // if (this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === undefined || this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === null) {
+            //     this.dispatchEvent(new CustomEvent('toast', {detail:{
+            //         msg:'La visualización seleccionada no soporta el canal '+(e.channel+1)
+            //     }, bubbles: true, composed: true }));
+            //     return ;
+            // }
             if (e.cmd === 'note-on' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note] )
                 this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(note,e);
             else if (e.cmd ==='note-off' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note]){
