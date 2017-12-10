@@ -256,8 +256,8 @@
                 // let semitoneRatio = Math.pow(2,1/12) ; 
                 // this.playbackActions[e.midiNote].source.playbackRate.value = Math.pow(semitoneRatio,semitones) ; 
                 let detune = (note-sample.pitch_keycenter)*100 ;  
-                if(!isNaN(sample.tune)) 
-                    detune += sample.tune ;
+                // if(!isNaN(sample.tune)) 
+                //     detune += sample.tune ;
                 this.playbackActions[e.midiNote].source.detune.value = detune ; 
                     
                 if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
@@ -292,8 +292,8 @@
                 // let semitoneRatio = Math.pow(2,1/12) ; 
                 // this[e.origin + 'Actions'][e.midiNote].source.playbackRate.value = Math.pow(semitoneRatio,semitones) ; 
                 let detune = (note-sample.pitch_keycenter)*100 ;  ; 
-                if(!isNaN(sample.tune)) 
-                    detune += sample.tune ; 
+                // if(!isNaN(sample.tune)) 
+                //     detune += sample.tune ; 
                 this[e.origin + 'Actions'][e.midiNote].source.detune.value = detune ;
 
                 if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {

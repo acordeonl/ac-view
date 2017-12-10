@@ -163,13 +163,13 @@
             }
         }
         ___acV_MIDIEventToAudio(e){
-            // var note = this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin,e.initiator) ;
-            // if (this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === undefined || this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === null) {
-            //     this.dispatchEvent(new CustomEvent('toast', {detail:{
-            //         msg:'La visualización seleccionada no soporta el canal '+(e.channel+1)
-            //     }, bubbles: true, composed: true }));
-            //     return ;
-            // }
+            var note = this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin,e.initiator) ;
+            if (this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === undefined || this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === null) {
+                this.dispatchEvent(new CustomEvent('toast', {detail:{
+                    msg:'La visualización seleccionada no soporta el canal '+(e.channel+1)
+                }, bubbles: true, composed: true }));
+                return ;
+            }
             if (e.cmd === 'note-on' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note] )
                 this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']')._startAudio(note,e);
             else if (e.cmd ==='note-off' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note]){
@@ -332,6 +332,7 @@
             for (let i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVclearGUI(origin);
             }
+            allNotesOff() ; 
         }
         ___acV_displayMonophonicNote(e) {
             if(this.shadowRoot.querySelector('[playbackNote]') !== undefined && this.shadowRoot.querySelector('[playbackNote]') !== null ) { 
@@ -415,6 +416,7 @@
             for (var i = 0; i < nodeList.length; i++) {
                 viewAudios.push ( {
                     name: nodeList[i].id,
+                    channel:nodeList[i].channel+1,
                     url: nodeList[i].audioUrl,
                     acLedsGroupIndex: this.___acV_index,
                     viewAudioIndex: i

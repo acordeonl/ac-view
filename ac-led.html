@@ -84,26 +84,29 @@
             if(note === undefined )
                 return ; 
 
-            // if(channel === undefined)
-            //     channel = 0 ; 
+            if(channel === undefined)
+                channel = 0 ; 
 
-            // let cmd = 8 ; 
-            // if (acLedState > 0) 
-            //     cmd = 9 ; 
-            // var when = 0 ; 
-            // let velocity = 70 ; 
+            let cmd = 8 ; 
+            if (acLedState > 0) 
+                cmd = 9 ; 
+            var when = 0 ; 
+            let velocity = 70 ; 
 
-            // for (let output of midiOutputs.values()) {
-            //     if(output.name !== 'Midi Through Port-0')
-            //         continue ; 
-            //     let outputEvent = [] ; 
-            //     outputEvent[0] = cmd << 4 ; 
-            //     outputEvent[0] |= 9 ; 
-            //     outputEvent[1] = note ; 
-            //     outputEvent[2] = velocity ; 
-            //     output.send(outputEvent); 
+            // if(appIsPlaying){
+                let outputPorts = midiEnabledOutputs.values() ; 
+                for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
+                    let outputEvent = [] ; 
+                    outputEvent[0] = cmd << 4 ; 
+                    outputEvent[0] |= 0 ; 
+                    outputEvent[1] = note ; 
+                    if(cmd === 8)
+                        velocity = 0 ; 
+                    outputEvent[2] = velocity ; 
+                    outputPort.value.send(outputEvent); 
+                }
             // }
-
+            
             if (acLedState !== 0) {
                 this.shadowRoot.querySelector('['+origin+'AcLed]').style.display = 'block' ;
                 var color = this.___acV_getACLedColor(acLedState,origin) ;
