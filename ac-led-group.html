@@ -151,9 +151,9 @@
                 }
                 if (e.origin === 'playback') {
                     if (e.playNow !== undefined) {
-                        e.when = playbackContext.currentTime;
+                        e.when = window.performance.now()/1000;
                     } else {
-                        e.when = playbackContext.currentTime + (e.tempo) * (e.time - e.playbackTime);
+                        e.when = window.performance.now()/1000 + (e.tempo) * (e.time - e.playbackTime);
                     }
                     this.playbackAcLedActions.push(e);
                 }
@@ -266,7 +266,7 @@
     /* -------------------- GUI ------------------------- */
         ___acV_updateGUI() {
             if (this.playbackAcLedActions !== null && this.playbackAcLedActions !== undefined && this.playbackAcLedActions.length > 0) {
-                if (this.playbackAcLedActions.first.value.when < playbackContext.currentTime) {
+                if (this.playbackAcLedActions.first.value.when < window.performance.now()/1000) {
                     let timeRef = this.playbackAcLedActions.first.value.when ; 
                     while (this.playbackAcLedActions.length > 0 &&  this.playbackAcLedActions.first.value.when === timeRef) { 
                         this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel);
@@ -304,11 +304,11 @@
             while (this.playbackAcLedActions.length > 0) {
                 var when;
                 if (this.playbackAcLedActions.first.value.playNow !== undefined) {
-                    when = playbackContext.currentTime;
+                    when = window.performance.now()/1000;
                 } else {
-                    when = playbackContext.currentTime + (this.playbackAcLedActions.first.value.tempo) * (this.playbackAcLedActions.first.value.time - this.playbackAcLedActions.first.value.playbackTime);
+                    when = window.performance.now()/1000 + (this.playbackAcLedActions.first.value.tempo) * (this.playbackAcLedActions.first.value.time - this.playbackAcLedActions.first.value.playbackTime);
                 }
-                if (when < playbackContext.currentTime || this.playbackAcLedActions.first.value.playNow !== undefined) {
+                if (when < window.performance.now()/1000 || this.playbackAcLedActions.first.value.playNow !== undefined) {
                     this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
                     this.playbackAcLedActions.popFirst();
                 } else {

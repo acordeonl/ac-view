@@ -93,7 +93,7 @@
             var when = 0 ; 
             let velocity = 70 ; 
 
-            if(appIsPlaying){
+            // if(appIsPlaying){
                 let outputPorts = midiEnabledOutputs.values() ; 
                 for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
                     let outputEvent = [] ; 
@@ -105,7 +105,7 @@
                     outputEvent[2] = velocity ; 
                     outputPort.value.send(outputEvent); 
                 }
-            }
+            // }
             
             if (acLedState !== 0) {
                 this.shadowRoot.querySelector('['+origin+'AcLed]').style.display = 'block' ;

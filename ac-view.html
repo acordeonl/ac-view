@@ -282,6 +282,11 @@
             this.___acVsetReverb(this.___acVreverb);
             this._acViewCallFunction('onACViewReadyToPlay', {});
         }
+        ___acVclearAllGUI(){
+            for(let i = 0 ; i < this.___acVinstrumentOrigins.length ; i ++ ){
+                this.___acVclearGUI(this.___acVinstrumentOrigins[i]) ; 
+            }
+        }
         ___acVclearGUI (origin) {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
