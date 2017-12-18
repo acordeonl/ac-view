@@ -44,6 +44,13 @@
             name += octave;
             return name;
         }
+    // --------------- MIDI out ----------------------
+        ___acVmuteMIDIOut() {
+            this.mutePlayback = true ;     
+        }
+        ___acVunMuteMIDIOut() {
+            this.mutePlayback = false ; 
+        }
     /* ------------------- GUI ------------------- */
         async ___acVtoggleNotes(origin,value){
             await this.initAcLed ;
@@ -90,22 +97,22 @@
             let cmd = 8 ; 
             if (acLedState > 0) 
                 cmd = 9 ; 
-            var when = 0 ; 
-            let velocity = 70 ; 
-
-            // if(appIsPlaying){
+            let velocity = 127 ; 
+            if(this.mutePlayback)
+                cmd = 8 ; 
+            if((origin === 'playback' && appIsPlaying) || (origin === 'chord' && !appIsPlaying)){
                 let outputPorts = midiEnabledOutputs.values() ; 
                 for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
                     let outputEvent = [] ; 
                     outputEvent[0] = cmd << 4 ; 
-                    outputEvent[0] |= 0 ; 
+                    outputEvent[0] |= channel ; 
                     outputEvent[1] = note ; 
                     if(cmd === 8)
                         velocity = 0 ; 
                     outputEvent[2] = velocity ; 
                     outputPort.value.send(outputEvent); 
                 }
-            // }
+            }
             
             if (acLedState !== 0) {
                 this.shadowRoot.querySelector('['+origin+'AcLed]').style.display = 'block' ;

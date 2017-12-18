@@ -26,6 +26,7 @@
             defaultInstrumentVolume: {type: Number,value: 1},
             defaultPlaybackVolume: {type: Number,value: 1},
         /* ------------------- Action ------------------- */
+            ___acV_playbackNotesOn:{type:Object},
             ___acV_instruments:{type:Array},
             ___acV_MIDIEventToNoteMap:{type:Array,value:[]},
             ___acV_mapKeyboardToNote:{type:Array,value:[]}
@@ -85,6 +86,20 @@
             }
         }
     /* ------------------- MIDIEvents ------------------- */
+        ___acV_MIDI_out_allNotesOff() {
+            let outputPorts = midiEnabledOutputs.values() ; 
+            for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
+                let playbackNotes = this.___acV_playbackNotesOn.values() ; 
+                for(let note = playbackNotes.next() ; note && !note.done ; note = playbackNotes.next() ){
+                    let outputEvent = [] ; 
+                    outputEvent[0] = 8 << 4 ; 
+                    outputEvent[0] |= note.value.channel ; 
+                    outputEvent[1] = note.value.note; 
+                    outputEvent[2] = 0 ; 
+                    outputPort.value.send(outputEvent); 
+                }
+            }
+        }
         ___acV_getMIDINoteName(note){
             var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
             var octave = Math.floor(note / 12)-1;
@@ -270,6 +285,12 @@
                     let timeRef = this.playbackAcLedActions.first.value.when ; 
                     while (this.playbackAcLedActions.length > 0 &&  this.playbackAcLedActions.first.value.when === timeRef) { 
                         this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel);
+                    // --------- for MIDI out ------------ 
+                        if(this.playbackAcLedActions.first.value.cmd === 'note-on') 
+                            this.___acV_playbackNotesOn.set(this.playbackAcLedActions.first.value.midiNote,{note:this.playbackAcLedActions.first.value.note,channel:this.playbackAcLedActions.first.value.channel}) ; 
+                        else
+                            this.___acV_playbackNotesOn.delete(this.playbackAcLedActions.first.value.midiNote) ; 
+                    // ----------------------------------- 
                         this.playbackAcLedActions.popFirst();
                     }
                 }
@@ -332,7 +353,6 @@
             for (let i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVclearGUI(origin);
             }
-            allNotesOff() ; 
         }
         ___acV_displayMonophonicNote(e) {
             if(this.shadowRoot.querySelector('[playbackNote]') !== undefined && this.shadowRoot.querySelector('[playbackNote]') !== null ) { 
@@ -350,6 +370,18 @@
             }
         }
     /* ----------------- View audio -------------------------- */
+        ___acVmuteMIDIOut() {
+            var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].___acVmuteMIDIOut() ;
+            }
+        }
+        ___acVunMuteMIDIOut() {
+            var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].___acVunMuteMIDIOut() ;
+            }
+        }
         ___acVinitPlaybackAudio() {
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
@@ -461,7 +493,7 @@
         ___acVsetIndex(index) {
             this.___acV_index = index;
         }
-        async ___acVaddOrigin (origin){
+        ___acVaddOrigin (origin){
             this[origin+'AcLedActions'] = new LinkedList() ;
             if (origin !== 'playback') {
                 this.___acV_instruments.push(origin) ;
@@ -474,6 +506,7 @@
             for (var j = 0; j < nodeList2.length; j++) {
                 nodeList2[j].addOrigin(origin) ;
             }
+            this.dispatchEvent(new CustomEvent('origin-added', { bubbles: true, composed: true }));
         }
         constructor() {
             super();
@@ -482,6 +515,7 @@
             super.ready() ;
             this.___acV_MIDIEventToNoteMap = [] ;
             this.___acV_flags = []  ;
+            this.___acV_playbackNotesOn = new Map() ; 
             this.___acV_instruments = [] ;
             this.___acV_mapKeyboardToNote = [] ;
 

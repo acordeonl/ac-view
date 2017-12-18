@@ -1,5 +1,6 @@
 <link rel="import" href="../polymer/polymer-element.html">
 <script>
+    var appIsPlaying = false ; 
     var playbackContext,
         playbackConvolver,
         playbackDry,
@@ -192,6 +193,11 @@
             }
         }
     /* ------------- MIDI --------------------- */
+        ___acV_MIDI_out_allNotesOff() {
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) 
+                nodeList[i].___acV_MIDI_out_allNotesOff();
+        }
         ___acV_getMIDINoteName(note){
             var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
             var octave = Math.floor(note / 12)-1;
@@ -199,9 +205,16 @@
             name += octave;
             return name;
         }
-        ___acVonMIDIEvent (e) {
-            if (this.___acVorigins[e.origin] === undefined)
+        ___acV_addedOrigin() {
+            if(this.addOriginPromiseR !== undefined)
+                this.addOriginPromiseR() ; 
+        }
+        async ___acVonMIDIEvent (e) {
+            if (this.___acVorigins[e.origin] === undefined){
+                this.addOriginPromise = new Promise(resolve => this.addOriginPromiseR = resolve);
                 this.___acVaddOrigin(e.origin) ;
+            }
+            await this.addOriginPromise  ;
             if (e.origin ==='conversion') {
                 e.id = this.___aV_conversionId ; 
                 this.___acV_midiEvents[this.___aV_conversionId] = e ; 
@@ -269,7 +282,11 @@
             }
         }
     /* ------------- playback controls -------------- */
+        ___acVisPlaying() {
+            appIsPlaying = true ;      
+        }
         async ___acVstop() {
+            appIsPlaying = false ; 
             this.___acVclearActions('playback') ;
             await stopPlaybackAudio() ;
             playbackContext.close();
@@ -380,11 +397,17 @@
         }
         ___acVmutePlayback() {
             this.___acVsetOpacity('playback', 0 ) ; 
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) 
+                nodeList[i].___acVmuteMIDIOut();
             playbackMasterGain.gain.setValueAtTime(playbackMasterGain.gain.value, playbackContext.currentTime);
             playbackMasterGain.gain.exponentialRampToValueAtTime(0.00001, playbackContext.currentTime + 1);
         }
         ___acVunMutePlayback() {
             this.___acVsetOpacity('playback', 100 ) ; 
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) 
+                nodeList[i].___acVunMuteMIDIOut();
             playbackMasterGain.gain.value = 1 ; 
         }
         ___acVsetOpacity (origin, opacity) {
@@ -644,6 +667,7 @@
             this.addEventListener('acLedGroup-loaded', e => this.___acV_onAcLedGroupLoaded(e));
             this.addEventListener('toast', e => this.___acV_handleToast(e));
             this.addEventListener('note-conversion', e => this.___acV_onRecordingConversionEvent(e));
+            this.addEventListener('origin-added', e => this.___acV_addedOrigin(e));
         }
     }
     customElements.define('ac-view', ACView);
