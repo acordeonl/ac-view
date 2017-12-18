@@ -10,6 +10,7 @@
             ___acV_totalViewAudios: {type: Number,value: 0},
             ___acV_loadedViewAudios: {type: Number,value: 0},
         /* ------------------- Setup ------------------- */
+            ___acV_registeredChannels:{type:Object},
             ___acV_flags:{type:Array,value:[]},
             ___acV_index: {type: Number},
             ___acV_rotation: {type: Boolean,value: false},
@@ -89,6 +90,15 @@
         ___acV_MIDI_out_allNotesOff() {
             let outputPorts = midiEnabledOutputs.values() ; 
             for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
+                let channels = this.___acV_registeredChannels.keys() ; 
+                for(let channel = channels.next() ; channel && !channel.done ; channel = channels.next() ){
+                    let outputEvent = [] ; 
+                    outputEvent[0] = 11 << 4 ; 
+                    outputEvent[0] |= channel.value ; 
+                    outputEvent[1] = 123; 
+                    outputEvent[2] = 0 ; 
+                    outputPort.value.send(outputEvent); 
+                }
                 let playbackNotes = this.___acV_playbackNotesOn.values() ; 
                 for(let note = playbackNotes.next() ; note && !note.done ; note = playbackNotes.next() ){
                     let outputEvent = [] ; 
@@ -516,6 +526,7 @@
             this.___acV_MIDIEventToNoteMap = [] ;
             this.___acV_flags = []  ;
             this.___acV_playbackNotesOn = new Map() ; 
+            this.___acV_registeredChannels = new Map() ; 
             this.___acV_instruments = [] ;
             this.___acV_mapKeyboardToNote = [] ;
 
@@ -527,6 +538,7 @@
             this.___acV_totalViewAudios = nodeList.length ;
             for (var i = 0; i < nodeList.length; i++) {
                 var channel = nodeList[i].channel ;
+                this.___acV_registeredChannels.set(channel,1) ; 
                 this.___acV_flags[channel] = false ;
                 this.___acV_MIDIEventToNoteMap[channel] =  [] ;
                 nodeList[i].setAttribute("channel"+channel, "");
