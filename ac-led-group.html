@@ -294,7 +294,7 @@
                 if (this.playbackAcLedActions.first.value.when < window.performance.now()/1000) {
                     let timeRef = this.playbackAcLedActions.first.value.when ; 
                     while (this.playbackAcLedActions.length > 0 &&  this.playbackAcLedActions.first.value.when === timeRef) { 
-                        this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel);
+                        this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel,this.playbackAcLedActions.first.value.velocity);
                     // --------- for MIDI out ------------ 
                         if(this.playbackAcLedActions.first.value.cmd === 'note-on') 
                             this.___acV_playbackNotesOn.set(this.playbackAcLedActions.first.value.midiNote,{note:this.playbackAcLedActions.first.value.note,channel:this.playbackAcLedActions.first.value.channel}) ; 
@@ -308,7 +308,7 @@
             for (var i = 0; i < this.___acV_instruments.length; i++) {
                 var origin = this.___acV_instruments[i] ;
                 if (this[origin+'AcLedActions'].length > 0) {
-                    this.shadowRoot.querySelector('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note);
+                    this.shadowRoot.querySelector('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note,this[origin+'AcLedActions'].first.value.velocity);
                     this[origin+'AcLedActions'].popFirst();
                 }
             }

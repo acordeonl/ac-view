@@ -490,6 +490,7 @@
                     midiNote:mapedNote,
                     channel:midiEvent.channel,
                     cmd:midiEvent.cmd,
+                    velocity:midiEvent.velocity,
                     time:midiEvent.time
                 }) ; 
             }
@@ -502,6 +503,7 @@
                     cmd:recording[i].cmd,
                     midiNote:recording[i].midiNote,
                     channel:recording[i].channel,
+                    velocity:recording[i].velocity,
                     time:recording[i].time,
                     origin:'recording-playback-conversion'
                 }) ;

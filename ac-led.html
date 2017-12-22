@@ -87,7 +87,7 @@
                 }
             }
         }
-        ___acVrender(origin,acLedState,note,channel){
+        ___acVrender(origin,acLedState,note,channel,velocity){
             if(note === undefined )
                 return ; 
 
@@ -97,7 +97,6 @@
             let cmd = 8 ; 
             if (acLedState > 0) 
                 cmd = 9 ; 
-            let velocity = 127 ; 
             if(this.mutePlayback)
                 cmd = 8 ; 
             if((origin === 'playback' && appIsPlaying) || (origin === 'chord' && !appIsPlaying)){
@@ -107,8 +106,6 @@
                     outputEvent[0] = cmd << 4 ; 
                     outputEvent[0] |= channel ; 
                     outputEvent[1] = note ; 
-                    if(cmd === 8)
-                        velocity = 0 ; 
                     outputEvent[2] = velocity ; 
                     outputPort.value.send(outputEvent); 
                 }
