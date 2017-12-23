@@ -27,6 +27,7 @@
             defaultInstrumentVolume: {type: Number,value: 1},
             defaultPlaybackVolume: {type: Number,value: 1},
         /* ------------------- Action ------------------- */
+            ___acV_mutePlayback:{type:Boolean,value:false},
             ___acV_playbackNotesOn:{type:Object},
             ___acV_instruments:{type:Array},
             ___acV_MIDIEventToNoteMap:{type:Array,value:[]},
@@ -108,6 +109,17 @@
                     outputEvent[2] = 0 ; 
                     outputPort.value.send(outputEvent); 
                 }
+            }
+        }
+        ___acV_MIDI_out(channel,cmd,note,velocity) { 
+            let outputPorts = midiEnabledOutputs.values() ; 
+            for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
+                let outputEvent = [] ; 
+                outputEvent[0] = cmd << 4 ; 
+                outputEvent[0] |= channel ; 
+                outputEvent[1] = note ; 
+                outputEvent[2] = 120 ; 
+                outputPort.value.send(outputEvent); 
             }
         }
         ___acV_getMIDINoteName(note){
@@ -295,6 +307,14 @@
                     let timeRef = this.playbackAcLedActions.first.value.when ; 
                     while (this.playbackAcLedActions.length > 0 &&  this.playbackAcLedActions.first.value.when === timeRef) { 
                         this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel,this.playbackAcLedActions.first.value.velocity);
+
+                    // --------------- MIDI out ----------------------
+                        if(appIsPlaying){
+                            let cmd = (this.playbackAcLedActions.first.value.cmd  === 'note-on')? 9:8; 
+                            if(this.___acV_mutePlayback)
+                                cmd = 8 ; 
+                            this.___acV_MIDI_out(this.playbackAcLedActions.first.value.channel,cmd,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.velocity) ; 
+                        }
                     // --------- for MIDI out ------------ 
                         if(this.playbackAcLedActions.first.value.cmd === 'note-on') 
                             this.___acV_playbackNotesOn.set(this.playbackAcLedActions.first.value.midiNote,{note:this.playbackAcLedActions.first.value.note,channel:this.playbackAcLedActions.first.value.channel}) ; 
@@ -309,6 +329,12 @@
                 var origin = this.___acV_instruments[i] ;
                 if (this[origin+'AcLedActions'].length > 0) {
                     this.shadowRoot.querySelector('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note,this[origin+'AcLedActions'].first.value.velocity);
+                    if(origin === 'chord' && !appIsPlaying){
+                        let cmd = (this[origin+'AcLedActions'].first.value.cmd  === 'note-on')? 9:8; 
+                        if(this.___acV_mutePlayback)
+                            cmd = 8 ; 
+                        this.___acV_MIDI_out( this[origin+'AcLedActions'].first.value.channel,cmd, this[origin+'AcLedActions'].first.value.note, this[origin+'AcLedActions'].first.value.velocity) ; 
+                    }
                     this[origin+'AcLedActions'].popFirst();
                 }
             }
@@ -341,6 +367,12 @@
                 }
                 if (when < window.performance.now()/1000 || this.playbackAcLedActions.first.value.playNow !== undefined) {
                     this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
+                    if(appIsPlaying){
+                        let cmd = (this.playbackAcLedActions.first.value.cmd  === 'note-on')? 9:8; 
+                        if(this.___acV_mutePlayback)
+                            cmd = 8 ; 
+                        this.___acV_MIDI_out(this.playbackAcLedActions.first.value.channel,cmd,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.velocity) ; 
+                    }
                     this.playbackAcLedActions.popFirst();
                 } else {
                     break;
@@ -381,16 +413,10 @@
         }
     /* ----------------- View audio -------------------------- */
         ___acVmuteMIDIOut() {
-            var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
-            for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].___acVmuteMIDIOut() ;
-            }
+            this.___acV_mutePlayback = true ; 
         }
         ___acVunMuteMIDIOut() {
-            var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
-            for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].___acVunMuteMIDIOut() ;
-            }
+            this.___acV_mutePlayback = false ; 
         }
         ___acVinitPlaybackAudio() {
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
