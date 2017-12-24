@@ -30,7 +30,7 @@
             ___acV_mutePlayback:{type:Boolean,value:false},
             ___acV_playbackNotesOn:{type:Object},
             ___acV_instruments:{type:Array},
-            ___acV_MIDIEventToNoteMap:{type:Array,value:[]},
+            ___acV_MIDINoteToAudioNoteMap:{type:Array,value:[]},
             ___acV_mapKeyboardToNote:{type:Array,value:[]}
         }}
     /* ----------------  Audio ------------------------- */
@@ -40,10 +40,10 @@
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var j = 0; j < nodeList.length; j++) {
                 var channel = nodeList[j].channel ;
-                for (var i = 0; i < this.___acV_MIDIEventToNoteMap[channel].length; i++) {
-                    if( this.___acV_MIDIEventToNoteMap[channel][i] === null || this.___acV_MIDIEventToNoteMap[channel][i] === undefined )
+                for (var i = 0; i < this.___acV_MIDINoteToAudioNoteMap[channel].length; i++) {
+                    if( this.___acV_MIDINoteToAudioNoteMap[channel][i] === null || this.___acV_MIDINoteToAudioNoteMap[channel][i] === undefined )
                         continue ;
-                    this.___acV_MIDIEventToNoteMap[channel][i] = this.___acV_handleAddPitch(this.___acV_MIDIEventToNoteMap[channel][i],channel,pitchDiff);
+                    this.___acV_MIDINoteToAudioNoteMap[channel][i] = this.___acV_handleAddPitch(this.___acV_MIDINoteToAudioNoteMap[channel][i],channel,pitchDiff);
                 }
             }
             this.___acV_onAddPitch() ;
@@ -111,7 +111,7 @@
                 }
             }
         }
-        ___acV_mapNoteToMIDIOut(channel,note,map){
+        ___acV_mapAudioNoteToMIDIOut(channel,note,map){
             if(this.___acV_NoteToMIDIOutMap[channel] === undefined)
                 this.___acV_NoteToMIDIOutMap[channel] = [] ; 
             this.___acV_NoteToMIDIOutMap[channel][note] = map ; 
@@ -148,9 +148,9 @@
         }
         ___acV_midiEventToAudioNoteDefault(channel,midiNote,origin) {
             var note ;
-            if (this.___acV_MIDIEventToNoteMap[channel] !== undefined && this.___acV_MIDIEventToNoteMap[channel] !== null) {
-                if (this.___acV_MIDIEventToNoteMap[channel][midiNote] !== undefined && this.___acV_MIDIEventToNoteMap[channel][midiNote] !== undefined)
-                    note = this.___acV_MIDIEventToNoteMap[channel][midiNote] ;
+            if (this.___acV_MIDINoteToAudioNoteMap[channel] !== undefined && this.___acV_MIDINoteToAudioNoteMap[channel] !== null) {
+                if (this.___acV_MIDINoteToAudioNoteMap[channel][midiNote] !== undefined)
+                    note = this.___acV_MIDINoteToAudioNoteMap[channel][midiNote] ;
                 else
                     note = midiNote  ;
             }
@@ -251,12 +251,12 @@
                     msg:'Algunas notas no pueden ser reproducidas debido a que no se encuentran en el audio de la visualización'
                 }, bubbles: true, composed: true }));
         }
-        ___acV_mapMIDIEventToNote(channel,midiNote,newNote){
+        ___acV_mapMIDINoteToAudioNote(channel,midiNote,newNote){
             if (!this.___acV_flags[channel]) {
                 this.___acV_flags[channel]=true ;
-                this.___acV_MIDIEventToNoteMap[channel] = [] ;
+                this.___acV_MIDINoteToAudioNoteMap[channel] = [] ;
             }
-            this.___acV_MIDIEventToNoteMap[channel][midiNote] = newNote;
+            this.___acV_MIDINoteToAudioNoteMap[channel][midiNote] = newNote;
         }
     /* ------------------- MIDIEvents Default helpers  ------------------- */
         ___acV_mapMIDIEventToAcLedId(channel,midiNote,origin){
@@ -586,7 +586,7 @@
         ready() {
             super.ready() ;
             this.___acV_NoteToMIDIOutMap = [] ; 
-            this.___acV_MIDIEventToNoteMap = [] ;
+            this.___acV_MIDINoteToAudioNoteMap = [] ;
             this.___acV_flags = []  ;
             this.___acV_playbackNotesOn = new Map() ; 
             this.___acV_registeredChannels = new Map() ; 
@@ -603,7 +603,7 @@
                 var channel = nodeList[i].channel ;
                 this.___acV_registeredChannels.set(channel,1) ; 
                 this.___acV_flags[channel] = false ;
-                this.___acV_MIDIEventToNoteMap[channel] =  [] ;
+                this.___acV_MIDINoteToAudioNoteMap[channel] =  [] ;
                 nodeList[i].setAttribute("channel"+channel, "");
                 var acLeds = this.shadowRoot.querySelectorAll('[channel'+channel+'][acLed]');
                 for (var j = 0; j < acLeds.length; j++) {
@@ -611,7 +611,7 @@
                     acLeds[j].setAttribute("id"+acId, "");
                 }
                 for(let j = 0 ; j < 300 ; j ++ ){
-                    this.___acV_MIDIEventToNoteMap[channel][j] = j ;
+                    this.___acV_MIDINoteToAudioNoteMap[channel][j] = j ;
                 }
             }
             this.___acV_loadedViewAudios = 0;
