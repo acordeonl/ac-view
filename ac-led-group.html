@@ -181,40 +181,55 @@
                 }
                 return ; 
             }
+            e = this.___acV_editMIDI_IN_event(e) ; 
             if(e.noGUI === null || e.noGUI === undefined)
                     this.___acV_MIDIEventToGUI(e) ;
             if(e.noAudio === null || e.noAudio === undefined)
                 this.___acV_MIDIEventToAudio(e) ;
 
         }
+        ___acV_editMIDI_IN_event(e) {
+            return e ;
+        }
+        ___acV_MIDIaddGUIAction(e) {
+            if (this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
+                this.dispatchEvent(new CustomEvent('toast', {detail:{
+                    msg:'La tonalidad de la grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'
+                }, bubbles: true, composed: true }));
+                return ;
+            }
+            if (e.origin === 'playback') {
+                if (e.playNow !== undefined) {
+                    e.when = window.performance.now()/1000;
+                } else {
+                    e.when = window.performance.now()/1000 + (e.tempo) * (e.time - e.playbackTime);
+                }
+                this.playbackAcLedActions.push(e);
+            }
+            else {
+                this[e.origin+'AcLedActions'].push(e) ;
+            }
+        }
         ___acV_MIDIEventToGUI(evt){
             evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin,evt.initiator) ;
             var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin,evt.initiator);
             var acLedStatesArr = this.___acV_mapMIDIEventToAcLedState(evt.channel,evt.midiNote,evt.origin,evt.initiator);
-            for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
-                var e = JSON.parse(JSON.stringify(evt))  ; 
-                e.acLedId = acLedIdsArr[i] ;
-                if (this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
-                    this.dispatchEvent(new CustomEvent('toast', {detail:{
-                        msg:'La tonalidad de la grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'
-                    }, bubbles: true, composed: true }));
-                    return ;
-                }
-                if(e.cmd === 'note-on')
-                    e.acLedState = acLedStatesArr[i];
-                else {
+            if(evt.acLedState !== undefined){
+                let e = JSON.parse(JSON.stringify(evt))  ; 
+                e.acLedId = e.midiNote ; 
+                if(e.cmd === 'note-off')
                     e.acLedState = 0 ;
-                }
-                if (e.origin === 'playback') {
-                    if (e.playNow !== undefined) {
-                        e.when = window.performance.now()/1000;
-                    } else {
-                        e.when = window.performance.now()/1000 + (e.tempo) * (e.time - e.playbackTime);
-                    }
-                    this.playbackAcLedActions.push(e);
-                }
-                else {
-                    this[e.origin+'AcLedActions'].push(e) ;
+                this.___acV_MIDIaddGUIAction(e) ; 
+            }
+            else { 
+                for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
+                    let e = JSON.parse(JSON.stringify(evt))  ; 
+                    e.acLedId = acLedIdsArr[i] ;
+                    if(e.cmd === 'note-on')
+                        e.acLedState = acLedStatesArr[i];
+                    else 
+                        e.acLedState = 0 ;
+                    this.___acV_MIDIaddGUIAction(e) ; 
                 }
             }
         }
