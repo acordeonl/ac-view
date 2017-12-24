@@ -298,6 +298,7 @@
                     e.playNow = 1;
                     e.midiNote = this.currentChord[i][j];
                     e.channel = this.currentChord[i][0];
+                    e.velocity = 100 ; 
                     e.origin = 'chord';
                     e.cmd = 'note-on';
                     this.___acV_onMIDIEvent(e) ;
@@ -314,6 +315,7 @@
                     e.midiNote = this.currentChord[i][j];
                     e.channel = this.currentChord[i][0];
                     e.origin = 'chord';
+                    e.velocity = 0 ;
                     e.cmd = 'note-off';
                     this.___acV_onMIDIEvent(e) ;
                 }
