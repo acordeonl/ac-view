@@ -111,15 +111,26 @@
                 }
             }
         }
+        ___acV_mapNoteToMIDIOut(channel,note,map){
+            if(this.___acV_NoteToMIDIOutMap[channel] === undefined)
+                this.___acV_NoteToMIDIOutMap[channel] = [] ; 
+            this.___acV_NoteToMIDIOutMap[channel][note] = map ; 
+        }       
         ___acV_MIDI_out(channel,cmd,note,velocity) { 
+            let midiOutput = [note] ; 
+            if(this.___acV_NoteToMIDIOutMap[channel] !== undefined && this.___acV_NoteToMIDIOutMap[channel][note] !== undefined)
+                midiOutput = this.___acV_NoteToMIDIOutMap[channel][note] ;
             let outputPorts = midiEnabledOutputs.values() ; 
             for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
-                let outputEvent = [] ; 
-                outputEvent[0] = cmd << 4 ; 
-                outputEvent[0] |= channel ; 
-                outputEvent[1] = note ; 
-                outputEvent[2] = 120 ; 
-                outputPort.value.send(outputEvent); 
+                for(let i = 0 ; i < midiOutput.length ; i ++ ){
+                    let outputEvent = [] ; 
+                    outputEvent[0] = cmd << 4 ; 
+                    outputEvent[0] |= channel ; 
+                    outputEvent[1] = midiOutput[i] ; 
+                    outputEvent[2] = velocity ; 
+                    outputPort.value.send(outputEvent);                
+                }
+                
             }
         }
         ___acV_getMIDINoteName(note){
@@ -155,11 +166,19 @@
                 }, bubbles: true, composed: true }));
                 return ; 
             }
-            if (e.origin === 'conversion') {
-                this.dispatchEvent(new CustomEvent('note-conversion', {detail:{
-                    eventId:e.id,
-                    mapedNote:this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin)
-                }, bubbles: true, composed: true }));
+            if (e.origin === 'universal-playback-conversion') {
+                let evt = e ; 
+                evt.midiNote = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin) ; 
+                let mapedNotes = [evt.midiNote] ; 
+                if(this.___acV_NoteToMIDIOutMap[evt.channel] !== undefined && this.___acV_NoteToMIDIOutMap[evt.channel][evt.midiNote] !== undefined)
+                    mapedNotes = this.___acV_NoteToMIDIOutMap[evt.channel][evt.midiNote] ;
+                for(let i = 0 ; i < mapedNotes.length ; i ++ ){
+                    let event = evt ;  
+                    event.midiNote = mapedNotes[i] ; 
+                    this.dispatchEvent(new CustomEvent('universal-playback-conversion', {detail:{
+                        evt:event
+                    }, bubbles: true, composed: true }));
+                }
                 return ; 
             }
             if(e.noGUI === null || e.noGUI === undefined)
@@ -549,6 +568,7 @@
         }
         ready() {
             super.ready() ;
+            this.___acV_NoteToMIDIOutMap = [] ; 
             this.___acV_MIDIEventToNoteMap = [] ;
             this.___acV_flags = []  ;
             this.___acV_playbackNotesOn = new Map() ; 
