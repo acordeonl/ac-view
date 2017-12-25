@@ -10,6 +10,7 @@
             ___acV_totalViewAudios: {type: Number,value: 0},
             ___acV_loadedViewAudios: {type: Number,value: 0},
         /* ------------------- Setup ------------------- */
+            ___acV_enableMIDIVelocity:{type:Boolean,value:false},
             ___acV_registeredChannels:{type:Object},
             ___acV_flags:{type:Array,value:[]},
             ___acV_index: {type: Number},
@@ -88,6 +89,9 @@
             }
         }
     /* ------------------- MIDIEvents ------------------- */
+        ___acVtoggleMIDIVelocity(val){
+            this.___acV_enableMIDIVelocity = val ; 
+        }
         ___acV_MIDI_out_allNotesOff() {
             let outputPorts = midiEnabledOutputs.values() ; 
             for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
@@ -117,6 +121,10 @@
             this.___acV_NoteToMIDIOutMap[channel][note] = map ; 
         }       
         ___acV_MIDI_out(channel,cmd,note,velocity) { 
+            if(!this.___acV_enableMIDIVelocity && cmd === 9)
+                velocity = 120 ;
+            if(!this.___acV_enableMIDIVelocity && cmd === 8)
+                velocity = 0 ;
             let midiOutput = [note] ; 
             if(this.___acV_NoteToMIDIOutMap[channel] !== undefined && this.___acV_NoteToMIDIOutMap[channel][note] !== undefined)
                 midiOutput = this.___acV_NoteToMIDIOutMap[channel][note] ;

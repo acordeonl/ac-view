@@ -191,6 +191,11 @@
             }
         }
     /* ------------- MIDI --------------------- */
+        ___acVtoggleMIDIVelocity(val){
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) 
+                nodeList[i].___acVtoggleMIDIVelocity(val);
+        }
         ___acV_MIDI_out_allNotesOff() {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) 
