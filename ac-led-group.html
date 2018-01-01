@@ -120,7 +120,7 @@
                 this.___acV_NoteToMIDIOutMap[channel] = [] ; 
             this.___acV_NoteToMIDIOutMap[channel][note] = map ; 
         }       
-        ___acV_MIDI_out(channel,cmd,note,velocity) { 
+        ___acV_MIDI_out(channel,cmd,note,velocity,origin) { 
             if(!this.___acV_enableMIDIVelocity && cmd === 9)
                 velocity = 120 ;
             if(!this.___acV_enableMIDIVelocity && cmd === 8)
@@ -128,15 +128,17 @@
             let midiOutput = [note] ; 
             if(this.___acV_NoteToMIDIOutMap[channel] !== undefined && this.___acV_NoteToMIDIOutMap[channel][note] !== undefined)
                 midiOutput = this.___acV_NoteToMIDIOutMap[channel][note] ;
-            let outputPorts = midiEnabledOutputs.values() ; 
+            let outputPorts = midiEnabledOutputs.keys() ; 
             for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
+                if(!outputPort.value.endsWith(origin))
+                    continue ; 
                 for(let i = 0 ; i < midiOutput.length ; i ++ ){
                     let outputEvent = [] ; 
                     outputEvent[0] = cmd << 4 ; 
                     outputEvent[0] |= channel ; 
                     outputEvent[1] = midiOutput[i] ; 
                     outputEvent[2] = velocity ; 
-                    outputPort.value.send(outputEvent);                
+                    midiEnabledOutputs.get(outputPort.value).send(outputEvent);                
                 }
                 
             }
@@ -357,7 +359,7 @@
                             let cmd = (this.playbackAcLedActions.first.value.cmd  === 'note-on')? 9:8; 
                             if(this.___acV_mutePlayback)
                                 cmd = 8 ; 
-                            this.___acV_MIDI_out(this.playbackAcLedActions.first.value.channel,cmd,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.velocity) ; 
+                            this.___acV_MIDI_out(this.playbackAcLedActions.first.value.channel,cmd,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.velocity,'playback') ; 
                         }
                     // --------- for MIDI out ------------ 
                         if(this.playbackAcLedActions.first.value.cmd === 'note-on') 
@@ -377,7 +379,11 @@
                         let cmd = (this[origin+'AcLedActions'].first.value.cmd  === 'note-on')? 9:8; 
                         if(this.___acV_mutePlayback)
                             cmd = 8 ; 
-                        this.___acV_MIDI_out( this[origin+'AcLedActions'].first.value.channel,cmd, this[origin+'AcLedActions'].first.value.note, this[origin+'AcLedActions'].first.value.velocity) ; 
+                        this.___acV_MIDI_out( this[origin+'AcLedActions'].first.value.channel,cmd, this[origin+'AcLedActions'].first.value.note, this[origin+'AcLedActions'].first.value.velocity,'playback') ; 
+                    }
+                    if(origin !== 'chord'){
+                        let cmd = (this[origin+'AcLedActions'].first.value.cmd  === 'note-on')? 9:8; 
+                        this.___acV_MIDI_out( this[origin+'AcLedActions'].first.value.channel,cmd, this[origin+'AcLedActions'].first.value.note, this[origin+'AcLedActions'].first.value.velocity,'recording') ; 
                     }
                     this[origin+'AcLedActions'].popFirst();
                 }
@@ -415,7 +421,7 @@
                         let cmd = (this.playbackAcLedActions.first.value.cmd  === 'note-on')? 9:8; 
                         if(this.___acV_mutePlayback)
                             cmd = 8 ; 
-                        this.___acV_MIDI_out(this.playbackAcLedActions.first.value.channel,cmd,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.velocity) ; 
+                        this.___acV_MIDI_out(this.playbackAcLedActions.first.value.channel,cmd,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.velocity,'playback') ; 
                     }
                     this.playbackAcLedActions.popFirst();
                 } else {
@@ -623,7 +629,7 @@
                 }
             }
             this.___acV_loadedViewAudios = 0;
-            setInterval(this.___acV_updateGUI.bind(this), 5);
+            setInterval(this.___acV_updateGUI.bind(this), 1);
             this.addEventListener('view-audio-load', e => this.___acV_onLoadViewAudio(e));
             this.addEventListener('gui-action', e => this.___acV_displayMonophonicNote(e));
         }
