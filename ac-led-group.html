@@ -224,23 +224,16 @@
             evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin,evt.initiator) ;
             var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin,evt.initiator);
             var acLedStatesArr = this.___acV_mapMIDIEventToAcLedState(evt.channel,evt.midiNote,evt.origin,evt.initiator);
-            if(evt.acLedState !== undefined){
+            for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
                 let e = JSON.parse(JSON.stringify(evt))  ; 
-                e.acLedId = e.midiNote ; 
-                if(e.cmd === 'note-off')
+                e.acLedId = acLedIdsArr[i] ;
+                if(e.cmd === 'note-on') {
+                    if(e.acLedState === undefined)
+                        e.acLedState = acLedStatesArr[i];
+                }
+                else 
                     e.acLedState = 0 ;
                 this.___acV_MIDIaddGUIAction(e) ; 
-            }
-            else { 
-                for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
-                    let e = JSON.parse(JSON.stringify(evt))  ; 
-                    e.acLedId = acLedIdsArr[i] ;
-                    if(e.cmd === 'note-on')
-                        e.acLedState = acLedStatesArr[i];
-                    else 
-                        e.acLedState = 0 ;
-                    this.___acV_MIDIaddGUIAction(e) ; 
-                }
             }
         }
         ___acV_MIDIEventToAudio(e){
