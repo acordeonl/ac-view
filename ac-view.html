@@ -406,7 +406,7 @@
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) 
                 nodeList[i].___acVunMuteMIDIOut();
-            playbackMasterGain.gain.value = 1 ; 
+            playbackMasterGain.gain.setTargetAtTime(1,playbackContext.currentTime,0.015) ;
         }
         ___acVsetOpacity (origin, opacity) {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
@@ -416,10 +416,10 @@
         }
         ___acVsetReverb (value) {
             let synthReverb = value;
-            playbackWet.gain.value = (1.0 - ((100 - synthReverb) / 100));
-            playbackDry.gain.value = (100 - synthReverb) / 100;
-            instrumentWet.gain.value = (1.0 - ((100 - synthReverb) / 100));
-            instrumentDry.gain.value = (100 - synthReverb) / 100;
+            playbackWet.gain.setTargetAtTime((1.0 - ((100 - synthReverb) / 100)),playbackContext.currentTime,0.015) ;
+            playbackDry.gain.setTargetAtTime((100 - synthReverb) / 100,playbackContext.currentTime,0.015) ;
+            instrumentWet.gain.setTargetAtTime((1.0 - ((100 - synthReverb) / 100)),instrumentContext.currentTime,0.015) ;
+            instrumentDry.gain.setTargetAtTime((100 - synthReverb) / 100,instrumentContext.currentTime,0.015) ;
         }
         ___acVsetRotation (rotation) {
             this.___acV_rotation = rotation;

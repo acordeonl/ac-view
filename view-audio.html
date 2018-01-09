@@ -197,7 +197,7 @@
     /* ------------- Audio synth ------------------ */
         setVelocity(velocity) {
             this.instrumentVelocity = velocity;
-            this.instrumentSynthGain.gain.value = this.instrumentGain * this.instrumentVelocity;
+            this.instrumentSynthGain.gain.setTargetAtTime(this.instrumentGain * this.instrumentVelocity,instrumentContext.currentTime,0.015) ;
         }
         getSample(note) { 
             for(let i = 0 ; i < this.regions.length ; i ++ ){
@@ -248,7 +248,7 @@
                 if (this.playbackActions[e.midiNote] === undefined || this.playbackActions[e.midiNote] === null)
                     this.playbackActions[e.midiNote] = {};
                 this.playbackActions[e.midiNote].gain = playbackContext.createGain();
-                this.playbackActions[e.midiNote].gain.value = 0.7;
+                this.playbackActions[e.midiNote].gain.gain.setTargetAtTime(0.7,playbackContext.currentTime,0.015) ;
                 this.playbackActions[e.midiNote].source = playbackContext.createBufferSource();
                 
                 this.playbackActions[e.midiNote].source.buffer = sample.audioBuffer ; 
@@ -285,7 +285,7 @@
                 if (this[e.origin + 'Actions'][e.midiNote] === undefined || this[e.origin + 'Actions'][e.midiNote] === null)
                     this[e.origin + 'Actions'][e.midiNote] = {};
                 this[e.origin + 'Actions'][e.midiNote].gain = instrumentContext.createGain();
-                this[e.origin + 'Actions'][e.midiNote].gain.value = 0.7;
+                this[e.origin + 'Actions'][e.midiNote].gain.gain.setTargetAtTime(0.7,instrumentContext.currentTime,0.015) ;
                 this[e.origin + 'Actions'][e.midiNote].source = instrumentContext.createBufferSource();
                 this[e.origin + 'Actions'][e.midiNote].source.buffer = sample.audioBuffer;
                 // let semitones = note-parseInt(sample.pitch_keycenter) ; 
@@ -339,8 +339,8 @@
         initInstrumentVolume() {
                 this.instrumentSynthGain = instrumentContext.createGain();
                 this.instrumentPanner = instrumentContext.createStereoPanner();
-                this.instrumentSynthGain.gain.value = this.instrumentGain;
-                this.instrumentPanner.pan.value = this.instrumentPanning;
+                this.instrumentSynthGain.gain.setTargetAtTime(this.instrumentGain,instrumentContext.currentTime,0.015) ;
+                this.instrumentPanner.pan.setTargetAtTime(this.instrumentPanning,instrumentContext.currentTime,0.015) ;
                 this.instrumentSynthGain.connect(this.instrumentPanner);
                 this.instrumentPanner.connect(instrumentCompressor);
             }
@@ -362,10 +362,10 @@
             this._updateInstrumentPanning();
         }
         _updatePlaybackPanning() {
-            this.playbackPanner.pan.value = this.playbackPanning;
+            this.playbackPanner.pan.setTargetAtTime(this.playbackPanning,playbackContext.currentTime,0.015) ;
         }
         _updateInstrumentPanning() {
-            this.instrumentPanner.pan.value = this.instrumentPanning;
+            this.instrumentPanner.pan.setTargetAtTime(this.instrumentPanning,instrumentContext.currentTime,0.015) ;
         }
         _updateInstrumentVolume() {
             if (this.instrumentSynthGain === undefined)
@@ -373,7 +373,7 @@
             if (this.instrumentPanner === undefined)
                 this.instrumentPanner = instrumentContext.createStereoPanner();
             if (this.instrumentGain !== undefined) {
-                this.instrumentSynthGain.gain.value = this.instrumentGain;
+                this.instrumentSynthGain.gain.setTargetAtTime(this.instrumentGain,instrumentContext.currentTime,0.015) ;
             }
             try {
                 this.instrumentSynthGain.connect(this.instrumentPanner);
@@ -384,21 +384,21 @@
 
         }
         _updatePlaybackVolume() {
-                if (!this.playbackSynthGain)
-                    this.playbackSynthGain = playbackContext.createGain();
-                if (!this.playbackPanner)
-                    this.playbackPanner = playbackContext.createStereoPanner();
-                if (this.playbackGain !== undefined) {
-                    this.playbackSynthGain.gain.value = this.playbackGain;
-                }
-                try {
-                    this.playbackSynthGain.connect(this.playbackPanner);
-                    this.playbackPanner.connect(playbackCompressor);
-                } catch (error) {
-                    location.reload();
-                }
+            if (!this.playbackSynthGain)
+                this.playbackSynthGain = playbackContext.createGain();
+            if (!this.playbackPanner)
+                this.playbackPanner = playbackContext.createStereoPanner();
+            if (this.playbackGain !== undefined) {
+                this.playbackSynthGain.gain.setTargetAtTime(this.playbackGain,playbackContext.currentTime,0.015) ;
             }
-            /* ------------------- Setup ------------------- */
+            try {
+                this.playbackSynthGain.connect(this.playbackPanner);
+                this.playbackPanner.connect(playbackCompressor);
+            } catch (error) {
+                location.reload();
+            }
+        }
+    /* ------------------- Setup ------------------- */
         async addOrigin(origin) {
             await this.originsSetupPromise;
             this.origins.push(origin);
