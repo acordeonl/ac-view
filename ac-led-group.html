@@ -367,7 +367,7 @@
             for (var i = 0; i < this.___acV_instruments.length; i++) {
                 var origin = this.___acV_instruments[i] ;
                 if (this[origin+'AcLedActions'].length > 0) {
-                    this.shadowRoot.querySelector('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note,this[origin+'AcLedActions'].first.value.velocity);
+                    this.shadowRoot.querySelector('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note,this[origin+'AcLedActions'].first.value.channel,this[origin+'AcLedActions'].first.value.velocity);
                     if(origin === 'chord' && !appIsPlaying){
                         let cmd = (this[origin+'AcLedActions'].first.value.cmd  === 'note-on')? 9:8; 
                         if(this.___acV_mutePlayback)

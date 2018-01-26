@@ -487,20 +487,6 @@
             }) ; 
         }
     // --------------- Recording Playback ----------------------
-        ___acVgetRecordingPlayback (recording) {
-            this.___acV_recordingPlayback = [] ;
-            for (var i = 0; i < recording.length; i++) {
-                this.___acVonMIDIEvent( {
-                    cmd:recording[i].cmd,
-                    midiNote:recording[i].midiNote,
-                    channel:recording[i].channel,
-                    velocity:recording[i].velocity,
-                    time:recording[i].time,
-                    origin:'recording-playback-conversion'
-                }) ;
-            }
-            this._acViewCallFunction('acViewSetRecordingPlayback', this.___acV_recordingPlayback);
-        }
         ___acV_onRecordingPlaybackConversionEvent(e){
             e.stopPropagation();
             e.preventDefault();
