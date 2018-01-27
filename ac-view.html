@@ -83,7 +83,6 @@
             ___acV_name:{type:String},
             ___acV_rotates:{type:Boolean,value:false},
             ___acV_displaysNotes:{type:Boolean,value:false},
-            ___acV_recordingPlayback:{type:Array,value:[]},
             ___acVinstrumentOrigins:{type:Array,value:[]},
             ___acVkeyboardEnabled:{type:Boolean,value:false},
             ___acVkeyboardOn:{type:Array,value:[]},
@@ -486,12 +485,6 @@
                 time:midiEvent.time
             }) ; 
         }
-    // --------------- Recording Playback ----------------------
-        ___acV_onRecordingPlaybackConversionEvent(e){
-            e.stopPropagation();
-            e.preventDefault();
-            this.___acV_recordingPlayback.push(e.detail.evt) ; 
-        }
     /* --------------- Setup ------------------- */
         ___acV_setName(name) {
             this.___acV_name = name ; 
@@ -596,6 +589,11 @@
         constructor() {
             super();
         }
+        ___acV_instrumentAction(e){
+            e.stopPropagation() ; 
+            e.preventDefault() ; 
+            this._acViewCallFunction('addInstrumentActivity',e) ; 
+        }
         ready() {
             super.ready() ;
             this.___acVorigins = [] ;
@@ -642,7 +640,7 @@
                     this[args.data[0]](args.data[1]);
                 } ;
             }
-            this.addEventListener('recording-playback-conversion', e => this.___acV_onRecordingPlaybackConversionEvent(e));
+            this.addEventListener('instrument-action', e => this.___acV_instrumentAction(e));
             this.addEventListener('acLedGroup-loaded', e => this.___acV_onAcLedGroupLoaded(e));
             this.addEventListener('toast', e => this.___acV_handleToast(e));
             this.addEventListener('universal-playback-conversion', e => this.___acV_onUniversalPlaybackConversionEvent(e));
