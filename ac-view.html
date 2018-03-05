@@ -35,12 +35,12 @@
         window[origin+'Wet'] = window[origin+'Context'].createGain();
         window[origin+'MasterGain'] = window[origin+'Context'].createGain();
         window[origin+'Compressor'] = window[origin+'Context'].createDynamicsCompressor();
-        window[origin+'Compressor'].threshold.value = 0;
-        window[origin+'Compressor'].knee.value = 0;
-        window[origin+'Compressor'].ratio.value = 20;
-        window[origin+'Compressor'].attack.value = 0.005;
-        window[origin+'Compressor'].release.value = 0.05;
-        window[origin+'Compressor'].threshold.value = 0;
+        window[origin+'Compressor'].threshold.setValueAtTime(0,window[origin+'Context'].currentTime);
+        window[origin+'Compressor'].knee.setValueAtTime(0,window[origin+'Context'].currentTime);
+        window[origin+'Compressor'].ratio.setValueAtTime(20,window[origin+'Context'].currentTime);
+        window[origin+'Compressor'].attack.setValueAtTime(0.005,window[origin+'Context'].currentTime);
+        window[origin+'Compressor'].release.setValueAtTime(0.05,window[origin+'Context'].currentTime);
+        window[origin+'Compressor'].threshold.setValueAtTime(0,window[origin+'Context'].currentTime);
         window[origin+'Compressor'].connect(window[origin+'Convolver']);
         window[origin+'Compressor'].connect(window[origin+'Dry']);
         window[origin+'Convolver'].connect(window[origin+'Wet']);

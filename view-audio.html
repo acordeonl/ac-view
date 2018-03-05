@@ -258,7 +258,7 @@
                 let detune = (note-sample.pitch_keycenter)*100 ;  
                 // if(!isNaN(sample.tune)) 
                 //     detune += sample.tune ;
-                this.playbackActions[e.midiNote].source.detune.value = detune ; 
+                this.playbackActions[e.midiNote].source.detune.setValueAtTime(detune,playbackContext.currentTime) ; 
                     
                 if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
                     this.playbackActions[e.midiNote].source.loopStart = sample.loopStart;
@@ -294,7 +294,7 @@
                 let detune = (note-sample.pitch_keycenter)*100 ;  ; 
                 // if(!isNaN(sample.tune)) 
                 //     detune += sample.tune ; 
-                this[e.origin + 'Actions'][e.midiNote].source.detune.value = detune ;
+                this[e.origin + 'Actions'][e.midiNote].source.detune.setValueAtTime(detune,instrumentContext.currentTime) ;
 
                 if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
                     this[e.origin + 'Actions'][e.midiNote].source.loopStart = sample.loopStart ; 
