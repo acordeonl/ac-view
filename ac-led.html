@@ -37,9 +37,9 @@
             }
             this.originsACLedState[origin][acLedState] = color ; 
         }
-        ___acV_getNoteName(note){
+        ___acV_getMIDINoteName(note){
             var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
-            var octave = Math.floor(note / 12);
+            var octave = Math.floor(note / 12)-1;
             var name = notes[note % 12];
             name += octave;
             return name;
@@ -71,18 +71,24 @@
         async ___acVsetOpacity(origin,opacity){
             await this.initAcLed ;
             if (origin === 'playback') {
+                this.playbackOpacity = opacity ;
                 this.shadowRoot.querySelector('[playbackAcLed]').style.opacity = opacity ;
             }
             else {
+                this.instrumentOpacity = opacity ;
                 for (var i = 0; i < this.___acV_instruments.length; i++) {
                     var origin = this.___acV_instruments[i] ;
                     this.shadowRoot.querySelector('['+origin+'AcLed]').style.opacity = opacity ;
                 }
             }
         }
-        ___acVrender(origin,acLedState,note,channel){
+        ___acVrender(origin,acLedState,note,channel,velocity){
             if(note === undefined )
                 return ; 
+
+            if(channel === undefined)
+                channel = 0 ; 
+            
             if (acLedState !== 0) {
                 this.shadowRoot.querySelector('['+origin+'AcLed]').style.display = 'block' ;
                 var color = this.___acV_getACLedColor(acLedState,origin) ;
@@ -99,27 +105,24 @@
                         if (this.___acV_isMonophonic) {
                             this.dispatchEvent(new CustomEvent('gui-action', {detail:{
                                 cmd:'playbackNoteOn',
-                                note:this.___acV_getNoteName(note,channel)
+                                note:this.___acV_getMIDINoteName(note,channel)
                             }, bubbles: true, composed: true }));
                         }
                         else{
-                            this.shadowRoot.querySelector('[playbackNote]').innerHTML = this.___acV_getNoteName(note,channel) ;
+                            this.shadowRoot.querySelector('[playbackNote]').innerHTML = this.___acV_getMIDINoteName(note,channel) ;
                         }
                     }
                 }
                 else {
-                    for (var i = 0; i < this.___acV_instruments.length; i++) {
-                        var origin = this.___acV_instruments[i] ;
-                        if(this['___acV_showingInstrumentNotes']){
-                            if (this.___acV_isMonophonic) {
-                                this.dispatchEvent(new CustomEvent('gui-action', {detail:{
-                                    cmd:'instrumentNoteOn',
-                                    note:this.___acV_getNoteName(note,channel)
-                                }, bubbles: true, composed: true }));
-                            }
-                            else{
-                                this.shadowRoot.querySelector('['+origin+'Note]').innerHTML = this.___acV_getNoteName(note,channel) ;
-                            }
+                    if(this['___acV_showingInstrumentNotes']){
+                        if (this.___acV_isMonophonic) {
+                            this.dispatchEvent(new CustomEvent('gui-action', {detail:{
+                                cmd:'instrumentNoteOn',
+                                note:this.___acV_getMIDINoteName(note,channel)
+                            }, bubbles: true, composed: true }));
+                        }
+                        else{
+                            this.shadowRoot.querySelector('['+origin+'Note]').innerHTML = this.___acV_getMIDINoteName(note,channel) ;
                         }
                     }
                 }
@@ -166,8 +169,9 @@
             this.shadowRoot.querySelector('['+origin+'AcLed] [note]').setAttribute(origin+'Note',"") ;
             this.shadowRoot.querySelector('['+origin+'AcLed]').style.display = 'none';
 
-            if(origin === 'playback')
+            if(origin === 'playback') {
                 this.shadowRoot.querySelector('['+origin+'AcLed]').style.opacity = this.playbackOpacity;
+            }
             else {
                 this.___acV_instruments.push(origin) ;
                 this.shadowRoot.querySelector('['+origin+'AcLed]').style.opacity = this.instrumentOpacity;

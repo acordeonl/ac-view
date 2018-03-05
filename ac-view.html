@@ -1,5 +1,6 @@
 <link rel="import" href="../polymer/polymer-element.html">
 <script>
+    var appIsPlaying = false ; 
     var playbackContext,
         playbackConvolver,
         playbackDry,
@@ -82,9 +83,6 @@
             ___acV_name:{type:String},
             ___acV_rotates:{type:Boolean,value:false},
             ___acV_displaysNotes:{type:Boolean,value:false},
-            ___acV_recordingPlayback:{type:Array,value:[]},
-            ___aV_conversionId:{type:Number,value:0},
-            ___acV_midiEvents:{type:Array,value:[]},
             ___acVinstrumentOrigins:{type:Array,value:[]},
             ___acVkeyboardEnabled:{type:Boolean,value:false},
             ___acVkeyboardOn:{type:Array,value:[]},
@@ -192,15 +190,34 @@
             }
         }
     /* ------------- MIDI --------------------- */
-        ___acVonMIDIEvent (e) {
-            if (this.___acVorigins[e.origin] === undefined)
+        ___acVtoggleMIDIVelocity(val){
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) 
+                nodeList[i].___acVtoggleMIDIVelocity(val);
+        }
+        ___acV_MIDI_out_allNotesOff() {
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) 
+                nodeList[i].___acV_MIDI_out_allNotesOff();
+        }
+        ___acV_getMIDINoteName(note){
+            var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+            var octave = Math.floor(note / 12)-1;
+            var name = notes[note % 12];
+            name += octave;
+            return name;
+        }
+        ___acV_addedOrigin() {
+            if(this.addOriginPromiseR !== undefined)
+                this.addOriginPromiseR() ; 
+        }
+        async ___acVonMIDIEvent (e) {
+            if (this.___acVorigins[e.origin] === undefined){
+                this.addOriginPromise = new Promise(resolve => this.addOriginPromiseR = resolve);
                 this.___acVaddOrigin(e.origin) ;
-            if (e.origin ==='conversion') {
-                e.id = this.___aV_conversionId ; 
-                this.___acV_midiEvents[this.___aV_conversionId] = e ; 
-                this.___aV_conversionId ++ ; 
             }
-            if (e.cmd === 'velocity-change') {
+            await this.addOriginPromise  ;
+            if (e.cmd === 'control-expression') {
                 this.___acV_setVelocity(e.velocity);
             }
             else {
@@ -262,7 +279,11 @@
             }
         }
     /* ------------- playback controls -------------- */
+        ___acVisPlaying() {
+            appIsPlaying = true ;      
+        }
         async ___acVstop() {
+            appIsPlaying = false ; 
             this.___acVclearActions('playback') ;
             await stopPlaybackAudio() ;
             playbackContext.close();
@@ -274,6 +295,11 @@
                 nodeList[i].___acVinitPlaybackAudio();
             this.___acVsetReverb(this.___acVreverb);
             this._acViewCallFunction('onACViewReadyToPlay', {});
+        }
+        ___acVclearAllGUI(){
+            for(let i = 0 ; i < this.___acVinstrumentOrigins.length ; i ++ ){
+                this.___acVclearGUI(this.___acVinstrumentOrigins[i]) ; 
+            }
         }
         ___acVclearGUI (origin) {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
@@ -368,12 +394,18 @@
         }
         ___acVmutePlayback() {
             this.___acVsetOpacity('playback', 0 ) ; 
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) 
+                nodeList[i].___acVmuteMIDIOut();
             playbackMasterGain.gain.setValueAtTime(playbackMasterGain.gain.value, playbackContext.currentTime);
             playbackMasterGain.gain.exponentialRampToValueAtTime(0.00001, playbackContext.currentTime + 1);
         }
         ___acVunMutePlayback() {
             this.___acVsetOpacity('playback', 100 ) ; 
-            playbackMasterGain.gain.value = 1 ; 
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) 
+                nodeList[i].___acVunMuteMIDIOut();
+            playbackMasterGain.gain.setTargetAtTime(1,playbackContext.currentTime,0.015) ;
         }
         ___acVsetOpacity (origin, opacity) {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
@@ -383,10 +415,10 @@
         }
         ___acVsetReverb (value) {
             let synthReverb = value;
-            playbackWet.gain.value = (1.0 - ((100 - synthReverb) / 100));
-            playbackDry.gain.value = (100 - synthReverb) / 100;
-            instrumentWet.gain.value = (1.0 - ((100 - synthReverb) / 100));
-            instrumentDry.gain.value = (100 - synthReverb) / 100;
+            playbackWet.gain.setTargetAtTime((1.0 - ((100 - synthReverb) / 100)),playbackContext.currentTime,0.015) ;
+            playbackDry.gain.setTargetAtTime((100 - synthReverb) / 100,playbackContext.currentTime,0.015) ;
+            instrumentWet.gain.setTargetAtTime((1.0 - ((100 - synthReverb) / 100)),instrumentContext.currentTime,0.015) ;
+            instrumentDry.gain.setTargetAtTime((100 - synthReverb) / 100,instrumentContext.currentTime,0.015) ;
         }
         ___acVsetRotation (rotation) {
             this.___acV_rotation = rotation;
@@ -423,16 +455,15 @@
         }
         ___acV_generateUniversalRecording(recording){
             this.___acVrecording = recording;
-            this.___aV_conversionId = 0 ;
-            this.___acV_midiEvents = [] ; 
             this.universalRecording = [] ;
             for (var i = 0; i < this.___acVrecording.length; i++) {
                 this.___acVonMIDIEvent( {
                     cmd:this.___acVrecording[i].cmd,
                     midiNote:this.___acVrecording[i].midiNote,
                     channel:this.___acVrecording[i].channel,
+                    velocity:this.___acVrecording[i].velocity,
                     time:this.___acVrecording[i].time,
-                    origin:'conversion'
+                    origin:'universal-playback-conversion'
                 }) ;
             }
             this.universalRecordingSetPromiseR() ;
@@ -444,39 +475,15 @@
             await this.universalRecordingSetPromise ;
             this._acViewCallFunction('acViewSetUniversalRecording', this.universalRecording);
         }
-        ___acV_onRecordingConversionEvent(e){
-            var ev = this.___acV_midiEvents[e.detail.eventId] ; 
-            var mapedNote = e.detail.mapedNote ; 
-            this.___acV_handleRecordingConversion(ev,mapedNote)
-        }
-        ___acV_handleRecordingConversion (midiEvent,mapedNote) {
-            if (midiEvent.channel === 0) {
-                this.universalRecording.push({
-                    midiNote:mapedNote,
-                    channel:midiEvent.channel,
-                    cmd:midiEvent.cmd,
-                    time:midiEvent.time
-                }) ; 
-            }
-        }
-    // --------------- Recording Playback ----------------------
-        ___acVgetRecordingPlayback (recording) {
-            this.___acV_recordingPlayback = [] ;
-            for (var i = 0; i < recording.length; i++) {
-                this.___acVonMIDIEvent( {
-                    cmd:recording[i].cmd,
-                    midiNote:recording[i].midiNote,
-                    channel:recording[i].channel,
-                    time:recording[i].time,
-                    origin:'recording-playback-conversion'
-                }) ;
-            }
-            this._acViewCallFunction('acViewSetRecordingPlayback', this.___acV_recordingPlayback);
-        }
-        ___acV_onRecordingPlaybackConversionEvent(e){
-            e.stopPropagation();
-            e.preventDefault();
-            this.___acV_recordingPlayback.push(e.detail.evt) ; 
+        ___acV_onUniversalPlaybackConversionEvent(e){
+            let midiEvent = e.detail.evt ; 
+            this.universalRecording.push({
+                midiNote:midiEvent.midiNote,
+                channel:midiEvent.channel,
+                cmd:midiEvent.cmd,
+                velocity:midiEvent.velocity,
+                time:midiEvent.time
+            }) ; 
         }
     /* --------------- Setup ------------------- */
         ___acV_setName(name) {
@@ -582,6 +589,11 @@
         constructor() {
             super();
         }
+        ___acV_instrumentAction(e){
+            e.stopPropagation() ; 
+            e.preventDefault() ; 
+            this._acViewCallFunction('addInstrumentActivity',e) ; 
+        }
         ready() {
             super.ready() ;
             this.___acVorigins = [] ;
@@ -615,11 +627,8 @@
                 nodeList[i].style.visibility = 'hidden' ;
             }
             this.midiNameToNumber = [] ;
-            for (let i = 0; i < 200; i++) {
-                var noteName = "C C#D EbE F F#G AbA BbB ";
-                noteName = (noteName.substring((i % 12) * 2, (i % 12) * 2 + 2) + (Math.floor(i / 12) ).toString()).replace(" ", "");
-                this.midiNameToNumber[noteName] = i ;
-            }
+            for (let i = 0; i < 200; i++) 
+                this.midiNameToNumber[this.___acV_getMIDINoteName(i)] = i ;
             this.___acV_initAcLeds();
             this.___acVaddOrigin('chord') ;
             this.___acVaddOrigin('keyboard') ;
@@ -631,10 +640,11 @@
                     this[args.data[0]](args.data[1]);
                 } ;
             }
-            this.addEventListener('recording-playback-conversion', e => this.___acV_onRecordingPlaybackConversionEvent(e));
+            this.addEventListener('instrument-action', e => this.___acV_instrumentAction(e));
             this.addEventListener('acLedGroup-loaded', e => this.___acV_onAcLedGroupLoaded(e));
             this.addEventListener('toast', e => this.___acV_handleToast(e));
-            this.addEventListener('note-conversion', e => this.___acV_onRecordingConversionEvent(e));
+            this.addEventListener('universal-playback-conversion', e => this.___acV_onUniversalPlaybackConversionEvent(e));
+            this.addEventListener('origin-added', e => this.___acV_addedOrigin(e));
         }
     }
     customElements.define('ac-view', ACView);

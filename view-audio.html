@@ -2,261 +2,426 @@
 
 <script>
     class ViewAudio extends Polymer.Element {
-        static get is() { return 'view-audio'; }
-        static get properties() {return {
-        /* ------------------- Loading ------------------- */
-        defaultAudioUrl:{type:String},
-            audioUrl: {type: String},
-        /* ------------------- Initialization ------------------- */
-            channel:{type:Number},
-            notesBuffers:{type:Array,value:[]},
-            loopDurations:{type:Array,value:[]},
-        /* ------------------- Volume ------------------- */
-            instrumentVelocity:{type:Number,value:1},
-            instrumentGain:{type:Number,value:1},
-            playbackGain:{type:Number,value:1},
-            instrumentPanner:{type:Object},
-            playbackPanner:{type:Object},
-            instrumentSynthGain:{type:Object},
-            playbackSynthGain:{type:Object},
-            playbackPanning:{type:Number,value:0},
-            instrumentPanning:{type:Number,value:0},
-        /* ------------------- Action ------------------- */
-            // playbackButtonActions
-            playbackActions:{type:Array,value:[]},
-            // instrumentButtonActions
-            activePlayback:{type:Array,value:[]},
-            activeInstrument:{type:Array,value:[]},
-            origins:{type:Array,value:[]}
-        }}
-        constructor() {
-            super();
-            this.originsSetupPromise = new Promise(resolve => this.originsSetupPromiseR = resolve);
+        static get is() {
+            return 'view-audio';
         }
+        static get properties() {
+            return {
+            /* ------------------- Loading ------------------- */
+                defaultAudioUrl: {
+                    type: String
+                },
+                audioUrl: {
+                    type: String
+                },
+            /* ------------------- Initialization ------------------- */
+                channel: {
+                    type: Number
+                },
+            /* ------------------- Volume ------------------- */
+                instrumentVelocity: {
+                    type: Number,
+                    value: 1
+                },
+                instrumentGain: {
+                    type: Number,
+                    value: 1
+                },
+                playbackGain: {
+                    type: Number,
+                    value: 1
+                },
+                instrumentPanner: {
+                    type: Object
+                },
+                playbackPanner: {
+                    type: Object
+                },
+                instrumentSynthGain: {
+                    type: Object
+                },
+                playbackSynthGain: {
+                    type: Object
+                },
+                playbackPanning: {
+                    type: Number,
+                    value: 0
+                },
+                instrumentPanning: {
+                    type: Number,
+                    value: 0
+                },
+            /* ------------------- Action ------------------- */
+                // playbackButtonActions
+                playbackActions: {
+                    type: Array,
+                    value: []
+                },
+                // instrumentButtonActions
+                activePlayback: {
+                    type: Array,
+                    value: []
+                },
+                activeInstrument: {
+                    type: Array,
+                    value: []
+                },
+                origins: {
+                    type: Array,
+                    value: []
+                }
+            }
+        }
+        constructor() {
+                super();
+                this.originsSetupPromise = new Promise(resolve => this.originsSetupPromiseR = resolve);
+            }
     /* --------- audio loading ----------------- */
-        async loadAudio(audioUrl){
-            this.audioUrl = audioUrl ;
-            this.loopDurations = [] ;
-            this.notesBuffers = [] ;
-            this.playbackActions = [] ;
-            for(let i = 0 ; i < this.origins.length ; i ++ ){
-                this[this.origins[i]+'Actions'] = []  ;  
+        getTextBetweenWords(str,word1,word2) { 
+            let re2 = new RegExp(word1+'(.*?)'+word2,'g') ; 
+            let res = str.match(re2) ; 
+            if(res !== null) {
+                res = res[0].replace(new RegExp(word1,'g') , '') ; 
+                res = res.replace(new RegExp(word2,'g'),'') ;  
             }
-
-            if(audioUrl !== '/data/accordion_synth/bass_chords.mp3') { 
-                this.dispatchEvent(new CustomEvent('view-audio-load', { bubbles: true, composed: true }));
-                return ;
+            return res ; 
+        }
+        sfzParse(file) {
+            let regions = []  ; 
+            file = file.replace(new RegExp('(<\\w+>)','g'),'</region> $1') +' </region>' ; 
+            file = file.replace(new RegExp('\r?\n|\r','g'), ' ') ; 
+            let region_props = file.match(new RegExp("<region>(.*?)<\/region>","g")) ; 
+            for(let i = 0 ; i < region_props.length ; i ++ ){
+                regions[i] = {} ; 
+                regions[i].sample = this.getTextBetweenWords(region_props[i],'sample=','.wav')+'.wav' ; 
+                regions[i].lokey = parseInt(this.getTextBetweenWords(region_props[i],'lokey=',' ')) ; 
+                regions[i].hikey = parseInt(this.getTextBetweenWords(region_props[i],'hikey=',' ')) ; 
+                regions[i].pitch_keycenter = parseInt(this.getTextBetweenWords(region_props[i],'pitch_keycenter=',' ')) ; 
+                regions[i].loop_start = parseInt(this.getTextBetweenWords(region_props[i],'loop_start=',' ')) ; 
+                regions[i].loop_end = parseInt(this.getTextBetweenWords(region_props[i],'loop_end=',' ')) ; 
+                regions[i].tune = parseInt(this.getTextBetweenWords(region_props[i],'tune=',' ')) ; 
             }
-                
-            var arrayBuffer = await(await fetch(audioUrl)).arrayBuffer();
-            var bb = new DataView(arrayBuffer);
-            var notesLoaded = 0, totalNotes = bb.getUint32(0);
-            var currentByte = 4 ;
-            for (var i = 0; i < totalNotes; i++) {
-                var loopDuration = bb.getFloat64(currentByte);
-                currentByte += 8 ;
-                var midiNote = bb.getUint32(currentByte) ;
-                currentByte += 4 ;
-                var byteLength = bb.getUint32(currentByte) ;
-                currentByte += 4 ;
-
-                var dstU8 = new Uint8Array(byteLength);
-                var srcU8 = new Uint8Array(arrayBuffer, currentByte, byteLength);
-                currentByte += byteLength ;
-                dstU8.set(srcU8);
-                var sound = dstU8;
-                var audioBuffer = await playbackContext.decodeAudioData(sound.buffer);
-                this.notesBuffers[midiNote] = audioBuffer ;
-                this.loopDurations[midiNote] = loopDuration ;
-                if (++notesLoaded === totalNotes)
-                    this.dispatchEvent(new CustomEvent('view-audio-load', { bubbles: true, composed: true }));
-            }
+            return regions ; 
+        }
+        async loadAudio(audioUrl) {
+            this.audioUrl = audioUrl;
+            this.playbackActions = [];
+            this.hasNote = [] ; 
+            this.regions = [] ; 
+            for(let i = 0 ; i < 256 ; i ++ )
+                this.hasNote[i] = false ;
+            for (let i = 0; i < this.origins.length; i++) 
+                this[this.origins[i] + 'Actions'] = [];
+            
+            var rec_zippedBlob = await (await fetch(audioUrl)).blob();
+            let audioArrayBuffers ; 
+            zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
+                zipReader.getEntries(async entries => {
+                    let withSFZR = function (){} ; 
+                    let withSFZ = new Promise(resolve => withSFZR = resolve);
+                    for (let i = 0; i < entries.length; i++) {
+                        if (entries[i].filename.endsWith('.sfz')) {
+                            entries[i].getData(new zip.BlobWriter("text/plain"), textBlob => {
+                                let fR = new FileReader();
+                                fR.readAsText(textBlob);
+                                fR.onload = () => {
+                                    this.regions = this.sfzParse(fR.result);
+                                    withSFZR();
+                                }
+                            });
+                            break; 
+                        }
+                    }
+                    await withSFZ;
+                    for (let i = 0; i < entries.length; i++) {
+                        if (entries[i].filename.endsWith('.sfz') || entries[i].filename.endsWith('/'))
+                            continue;
+                        if(!entries[i].filename.endsWith('.wav') && !entries[i].filename.endsWith('ogg') )
+                            continue ; 
+                        let audioBuffer, sampleRate;
+                        let fileType = entries[i].filename.slice(-3) ; 
+                        let entryReadR = function(){} ; 
+                        let entryRead = new Promise(resolve => entryReadR = resolve);
+                        entries[i].getData(new zip.BlobWriter('audio/wav'), wavBlob => {
+                            let fR = new FileReader();
+                            fR.readAsArrayBuffer(wavBlob);
+                            fR.onload = async() => {
+                                let bufferPart ; 
+                                bufferPart = (fileType === 'wav') ? fR.result.slice(24, 28) : fR.result.slice(40, 48) ; 
+                                let bufferView = new Uint32Array(bufferPart);
+                                sampleRate = bufferView[0];
+                                audioBuffer = await playbackContext.decodeAudioData(fR.result);
+                                entryReadR();
+                            }
+                        });
+                        await entryRead;
+                        let tmp = entries[i].filename.split('/');
+                        let entry_filename = tmp[tmp.length - 1].slice(0, -3) + 'wav';
+                        for (let j = 0; j < this.regions.length; j++) {
+                            let sample_prop = this.regions[j].sample ;  
+                            let sample_filename = "" ; 
+                            for(let k = sample_prop.length-1 ; sample_prop[k] !== '/' && sample_prop[k] !== "\\" && k >= 0; k -- )
+                                sample_filename += sample_prop[k] ; 
+                            sample_filename = sample_filename.split("").reverse().join("");
+                            if (sample_filename === entry_filename) {
+                                this.regions[j].audioBuffer = audioBuffer;
+                                if (!isNaN(this.regions[j].loop_start)) {
+                                    let loop_start = this.regions[j].loop_start;
+                                    let loop_end = this.regions[j].loop_end+1;
+                                    this.regions[j].loopStart = loop_start / sampleRate;
+                                    this.regions[j].loopEnd = loop_end / sampleRate;
+                                }
+                                if( isNaN(this.regions[j].lokey) && isNaN(this.regions[j].hikey)) {
+                                    this.regions[j].lokey = this.regions[j].pitch_keycenter ; 
+                                    this.regions[j].hikey = this.regions[j].pitch_keycenter ; 
+                                }
+                            }
+                        }
+                    }
+                    for(let i = 0 ; i < this.regions.length ; i ++ ){
+                        let low = this.regions[i].lokey ;
+                        let high = this.regions[i].hikey ;
+                        for(let j = low ; j <= high ; j ++ )
+                            this.hasNote[j] = true ; 
+                    }
+                    this.updateSFZNoteRange() ; 
+                    this.dispatchEvent(new CustomEvent('view-audio-load', {
+                        bubbles: true,
+                        composed: true
+                    }));
+                    zipReader.close();
+                });
+            });
+            
         }
     /* ------------- Audio synth ------------------ */
-        setVelocity(velocity){
-            this.instrumentVelocity = velocity ;
-            this.instrumentSynthGain.gain.value = this.instrumentGain*this.instrumentVelocity ;
+        setVelocity(velocity) {
+            this.instrumentVelocity = velocity;
+            this.instrumentSynthGain.gain.setTargetAtTime(this.instrumentGain * this.instrumentVelocity,instrumentContext.currentTime,0.015) ;
         }
-        _startAudio(note,e){
-            if(e.channel === 3)
-                console.log(note);
-            if(e.origin ==='playback') {
-                if(this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null){
-                    var when =  playbackContext.currentTime ;
+        getSample(note) { 
+            for(let i = 0 ; i < this.regions.length ; i ++ ){
+                if(this.regions[i].lokey <= note && note <= this.regions[i].hikey )
+                    return this.regions[i] ;                     
+            }
+        }
+        updateSFZNoteRange(){
+            for(let key = 0 ; key < 128 ; key ++ ){
+                let diff = 10000 , pos = -1 ; 
+                if(!this.hasNote[key]) {
+                    for(let i = 0 ; i < this.regions.length ; i ++ ){
+                        if(Math.abs(this.regions[i].lokey-key) < diff || Math.abs(this.regions[i].hikey-key) < diff){
+                            diff = Math.min(Math.abs(this.regions[i].lokey-key) , Math.abs(this.regions[i].hikey-key) )   ; 
+                            pos = i ; 
+                        }
+                    }
+                    if(key < this.regions[pos].lokey) {
+                        for(let i = key ; i < this.regions[pos].lokey ; i ++ )
+                            this.hasNote[i] = true ; 
+                        this.regions[pos].lokey = key ;
+                    } 
+                    if(key > this.regions[pos].hikey) { 
+                        for(let i = this.regions[pos].hikey+1 ; i <= key ; i ++ )
+                            this.hasNote[i] = true ; 
+                        this.regions[pos].hikey = key ; 
+                    }
+                    
+                }
+            }
+        }
+        _startAudio(note, e) {
+            let sample = this.getSample(note) ;
+            if (e.origin === 'playback') {
+                if (this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null) {
+                    var when = playbackContext.currentTime;
                     if (this.playbackActions[e.midiNote].gain !== undefined) {
-                        this.playbackActions[e.midiNote].gain.gain.cancelScheduledValues(when) ;
+                        this.playbackActions[e.midiNote].gain.gain.cancelScheduledValues(when);
                         this.playbackActions[e.midiNote].gain.gain.setValueAtTime(this.playbackActions[e.midiNote].gain.gain.value, when);
-                        this.playbackActions[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when+0.1);
-                        this.playbackActions[e.midiNote].source.stop(when+0.1) ;
-                        this.playbackActions[e.midiNote] = null ;
+                        this.playbackActions[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when + 0.1);
+                        this.playbackActions[e.midiNote].source.stop(when + 0.1);
+                        this.playbackActions[e.midiNote] = null;
                     }
                 }
-                var when = playbackContext.currentTime ;
-                if( (e.tempo)*(e.time-e.playbackTime)> 0)
-                    when += (e.tempo)*(e.time-e.playbackTime)  ;
-                if(this.playbackActions[e.midiNote] === undefined || this.playbackActions[e.midiNote] === null)
-                    this.playbackActions[e.midiNote] = {} ;
+                var when = playbackContext.currentTime;
+                if ((e.tempo) * (e.time - e.playbackTime) > 0)
+                    when += (e.tempo) * (e.time - e.playbackTime);
+                if (this.playbackActions[e.midiNote] === undefined || this.playbackActions[e.midiNote] === null)
+                    this.playbackActions[e.midiNote] = {};
                 this.playbackActions[e.midiNote].gain = playbackContext.createGain();
-                this.playbackActions[e.midiNote].gain.value = 0.7 ;
+                this.playbackActions[e.midiNote].gain.gain.setTargetAtTime(0.7,playbackContext.currentTime,0.015) ;
                 this.playbackActions[e.midiNote].source = playbackContext.createBufferSource();
-                this.playbackActions[e.midiNote].source.buffer = this.notesBuffers[note] ;
-
-                if (this.loopDurations[note] !== -1) {
-                    this.playbackActions[e.midiNote].source.loopStart = this.playbackActions[e.midiNote].source.buffer.duration - this.loopDurations[note];
-                    this.playbackActions[e.midiNote].source.loopEnd = this.playbackActions[e.midiNote].source.buffer.duration;
+                
+                this.playbackActions[e.midiNote].source.buffer = sample.audioBuffer ; 
+                // let semitones = note-parseInt(sample.pitch_keycenter) ; 
+                // let semitoneRatio = Math.pow(2,1/12) ; 
+                // this.playbackActions[e.midiNote].source.playbackRate.value = Math.pow(semitoneRatio,semitones) ; 
+                let detune = (note-sample.pitch_keycenter)*100 ;  
+                // if(!isNaN(sample.tune)) 
+                //     detune += sample.tune ;
+                this.playbackActions[e.midiNote].source.detune.value = detune ; 
+                    
+                if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
+                    this.playbackActions[e.midiNote].source.loopStart = sample.loopStart;
+                    this.playbackActions[e.midiNote].source.loopEnd = sample.loopEnd ; 
                     this.playbackActions[e.midiNote].source.loop = true;
                 }
 
                 this.playbackActions[e.midiNote].source.connect(this.playbackActions[e.midiNote].gain);
                 this.playbackActions[e.midiNote].source.start(when);
-                this.playbackActions[e.midiNote].gain.connect(this.playbackSynthGain) ;
-            }
-            else{
-                if (this[e.origin+'Actions'] === undefined) 
-                    this[e.origin+'Actions'] = [] ;
-                    if(this[e.origin+'Actions'][e.midiNote] !== undefined && this[e.origin+'Actions'][e.midiNote] !== null){
-                    var when =  instrumentContext.currentTime ;
-                    if (this[e.origin+'Actions'][e.midiNote].gain !== undefined) {
-                        this[e.origin+'Actions'][e.midiNote].gain.gain.cancelScheduledValues(when) ;
-                        this[e.origin+'Actions'][e.midiNote].gain.gain.setValueAtTime(this[e.origin+'Actions'][e.midiNote].gain.gain.value, when);
-                        this[e.origin+'Actions'][e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when+0.1);
-                        this[e.origin+'Actions'][e.midiNote].source.stop(when+0.1) ;
-                        this[e.origin+'Actions'][e.midiNote] = null ;
+                this.playbackActions[e.midiNote].gain.connect(this.playbackSynthGain);
+            } else {
+                if (this[e.origin + 'Actions'] === undefined)
+                    this[e.origin + 'Actions'] = [];
+                if (this[e.origin + 'Actions'][e.midiNote] !== undefined && this[e.origin + 'Actions'][e.midiNote] !== null) {
+                    var when = instrumentContext.currentTime;
+                    if (this[e.origin + 'Actions'][e.midiNote].gain !== undefined) {
+                        this[e.origin + 'Actions'][e.midiNote].gain.gain.cancelScheduledValues(when);
+                        this[e.origin + 'Actions'][e.midiNote].gain.gain.setValueAtTime(this[e.origin + 'Actions'][e.midiNote].gain.gain.value, when);
+                        this[e.origin + 'Actions'][e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when + 0.1);
+                        this[e.origin + 'Actions'][e.midiNote].source.stop(when + 0.1);
+                        this[e.origin + 'Actions'][e.midiNote] = null;
                     }
                 }
-                if(this[e.origin+'Actions'][e.midiNote] === undefined || this[e.origin+'Actions'][e.midiNote] === null)
-                    this[e.origin+'Actions'][e.midiNote] = {} ;
-                this[e.origin+'Actions'][e.midiNote].gain = instrumentContext.createGain();
-                this[e.origin+'Actions'][e.midiNote].gain.value = 0.7 ;
-                this[e.origin+'Actions'][e.midiNote].source = instrumentContext.createBufferSource();
-                this[e.origin+'Actions'][e.midiNote].source.buffer = this.notesBuffers[note] ;
+                if (this[e.origin + 'Actions'][e.midiNote] === undefined || this[e.origin + 'Actions'][e.midiNote] === null)
+                    this[e.origin + 'Actions'][e.midiNote] = {};
+                this[e.origin + 'Actions'][e.midiNote].gain = instrumentContext.createGain();
+                this[e.origin + 'Actions'][e.midiNote].gain.gain.setTargetAtTime(0.7,instrumentContext.currentTime,0.015) ;
+                this[e.origin + 'Actions'][e.midiNote].source = instrumentContext.createBufferSource();
+                this[e.origin + 'Actions'][e.midiNote].source.buffer = sample.audioBuffer;
+                // let semitones = note-parseInt(sample.pitch_keycenter) ; 
+                // let semitoneRatio = Math.pow(2,1/12) ; 
+                // this[e.origin + 'Actions'][e.midiNote].source.playbackRate.value = Math.pow(semitoneRatio,semitones) ; 
+                let detune = (note-sample.pitch_keycenter)*100 ;  ; 
+                // if(!isNaN(sample.tune)) 
+                //     detune += sample.tune ; 
+                this[e.origin + 'Actions'][e.midiNote].source.detune.value = detune ;
 
-                if (this.loopDurations[note] !== -1) {
-                    this[e.origin+'Actions'][e.midiNote].source.loopStart = this[e.origin+'Actions'][e.midiNote].source.buffer.duration - this.loopDurations[note];
-                    this[e.origin+'Actions'][e.midiNote].source.loopEnd = this[e.origin+'Actions'][e.midiNote].source.buffer.duration;
-                    this[e.origin+'Actions'][e.midiNote].source.loop = true;
+                if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
+                    this[e.origin + 'Actions'][e.midiNote].source.loopStart = sample.loopStart ; 
+                    this[e.origin + 'Actions'][e.midiNote].source.loopEnd = sample.loopEnd ; 
+                    this[e.origin + 'Actions'][e.midiNote].source.loop = true;
                 }
 
-                this[e.origin+'Actions'][e.midiNote].source.connect(this[e.origin+'Actions'][e.midiNote].gain);
-                this[e.origin+'Actions'][e.midiNote].source.start(instrumentContext.currentTime);
-                this[e.origin+'Actions'][e.midiNote].gain.connect(this.instrumentSynthGain) ;
+                this[e.origin + 'Actions'][e.midiNote].source.connect(this[e.origin + 'Actions'][e.midiNote].gain);
+                this[e.origin + 'Actions'][e.midiNote].source.start(instrumentContext.currentTime);
+                this[e.origin + 'Actions'][e.midiNote].gain.connect(this.instrumentSynthGain);
             }
         }
-        _stopAudio(e){
-            var when =  playbackContext.currentTime ;
-            if((e.tempo)*(e.time-e.playbackTime) > 0)
-                when += (e.tempo)*(e.time-e.playbackTime) ;
-            if(e.origin==='playback' && this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null){
+        _stopAudio(e) {
+            var when = playbackContext.currentTime;
+            if ((e.tempo) * (e.time - e.playbackTime) > 0)
+                when += (e.tempo) * (e.time - e.playbackTime);
+            if (e.origin === 'playback' && this.playbackActions[e.midiNote] !== undefined && this.playbackActions[e.midiNote] !== null) {
                 if (this.playbackActions[e.midiNote].gain !== undefined) {
-                    this.playbackActions[e.midiNote].gain.gain.cancelScheduledValues(when) ;
+                    this.playbackActions[e.midiNote].gain.gain.cancelScheduledValues(when);
                     this.playbackActions[e.midiNote].gain.gain.setValueAtTime(this.playbackActions[e.midiNote].gain.gain.value, when);
-                    this.playbackActions[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when+0.1);
-                    this.playbackActions[e.midiNote].source.stop(when+0.1) ;
-                    this.playbackActions[e.midiNote] = null ;
+                    this.playbackActions[e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, when + 0.1);
+                    this.playbackActions[e.midiNote].source.stop(when + 0.1);
+                    this.playbackActions[e.midiNote] = null;
                 }
+            } else if (this[e.origin + 'Actions'][e.midiNote] !== undefined && this[e.origin + 'Actions'][e.midiNote] !== null) {
+                this[e.origin + 'Actions'][e.midiNote].gain.gain.cancelScheduledValues(instrumentContext.currentTime);
+                this[e.origin + 'Actions'][e.midiNote].gain.gain.setValueAtTime(this[e.origin + 'Actions'][e.midiNote].gain.gain.value, instrumentContext.currentTime);
+                this[e.origin + 'Actions'][e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, instrumentContext.currentTime + 0.1);
+                this[e.origin + 'Actions'][e.midiNote].source.stop(instrumentContext.currentTime + 0.1);
+                this[e.origin + 'Actions'][e.midiNote] = null;
             }
-            else if (this[e.origin+'Actions'][e.midiNote] !== undefined && this[e.origin+'Actions'][e.midiNote] !== null){
-                this[e.origin+'Actions'][e.midiNote].gain.gain.cancelScheduledValues(instrumentContext.currentTime) ;
-                this[e.origin+'Actions'][e.midiNote].gain.gain.setValueAtTime(this[e.origin+'Actions'][e.midiNote].gain.gain.value, instrumentContext.currentTime);
-                this[e.origin+'Actions'][e.midiNote].gain.gain.exponentialRampToValueAtTime(0.00001, instrumentContext.currentTime+0.1);
-                this[e.origin+'Actions'][e.midiNote].source.stop(instrumentContext.currentTime+0.1) ;
-                this[e.origin+'Actions'][e.midiNote] = null  ;
+        }
+        initPlaybackAudio() {
+                this.playbackSynthGain = playbackContext.createGain();
+                this.playbackPanner = playbackContext.createStereoPanner();
+                this.playbackSynthGain.connect(this.playbackPanner);
+                this.playbackPanner.connect(playbackCompressor);
+                this._updatePlaybackVolume();
+                this._updatePlaybackPanning();
             }
+            /* ------------------- Instrument ------------------- */
+        initInstrumentVolume() {
+                this.instrumentSynthGain = instrumentContext.createGain();
+                this.instrumentPanner = instrumentContext.createStereoPanner();
+                this.instrumentSynthGain.gain.setTargetAtTime(this.instrumentGain,instrumentContext.currentTime,0.015) ;
+                this.instrumentPanner.pan.setTargetAtTime(this.instrumentPanning,instrumentContext.currentTime,0.015) ;
+                this.instrumentSynthGain.connect(this.instrumentPanner);
+                this.instrumentPanner.connect(instrumentCompressor);
+            }
+            /* ---------- Settings controls ------------ */
+        setPlaybackGain(gain) {
+            this.playbackGain = gain;
+            this._updatePlaybackVolume();
         }
-        initPlaybackAudio(){
-            this.playbackSynthGain = playbackContext.createGain() ;
-            this.playbackPanner = playbackContext.createStereoPanner() ;
-            this.playbackSynthGain.connect(this.playbackPanner);
-            this.playbackPanner.connect(playbackCompressor);
-            this._updatePlaybackVolume() ;
-            this._updatePlaybackPanning() ;
+        setInstrumentGain(gain) {
+            this.instrumentGain = gain;
+            this._updateInstrumentVolume();
         }
-    /* ------------------- Instrument ------------------- */
-        initInstrumentVolume(){
-            this.instrumentSynthGain = instrumentContext.createGain() ;
-            this.instrumentPanner = instrumentContext.createStereoPanner() ;
-            this.instrumentSynthGain.gain.value = this.instrumentGain ;
-            this.instrumentPanner.pan.value = this.instrumentPanning ;
-            this.instrumentSynthGain.connect(this.instrumentPanner);
-            this.instrumentPanner.connect(instrumentCompressor);
+        setPlaybackPanning(value) {
+            this.playbackPanning = value;
+            this._updatePlaybackPanning();
         }
-    /* ---------- Settings controls ------------ */
-        setPlaybackGain(gain){
-            this.playbackGain = gain ;
-            this._updatePlaybackVolume() ;
+        setInstrumentPanning(value) {
+            this.instrumentPanning = value;
+            this._updateInstrumentPanning();
         }
-        setInstrumentGain(gain){
-            this.instrumentGain = gain ;
-            this._updateInstrumentVolume() ;
+        _updatePlaybackPanning() {
+            this.playbackPanner.pan.setTargetAtTime(this.playbackPanning,playbackContext.currentTime,0.015) ;
         }
-        setPlaybackPanning(value){
-            this.playbackPanning = value ;
-            this._updatePlaybackPanning() ;
+        _updateInstrumentPanning() {
+            this.instrumentPanner.pan.setTargetAtTime(this.instrumentPanning,instrumentContext.currentTime,0.015) ;
         }
-        setInstrumentPanning(value){
-            this.instrumentPanning = value ;
-            this._updateInstrumentPanning() ;
-        }
-        _updatePlaybackPanning(){
-            this.playbackPanner.pan.value = this.playbackPanning ;
-        }
-        _updateInstrumentPanning(){
-            this.instrumentPanner.pan.value = this.instrumentPanning ;
-        }
-        _updateInstrumentVolume(){
-            if(this.instrumentSynthGain === undefined)
-                this.instrumentSynthGain = instrumentContext.createGain() ;
-            if(this.instrumentPanner === undefined)
-                this.instrumentPanner = instrumentContext.createStereoPanner() ;
-            if(this.instrumentGain !==undefined) {
-                this.instrumentSynthGain.gain.value = this.instrumentGain ;
+        _updateInstrumentVolume() {
+            if (this.instrumentSynthGain === undefined)
+                this.instrumentSynthGain = instrumentContext.createGain();
+            if (this.instrumentPanner === undefined)
+                this.instrumentPanner = instrumentContext.createStereoPanner();
+            if (this.instrumentGain !== undefined) {
+                this.instrumentSynthGain.gain.setTargetAtTime(this.instrumentGain,instrumentContext.currentTime,0.015) ;
             }
             try {
                 this.instrumentSynthGain.connect(this.instrumentPanner);
                 this.instrumentPanner.connect(instrumentCompressor);
             } catch (error) {
-                location.reload() ; 
+                location.reload();
             }
 
         }
-        _updatePlaybackVolume(){
-            if(!this.playbackSynthGain)
-                this.playbackSynthGain = playbackContext.createGain() ;
-            if(!this.playbackPanner)
-                this.playbackPanner = playbackContext.createStereoPanner() ;
-            if(this.playbackGain !==undefined) {
-                this.playbackSynthGain.gain.value = this.playbackGain;
+        _updatePlaybackVolume() {
+            if (!this.playbackSynthGain)
+                this.playbackSynthGain = playbackContext.createGain();
+            if (!this.playbackPanner)
+                this.playbackPanner = playbackContext.createStereoPanner();
+            if (this.playbackGain !== undefined) {
+                this.playbackSynthGain.gain.setTargetAtTime(this.playbackGain,playbackContext.currentTime,0.015) ;
             }
             try {
                 this.playbackSynthGain.connect(this.playbackPanner);
                 this.playbackPanner.connect(playbackCompressor);
             } catch (error) {
-                location.reload() ; 
+                location.reload();
             }
         }
     /* ------------------- Setup ------------------- */
-        async addOrigin(origin){
-            await this.originsSetupPromise ; 
-            this.origins.push(origin) ; 
-            if (this[origin+'Actions'] === undefined) {
-                this[origin+'Actions'] = [] ;
+        async addOrigin(origin) {
+            await this.originsSetupPromise;
+            this.origins.push(origin);
+            if (this[origin + 'Actions'] === undefined) {
+                this[origin + 'Actions'] = [];
             }
         }
         ready() {
-            super.ready() ;
-            this.loopDurations = [] ;
-            this.notesBuffers = [] ;
-            this.playbackActions = [] ;
-            this.origins = [] ; 
-            this.originsSetupPromiseR() ; 
-            if(this.instrumentSynthGain === undefined)
-                this.instrumentSynthGain = instrumentContext.createGain() ;
-            if(this.playbackSynthGain === undefined )
-                this.playbackSynthGain = playbackContext.createGain() ;
-            if(this.instrumentPanner === undefined)
-                this.instrumentPanner = instrumentContext.createStereoPanner() ;
-            if(this.playbackPanner === undefined ) {
-                this.playbackPanner = playbackContext.createStereoPanner() ;
+            super.ready();
+            this.playbackActions = [];
+            this.origins = [];
+            this.hasNote = [] ; 
+            this.regions = [] ; 
+            
+            this.originsSetupPromiseR();
+            if (this.instrumentSynthGain === undefined)
+                this.instrumentSynthGain = instrumentContext.createGain();
+            if (this.playbackSynthGain === undefined)
+                this.playbackSynthGain = playbackContext.createGain();
+            if (this.instrumentPanner === undefined)
+                this.instrumentPanner = instrumentContext.createStereoPanner();
+            if (this.playbackPanner === undefined) {
+                this.playbackPanner = playbackContext.createStereoPanner();
             }
         }
     }
