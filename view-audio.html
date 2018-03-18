@@ -104,95 +104,102 @@
             return regions ; 
         }
         async loadAudio(audioUrl) {
-            this.audioUrl = audioUrl;
-            this.playbackActions = [];
-            this.hasNote = [] ; 
-            this.regions = [] ; 
-            for(let i = 0 ; i < 256 ; i ++ )
-                this.hasNote[i] = false ;
-            for (let i = 0; i < this.origins.length; i++) 
-                this[this.origins[i] + 'Actions'] = [];
-            
-            var rec_zippedBlob = await (await fetch(audioUrl)).blob();
-            let audioArrayBuffers ; 
-            zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
-                zipReader.getEntries(async entries => {
-                    let withSFZR = function (){} ; 
-                    let withSFZ = new Promise(resolve => withSFZR = resolve);
-                    for (let i = 0; i < entries.length; i++) {
-                        if (entries[i].filename.endsWith('.sfz')) {
-                            entries[i].getData(new zip.BlobWriter("text/plain"), textBlob => {
+            try {
+                this.audioUrl = audioUrl;
+                this.playbackActions = [];
+                this.hasNote = [] ; 
+                this.regions = [] ; 
+                for(let i = 0 ; i < 256 ; i ++ )
+                    this.hasNote[i] = false ;
+                for (let i = 0; i < this.origins.length; i++) 
+                    this[this.origins[i] + 'Actions'] = [];
+
+                var rec_zippedBlob = await (await fetch(audioUrl)).blob();
+                let audioArrayBuffers ; 
+                zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
+                    zipReader.getEntries(async entries => {
+                        let withSFZR = function (){} ; 
+                        let withSFZ = new Promise(resolve => withSFZR = resolve);
+                        for (let i = 0; i < entries.length; i++) {
+                            if (entries[i].filename.endsWith('.sfz')) {
+                                entries[i].getData(new zip.BlobWriter("text/plain"), textBlob => {
+                                    let fR = new FileReader();
+                                    fR.readAsText(textBlob);
+                                    fR.onload = () => {
+                                        this.regions = this.sfzParse(fR.result);
+                                        withSFZR();
+                                    }
+                                });
+                                break; 
+                            }
+                        }
+                        await withSFZ;
+                        for (let i = 0; i < entries.length; i++) {
+                            if (entries[i].filename.endsWith('.sfz') || entries[i].filename.endsWith('/'))
+                                continue;
+                            if(!entries[i].filename.endsWith('.wav') && !entries[i].filename.endsWith('ogg') )
+                                continue ; 
+                            let audioBuffer, sampleRate;
+                            let fileType = entries[i].filename.slice(-3) ; 
+                            let entryReadR = function(){} ; 
+                            let entryRead = new Promise(resolve => entryReadR = resolve);
+                            entries[i].getData(new zip.BlobWriter('audio/wav'), wavBlob => {
                                 let fR = new FileReader();
-                                fR.readAsText(textBlob);
-                                fR.onload = () => {
-                                    this.regions = this.sfzParse(fR.result);
-                                    withSFZR();
+                                fR.readAsArrayBuffer(wavBlob);
+                                fR.onload = async() => {
+                                    let bufferPart ; 
+                                    bufferPart = (fileType === 'wav') ? fR.result.slice(24, 28) : fR.result.slice(40, 48) ; 
+                                    let bufferView = new Uint32Array(bufferPart);
+                                    sampleRate = bufferView[0];
+                                    audioBuffer = await playbackContext.decodeAudioData(fR.result);
+                                    entryReadR();
                                 }
                             });
-                            break; 
-                        }
-                    }
-                    await withSFZ;
-                    for (let i = 0; i < entries.length; i++) {
-                        if (entries[i].filename.endsWith('.sfz') || entries[i].filename.endsWith('/'))
-                            continue;
-                        if(!entries[i].filename.endsWith('.wav') && !entries[i].filename.endsWith('ogg') )
-                            continue ; 
-                        let audioBuffer, sampleRate;
-                        let fileType = entries[i].filename.slice(-3) ; 
-                        let entryReadR = function(){} ; 
-                        let entryRead = new Promise(resolve => entryReadR = resolve);
-                        entries[i].getData(new zip.BlobWriter('audio/wav'), wavBlob => {
-                            let fR = new FileReader();
-                            fR.readAsArrayBuffer(wavBlob);
-                            fR.onload = async() => {
-                                let bufferPart ; 
-                                bufferPart = (fileType === 'wav') ? fR.result.slice(24, 28) : fR.result.slice(40, 48) ; 
-                                let bufferView = new Uint32Array(bufferPart);
-                                sampleRate = bufferView[0];
-                                audioBuffer = await playbackContext.decodeAudioData(fR.result);
-                                entryReadR();
-                            }
-                        });
-                        await entryRead;
-                        let tmp = entries[i].filename.split('/');
-                        let entry_filename = tmp[tmp.length - 1].slice(0, -3) + 'wav';
-                        for (let j = 0; j < this.regions.length; j++) {
-                            let sample_prop = this.regions[j].sample ;  
-                            let sample_filename = "" ; 
-                            for(let k = sample_prop.length-1 ; sample_prop[k] !== '/' && sample_prop[k] !== "\\" && k >= 0; k -- )
-                                sample_filename += sample_prop[k] ; 
-                            sample_filename = sample_filename.split("").reverse().join("");
-                            if (sample_filename === entry_filename) {
-                                this.regions[j].audioBuffer = audioBuffer;
-                                if (!isNaN(this.regions[j].loop_start)) {
-                                    let loop_start = this.regions[j].loop_start;
-                                    let loop_end = this.regions[j].loop_end+1;
-                                    this.regions[j].loopStart = loop_start / sampleRate;
-                                    this.regions[j].loopEnd = loop_end / sampleRate;
-                                }
-                                if( isNaN(this.regions[j].lokey) && isNaN(this.regions[j].hikey)) {
-                                    this.regions[j].lokey = this.regions[j].pitch_keycenter ; 
-                                    this.regions[j].hikey = this.regions[j].pitch_keycenter ; 
+                            await entryRead;
+                            let tmp = entries[i].filename.split('/');
+                            let entry_filename = tmp[tmp.length - 1].slice(0, -3) + 'wav';
+                            for (let j = 0; j < this.regions.length; j++) {
+                                let sample_prop = this.regions[j].sample ;  
+                                let sample_filename = "" ; 
+                                for(let k = sample_prop.length-1 ; sample_prop[k] !== '/' && sample_prop[k] !== "\\" && k >= 0; k -- )
+                                    sample_filename += sample_prop[k] ; 
+                                sample_filename = sample_filename.split("").reverse().join("");
+                                if (sample_filename === entry_filename) {
+                                    this.regions[j].audioBuffer = audioBuffer;
+                                    if (!isNaN(this.regions[j].loop_start)) {
+                                        let loop_start = this.regions[j].loop_start;
+                                        let loop_end = this.regions[j].loop_end+1;
+                                        this.regions[j].loopStart = loop_start / sampleRate;
+                                        this.regions[j].loopEnd = loop_end / sampleRate;
+                                    }
+                                    if( isNaN(this.regions[j].lokey) && isNaN(this.regions[j].hikey)) {
+                                        this.regions[j].lokey = this.regions[j].pitch_keycenter ; 
+                                        this.regions[j].hikey = this.regions[j].pitch_keycenter ; 
+                                    }
                                 }
                             }
                         }
-                    }
-                    for(let i = 0 ; i < this.regions.length ; i ++ ){
-                        let low = this.regions[i].lokey ;
-                        let high = this.regions[i].hikey ;
-                        for(let j = low ; j <= high ; j ++ )
-                            this.hasNote[j] = true ; 
-                    }
-                    this.updateSFZNoteRange() ; 
-                    this.dispatchEvent(new CustomEvent('view-audio-load', {
-                        bubbles: true,
-                        composed: true
-                    }));
-                    zipReader.close();
+                        for(let i = 0 ; i < this.regions.length ; i ++ ){
+                            let low = this.regions[i].lokey ;
+                            let high = this.regions[i].hikey ;
+                            for(let j = low ; j <= high ; j ++ )
+                                this.hasNote[j] = true ; 
+                        }
+                        this.updateSFZNoteRange() ; 
+                        this.dispatchEvent(new CustomEvent('view-audio-load', {
+                            bubbles: true,
+                            composed: true
+                        }));
+                        zipReader.close();
+                    });
                 });
-            });
-            
+            }    
+            catch(e){
+                console.log(e);
+                this.dispatchEvent(new CustomEvent('fetch-error', {detail:{
+                    error:e
+                }, bubbles: true, composed: true }));
+            } 
         }
     /* ------------- Audio synth ------------------ */
         setVelocity(velocity) {
