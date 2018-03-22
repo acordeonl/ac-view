@@ -192,10 +192,15 @@
                         }));
                         zipReader.close();
                     });
+                } , error => {
+                    this.dispatchEvent(new CustomEvent('toast', {detail:{
+                        msg:this.t2('loadViewAudioError'), 
+                        persist:true
+                    }, bubbles: true, composed: true }));
+                    this.loadAudio('/data/pianos/grand-piano-YDP-20160804-2-ogg.zip') ; 
                 });
             }    
             catch(e){
-                console.log(e);
                 this.dispatchEvent(new CustomEvent('fetch-error', {detail:{
                     error:e
                 }, bubbles: true, composed: true }));
@@ -412,6 +417,9 @@
             if (this[origin + 'Actions'] === undefined) {
                 this[origin + 'Actions'] = [];
             }
+        }
+        t2(c , arg ) {
+            return i18next.t(c , arg) ; 
         }
         ready() {
             super.ready();

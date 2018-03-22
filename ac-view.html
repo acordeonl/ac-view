@@ -264,7 +264,9 @@
         }
     /* ------------------- Instrument ------------------- */
         ___acV_handleToast(e){
-            this._acViewCallFunction('toast',e.detail.msg) ;
+            e.preventDefault() ; 
+            e.stopPropagation() ; 
+            this._acViewCallFunction('toast',e) ;
         }
         async ___acVstopInstrumentAudio (){
             this.___acVclearGUI('instrument') ;
