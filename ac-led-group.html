@@ -5,6 +5,7 @@
     class ACLedGroup extends Polymer.Element {
         static get is() { return 'ac-led-group'; }
         static get properties() {return {
+            midiOutCnt:{type:Array},
         /* ------------------- Loading ------------------- */
             name: {type: String},
             ___acV_totalViewAudios: {type: Number,value: 0},
@@ -89,31 +90,22 @@
             }
         }
     /* ------------------- MIDIEvents ------------------- */
+        ___acV_clear_midiOutCnt() {
+            for(let i = 0 ; i < 16 ; i ++ )
+                for(let j = 0 ; j < 128 ; j ++ )
+                    this.midiOutCnt[i][j] = 0 ; 
+        }
         ___acVtoggleMIDIVelocity(val){
             this.___acV_enableMIDIVelocity = val ; 
         }
-        ___acV_MIDI_out_allNotesOff() {
+        async ___acV_MIDI_out_resetPlayback() {
             let outputPorts = midiEnabledOutputs.values() ; 
             for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
-                let channels = this.___acV_registeredChannels.keys() ; 
-                for(let channel = channels.next() ; channel && !channel.done ; channel = channels.next() ){
-                    let outputEvent = [] ; 
-                    outputEvent[0] = 11 << 4 ; 
-                    outputEvent[0] |= channel.value ; 
-                    outputEvent[1] = 123; 
-                    outputEvent[2] = 0 ; 
-                    outputPort.value.send(outputEvent); 
-                }
                 let playbackNotes = this.___acV_playbackNotesOn.values() ; 
-                for(let note = playbackNotes.next() ; note && !note.done ; note = playbackNotes.next() ){
-                    let outputEvent = [] ; 
-                    outputEvent[0] = 8 << 4 ; 
-                    outputEvent[0] |= note.value.channel ; 
-                    outputEvent[1] = note.value.note; 
-                    outputEvent[2] = 0 ; 
-                    outputPort.value.send(outputEvent); 
-                }
+                for(let note = playbackNotes.next() ; note && !note.done ; note = playbackNotes.next() )
+                    this.___acV_MIDI_out(note.value.channel,8,note.value.note,0,'playback') ; 
             }
+            this.___acV_clear_midiOutCnt() ; 
         }
         ___acV_mapAudioNoteToMIDIOut(channel,note,map){
             if(this.___acV_NoteToMIDIOutMap[channel] === undefined)
@@ -138,7 +130,13 @@
                     outputEvent[0] |= channel ; 
                     outputEvent[1] = midiOutput[i] ; 
                     outputEvent[2] = velocity ; 
-                    midiEnabledOutputs.get(outputPort.value).send(outputEvent);                
+                    // play midi note once per channel (prevents bugs)
+                    if((this.midiOutCnt[channel][midiOutput[i]] === 0 && cmd === 9) || cmd === 8 ) 
+                        midiEnabledOutputs.get(outputPort.value).send(outputEvent);                
+                    if(cmd === 9)
+                        this.midiOutCnt[channel][midiOutput[i]] ++ ; 
+                    else if(cmd === 8 && this.midiOutCnt[channel][midiOutput[i]] > 0)
+                        this.midiOutCnt[channel][midiOutput[i]] --  ;
                 }
                 
             }
@@ -600,6 +598,11 @@
             this.___acV_registeredChannels = new Map() ; 
             this.___acV_instruments = [] ;
             this.___acV_mapKeyboardToNote = [] ;
+
+            this.midiOutCnt = new  Array () ; 
+            for(let i = 0 ; i < 16 ; i ++ )
+                this.midiOutCnt[i] = new Array(128) ; 
+            this.___acV_clear_midiOutCnt() ;
 
             var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {

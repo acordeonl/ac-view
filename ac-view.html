@@ -200,10 +200,10 @@
             for (var i = 0; i < nodeList.length; i++) 
                 nodeList[i].___acVtoggleMIDIVelocity(val);
         }
-        ___acV_MIDI_out_allNotesOff() {
+        ___acV_MIDI_out_resetPlayback() {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) 
-                nodeList[i].___acV_MIDI_out_allNotesOff();
+                nodeList[i].___acV_MIDI_out_resetPlayback();
         }
         ___acV_getMIDINoteName(note){
             var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
