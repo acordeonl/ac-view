@@ -31,6 +31,7 @@
         /* ------------------- Action ------------------- */
             ___acV_mutePlayback:{type:Boolean,value:false},
             ___acV_playbackNotesOn:{type:Object},
+            ___acV_recordingNotesOn:{type:Object},
             ___acV_instruments:{type:Array},
             ___acV_MIDINoteToAudioNoteMap:{type:Array,value:[]},
             ___acV_mapKeyboardToNote:{type:Array,value:[]}
@@ -104,6 +105,15 @@
                 let playbackNotes = this.___acV_playbackNotesOn.values() ; 
                 for(let note = playbackNotes.next() ; note && !note.done ; note = playbackNotes.next() )
                     this.___acV_MIDI_out(note.value.channel,8,note.value.note,0,'playback') ; 
+            }
+            this.___acV_clear_midiOutCnt() ; 
+        }
+        async ___acV_MIDI_out_resetInstrument() {
+            let outputPorts = midiEnabledOutputs.values() ; 
+            for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
+                let recordingNotes = this.___acV_recordingNotesOn.values() ; 
+                for(let note = recordingNotes.next() ; note && !note.done ; note = recordingNotes.next() )
+                    this.___acV_MIDI_out(note.value.channel,8,note.value.note,0,'recording') ; 
             }
             this.___acV_clear_midiOutCnt() ; 
         }
@@ -377,6 +387,12 @@
                         let cmd = (this[origin+'AcLedActions'].first.value.cmd  === 'note-on')? 9:8; 
                         this.___acV_MIDI_out( this[origin+'AcLedActions'].first.value.channel,cmd, this[origin+'AcLedActions'].first.value.note, this[origin+'AcLedActions'].first.value.velocity,'recording') ; 
                     }
+                    // --------- for MIDI out ------------ 
+                    if(this[origin+'AcLedActions'].first.value.cmd === 'note-on') 
+                            this.___acV_recordingNotesOn.set(this[origin+'AcLedActions'].first.value.midiNote,{note:this[origin+'AcLedActions'].first.value.note,channel:this[origin+'AcLedActions'].first.value.channel}) ; 
+                        else
+                            this.___acV_recordingNotesOn.delete(this[origin+'AcLedActions'].first.value.midiNote) ; 
+                    // ----------------------------------- 
                     this[origin+'AcLedActions'].popFirst();
                 }
             }
@@ -595,6 +611,7 @@
             this.___acV_MIDINoteToAudioNoteMap = [] ;
             this.___acV_flags = []  ;
             this.___acV_playbackNotesOn = new Map() ; 
+            this.___acV_recordingNotesOn = new Map() ; 
             this.___acV_registeredChannels = new Map() ; 
             this.___acV_instruments = [] ;
             this.___acV_mapKeyboardToNote = [] ;

@@ -205,6 +205,11 @@
             for (var i = 0; i < nodeList.length; i++) 
                 nodeList[i].___acV_MIDI_out_resetPlayback();
         }
+        ___acV_MIDI_out_resetInstrument() {
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) 
+                nodeList[i].___acV_MIDI_out_resetInstrument();
+        }
         ___acV_getMIDINoteName(note){
             var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
             var octave = Math.floor(note / 12)-1;
@@ -346,7 +351,6 @@
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVtoggleChords(playingChords) ;
             }
-            this._acViewCallFunction('onACViewChordsOff') ;
         }
     /* ------------- settings controls -------------- */
         ___acV_acViewDisplaysNotes(value) {
