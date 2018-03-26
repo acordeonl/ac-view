@@ -84,6 +84,7 @@
     class ACView extends Polymer.Element {
         static get is() { return 'ac-view'; }
         static get properties() {return {
+            ___acV_enableMIDIExpression:{type:Boolean,value:false},
             ___acV_userPreferences:{type:Object},
             ___acV_name:{type:String},
             ___acV_rotates:{type:Boolean,value:false},
@@ -200,15 +201,27 @@
             for (var i = 0; i < nodeList.length; i++) 
                 nodeList[i].___acVtoggleMIDIVelocity(val);
         }
+        ___acVtoggleMIDIExpression(val){
+            this.___acV_enableMIDIExpression = val ; 
+            if(!this.___acV_enableMIDIExpression){
+                var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+                for (var i = 0; i < nodeList.length; i++) 
+                    nodeList[i].___acV_resetMIDIExpression('recording');
+            }
+        }
         ___acV_MIDI_out_resetPlayback() {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
-            for (var i = 0; i < nodeList.length; i++) 
+            for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acV_MIDI_out_resetPlayback();
+                nodeList[i].___acV_resetMIDIExpression('playback');
+            }
         }
         ___acV_MIDI_out_resetInstrument() {
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
-            for (var i = 0; i < nodeList.length; i++) 
+            for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acV_MIDI_out_resetInstrument();
+                nodeList[i].___acV_resetMIDIExpression('recording');
+            }
         }
         ___acV_getMIDINoteName(note){
             var notes = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
@@ -229,6 +242,19 @@
             await this.addOriginPromise  ;
             if (e.cmd === 'control-expression') {
                 this.___acV_setVelocity(e.velocity);
+                if(this.___acV_enableMIDIExpression){
+                    let outputPorts = midiEnabledOutputs.keys() ; 
+                    for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
+                        if(!outputPort.value.endsWith('recording'))
+                            continue ; 
+                        let outputEvent = [] ; 
+                        outputEvent[0] = 11 << 4 ; 
+                        outputEvent[0] |= e.channel ; 
+                        outputEvent[1] = 11 ; 
+                        outputEvent[2] = e.velocity ; 
+                        midiEnabledOutputs.get(outputPort.value).send(outputEvent);                
+                    }
+                }
             }
             else {
                 this.___acV_handleMIDIEvent(e);
