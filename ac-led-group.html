@@ -5,6 +5,7 @@
     class ACLedGroup extends Polymer.Element {
         static get is() { return 'ac-led-group'; }
         static get properties() {return {
+            ___acV_in_midiIOToggle:{type:Boolean,value:false},
             ___acV_midiOutCnt_recording:{type:Array},
             ___acV_midiOutCnt_playback:{type:Array},
         /* ------------------- Loading ------------------- */
@@ -117,7 +118,7 @@
                 }
             }
         }
-        async ___acV_MIDI_out_resetPlayback() {
+        ___acV_MIDI_out_resetPlayback() {
             let outputPorts = midiEnabledOutputs.values() ; 
             for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
                 let playbackNotes = this.___acV_playbackNotesOn.values() ; 
@@ -126,7 +127,7 @@
             }
             this.___acV_clear_midiOutCnt('playback') ; 
         }
-        async ___acV_MIDI_out_resetInstrument() {
+        ___acV_MIDI_out_resetInstrument() {
             let outputPorts = midiEnabledOutputs.values() ; 
             for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
                 let recordingNotes = this.___acV_recordingNotesOn.values() ; 
@@ -149,10 +150,10 @@
             if(this.___acV_NoteToMIDIOutMap[channel] !== undefined && this.___acV_NoteToMIDIOutMap[channel][note] !== undefined)
                 midiOutput = this.___acV_NoteToMIDIOutMap[channel][note] ;
             let outputPorts = midiEnabledOutputs.keys() ; 
-            for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
-                if(!outputPort.value.endsWith(origin))
-                    continue ; 
-                for(let i = 0 ; i < midiOutput.length ; i ++ ){
+            for(let i = 0 ; i < midiOutput.length ; i ++ ){
+                for(let outputPort = outputPorts.next() ; outputPort && !outputPort.done ; outputPort = outputPorts.next() ){
+                    if(!outputPort.value.endsWith(origin))
+                        continue ; 
                     let outputEvent = [] ; 
                     outputEvent[0] = cmd << 4 ; 
                     outputEvent[0] |= channel ; 
@@ -161,12 +162,12 @@
                     // play midi note once per channel (prevents bugs)
                     if((this['___acV_midiOutCnt_'+origin][channel][midiOutput[i]] === 0 && cmd === 9) || cmd === 8 ) 
                         midiEnabledOutputs.get(outputPort.value).send(outputEvent);                
-                    if(cmd === 9)
-                        this['___acV_midiOutCnt_'+origin][channel][midiOutput[i]] ++ ; 
-                    else if(cmd === 8 && this['___acV_midiOutCnt_'+origin][channel][midiOutput[i]] > 0)
-                        this['___acV_midiOutCnt_'+origin][channel][midiOutput[i]] --  ;
+                  
                 }
-                
+                if(cmd === 9)
+                    this['___acV_midiOutCnt_'+origin][channel][midiOutput[i]] ++ ; 
+                else if(cmd === 8 && this['___acV_midiOutCnt_'+origin][channel][midiOutput[i]] > 0)
+                    this['___acV_midiOutCnt_'+origin][channel][midiOutput[i]] --  ;
             }
         }
         ___acV_getMIDINoteName(note){
@@ -368,6 +369,8 @@
         }
     /* -------------------- GUI ------------------------- */
         ___acV_updateGUI() {
+            if(this.___acV_in_midiIOToggle)
+                return ; 
             if (this.playbackAcLedActions !== null && this.playbackAcLedActions !== undefined && this.playbackAcLedActions.length > 0) {
                 if (this.playbackAcLedActions.first.value.when < window.performance.now()/1000) {
                     let timeRef = this.playbackAcLedActions.first.value.when ; 
@@ -399,7 +402,7 @@
                         let cmd = (this[origin+'AcLedActions'].first.value.cmd  === 'note-on')? 9:8; 
                         if(this.___acV_mutePlayback)
                             cmd = 8 ; 
-                        this.___acV_MIDI_out( this[origin+'AcLedActions'].first.value.channel,cmd, this[origin+'AcLedActions'].first.value.note, this[origin+'AcLedActions'].first.value.velocity,'playback') ; 
+                        this.___acV_MIDI_out( this[origin+'AcLedActions'].first.value.channel,cmd, this[origin+'AcLedActions'].first.value.note, this[origin+'AcLedActions'].first.value.velocity,'recording') ; 
                     }
                     if(origin !== 'chord'){
                         let cmd = (this[origin+'AcLedActions'].first.value.cmd  === 'note-on')? 9:8; 
@@ -456,6 +459,12 @@
             }
             this.playbackAcLedActions.clear();
             // this.instrumentAcLedActions.clear();
+        }
+        ___acV_on_midiIOToggleBegin(){
+            this.___acV_in_midiIOToggle = true ; 
+        }
+        ___acV_on_midiIOToggleEnd(){
+            this.___acV_in_midiIOToggle = false ; 
         }
         ___acVclearGUI(origin) {
             if (origin === 'playback') {
