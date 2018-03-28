@@ -103,6 +103,15 @@
             }
             return regions ; 
         }
+        async _verifyAudioLoadingTime() {
+            await sleep(7000);
+            if(this.isloadingAudio) { 
+                this.dispatchEvent(new CustomEvent('toast', {detail:{
+                    msg:this.t2('slowViewAudioLoading')
+                }, bubbles: true, composed: true }));
+                this._verifyAudioLoadingTime() ; 
+            }
+        }
         async loadAudio(audioUrl) {
             try {
                 this.audioUrl = audioUrl;
@@ -114,7 +123,10 @@
                 for (let i = 0; i < this.origins.length; i++) 
                     this[this.origins[i] + 'Actions'] = [];
 
+                this.isloadingAudio = true ; 
+                this._verifyAudioLoadingTime() ; 
                 var rec_zippedBlob = await (await fetch(audioUrl)).blob();
+                this.isloadingAudio = false ;  
                 let audioArrayBuffers ; 
                 zip.createReader(new zip.BlobReader(rec_zippedBlob), zipReader => {
                     zipReader.getEntries(async entries => {
@@ -193,6 +205,7 @@
                         zipReader.close();
                     });
                 } , error => {
+                    this.isloadingAudio = false ;
                     this.dispatchEvent(new CustomEvent('toast', {detail:{
                         msg:this.t2('loadViewAudioError'), 
                         persist:true
@@ -201,6 +214,7 @@
                 });
             }    
             catch(e){
+                this.isloadingAudio = false ;
                 this.dispatchEvent(new CustomEvent('fetch-error', {detail:{
                     error:e
                 }, bubbles: true, composed: true }));
