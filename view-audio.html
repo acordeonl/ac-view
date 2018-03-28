@@ -104,7 +104,7 @@
             return regions ; 
         }
         async _verifyAudioLoadingTime() {
-            await sleep(7000);
+            await sleep(5000);
             if(this.isloadingAudio) { 
                 this.dispatchEvent(new CustomEvent('toast', {detail:{
                     msg:this.t2('slowViewAudioLoading')
