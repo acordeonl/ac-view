@@ -277,7 +277,7 @@
             else if (e.cmd ==='note-off' && this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note]){
                 this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']')._stopAudio(e);
             }
-            if (!this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note] )
+            if (note > 127 || !this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note] )
                 this.dispatchEvent(new CustomEvent('toast', {detail:{
                     msg:'Algunas notas no pueden ser reproducidas debido a que no se encuentran en el audio de la visualización'
                 }, bubbles: true, composed: true }));

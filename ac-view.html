@@ -363,9 +363,15 @@
         }
     /* ------------------- Chords ------------------- */
         ___acVsetCurrentChord (arg) {
+            if(arg === undefined)
+                return ; 
             this.currentChord = arg ;
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             var midiNote = this.midiNameToNumber[arg.substr(0,arg.indexOf(' '))] ;
+            if(midiNote === undefined)
+                this.dispatchEvent(new CustomEvent('toast', {detail:{
+                    msg:this.t('unableToPlayChord')
+                }, bubbles: true, composed: true }));
             var description = arg.substr(arg.indexOf(' ')+1);
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acVsetCurrentChord(midiNote-this.___acV_recordingPitchDiff,description);
@@ -641,6 +647,9 @@
             e.preventDefault() ; 
             this._acViewCallFunction('addInstrumentActivity',e) ; 
         }
+        t(c , arg) {
+            return i18next.t('acView.'+c , arg) ; 
+        }
         ready() {
             super.ready() ;
             this.___acVorigins = [] ;
@@ -674,7 +683,7 @@
                 nodeList[i].style.visibility = 'hidden' ;
             }
             this.midiNameToNumber = [] ;
-            for (let i = 0; i < 200; i++) 
+            for (let i = 0; i < 128; i++) 
                 this.midiNameToNumber[this.___acV_getMIDINoteName(i)] = i ;
             this.___acV_initAcLeds();
             this.___acVaddOrigin('chord') ;
