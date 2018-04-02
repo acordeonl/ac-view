@@ -268,7 +268,7 @@
             var note = this.___acV_midiEventToAudioNote(e.channel,e.midiNote,e.origin,e.initiator) ;
             if (this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === undefined || this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']') === null) {
                 this.dispatchEvent(new CustomEvent('toast', {detail:{
-                    msg:'La visualización seleccionada no soporta el canal '+(e.channel+1)
+                    msg:this.t('channelNotInView' , {channel:e.channel+1})
                 }, bubbles: true, composed: true }));
                 return ;
             }
