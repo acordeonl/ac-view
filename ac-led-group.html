@@ -232,7 +232,7 @@
         ___acV_MIDIaddGUIAction(e) {
             if (this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
                 this.dispatchEvent(new CustomEvent('toast', {detail:{
-                    msg:'La tonalidad de la grabación seleccionada o la configuración del instrumento MIDI conectado no es compatible con la visualización seleccionada'
+                    msg:this.t('notesNotInView')
                 }, bubbles: true, composed: true }));
                 return ;
             }
@@ -279,7 +279,7 @@
             }
             if (note > 127 || !this.shadowRoot.querySelector('VIEW-AUDIO[channel' + e.channel + ']').hasNote[note] )
                 this.dispatchEvent(new CustomEvent('toast', {detail:{
-                    msg:'Algunas notas no pueden ser reproducidas debido a que no se encuentran en el audio de la visualización'
+                    msg:this.t('notesNotInAudio')
                 }, bubbles: true, composed: true }));
         }
         ___acV_mapMIDINoteToAudioNote(channel,midiNote,newNote){
@@ -631,6 +631,9 @@
         }
         constructor() {
             super();
+        }
+        t(c , arg) {
+            return i18next.t('acLedGroup.'+c , arg) ; 
         }
         ready() {
             super.ready() ;
