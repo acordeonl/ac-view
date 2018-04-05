@@ -252,6 +252,10 @@
             evt.note = this.___acV_midiEventToAudioNote(evt.channel,evt.midiNote,evt.origin,evt.initiator) ;
             var acLedIdsArr = this.___acV_mapMIDIEventToAcLedId(evt.channel,evt.midiNote,evt.origin,evt.initiator);
             var acLedStatesArr = this.___acV_mapMIDIEventToAcLedState(evt.channel,evt.midiNote,evt.origin,evt.initiator);
+            if(acLedIdsArr.length === 0)
+                this.dispatchEvent(new CustomEvent('toast', {detail:{
+                    msg:this.t('notesNotInView')
+                }, bubbles: true, composed: true }));
             for(let i = 0 ; i < acLedIdsArr.length ; i ++ ){
                 let e = JSON.parse(JSON.stringify(evt))  ; 
                 e.acLedId = acLedIdsArr[i] ;
