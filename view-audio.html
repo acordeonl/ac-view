@@ -435,13 +435,15 @@
         t2(c , arg ) {
             return i18next.t(c , arg) ; 
         }
-        ready() {
+        async ready() {
             super.ready();
             this.playbackActions = [];
             this.origins = [];
             this.hasNote = [] ; 
             this.regions = [] ; 
-            
+            await instrumentAudioContextInit ; 
+            await playbackAudioContextInit ; 
+
             this.originsSetupPromiseR();
             if (this.instrumentSynthGain === undefined)
                 this.instrumentSynthGain = instrumentContext.createGain();

@@ -521,25 +521,37 @@
                 nodeList[i].setVelocity(velocity);
             }
         }
-        ___acV_setSynthInstrumentPanning(panning) {
+        async ___acV_setSynthInstrumentPanning(panning) {
+            await instrumentAudioContextInit ; 
+            await playbackAudioContextInit ; 
+
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setInstrumentPanning(panning);
             }
         }
-        ___acV_setSynthPlaybackPanning(panning) {
+        async ___acV_setSynthPlaybackPanning(panning) {
+            await instrumentAudioContextInit ; 
+            await playbackAudioContextInit ; 
+
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setPlaybackPanning(panning);
             }
         }
-        ___acV_setSynthPlaybackVolume(volume) {
+        async ___acV_setSynthPlaybackVolume(volume) {
+            await instrumentAudioContextInit ; 
+            await playbackAudioContextInit ; 
+
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setPlaybackGain(volume);
             }
         }
-        ___acV_setSynthInstrumentVolume(volume) {
+        async ___acV_setSynthInstrumentVolume(volume) {
+            await instrumentAudioContextInit ; 
+            await playbackAudioContextInit ; 
+
             var nodeList = this.shadowRoot.querySelectorAll('VIEW-AUDIO');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].setInstrumentGain(volume);

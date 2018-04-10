@@ -300,6 +300,8 @@
             this._acViewCallFunction('toast',e) ;
         }
         async ___acVstopInstrumentAudio (){
+            await instrumentAudioContextInit ; 
+            await playbackAudioContextInit ; 
             this.___acVclearGUI('instrument') ;
             await stopInstrumentAudio() ;
             instrumentContext.close();
@@ -404,7 +406,9 @@
                 nodeList[i].___acVsetACLedColors(colors) ; 
             }
         }
-        ___acVsettingsUpdate (origin, value) {
+        async ___acVsettingsUpdate (origin, value) {
+            await instrumentAudioContextInit ; 
+            await playbackAudioContextInit ; 
             if (value === null || value === undefined || isNaN(value))
                 return;
             var arr = origin.split('_');
