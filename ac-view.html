@@ -28,7 +28,7 @@
         window[origin+'Convolver'] = window[origin+'Context'].createConvolver();
         if(convolverBuffer === null){
             try {
-                var convolverArrayBuffer = await(await fetch("/data/16_IR_Pool_Size_00.wav")).arrayBuffer();
+                var convolverArrayBuffer = await(await fetch("/audio-samples/16_IR_Pool_Size_00.wav")).arrayBuffer();
                 convolverBuffer = await window[origin+'Context'].decodeAudioData(convolverArrayBuffer) ;
                 
             } catch (error) {
