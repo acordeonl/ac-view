@@ -53,11 +53,9 @@
             window[origin+'Convolver'].connect(window[origin+'Wet']);
             window[origin+'Dry'].connect(window[origin+'MasterGain']);
             window[origin+'Wet'].connect(window[origin+'MasterGain']);
-            alert('with convolver') ; 
         }
         else{
             window[origin+'Compressor'].connect(window[origin+'MasterGain']);
-            alert('no convolver') ;
         }   
 
         window[origin+'MasterGain'].connect(window[origin+'Context'].destination);
