@@ -46,11 +46,20 @@
         window[origin+'Compressor'].attack.setValueAtTime(0.005,window[origin+'Context'].currentTime);
         window[origin+'Compressor'].release.setValueAtTime(0.05,window[origin+'Context'].currentTime);
         window[origin+'Compressor'].threshold.setValueAtTime(0,window[origin+'Context'].currentTime);
-        window[origin+'Compressor'].connect(window[origin+'Convolver']);
-        window[origin+'Compressor'].connect(window[origin+'Dry']);
-        window[origin+'Convolver'].connect(window[origin+'Wet']);
-        window[origin+'Dry'].connect(window[origin+'MasterGain']);
-        window[origin+'Wet'].connect(window[origin+'MasterGain']);
+
+        if(!app_isMobile()){
+            window[origin+'Compressor'].connect(window[origin+'Convolver']);
+            window[origin+'Compressor'].connect(window[origin+'Dry']);
+            window[origin+'Convolver'].connect(window[origin+'Wet']);
+            window[origin+'Dry'].connect(window[origin+'MasterGain']);
+            window[origin+'Wet'].connect(window[origin+'MasterGain']);
+            alert('with convolver') ; 
+        }
+        else{
+            window[origin+'Compressor'].connect(window[origin+'MasterGain']);
+            alert('no convolver') ;
+        }   
+
         window[origin+'MasterGain'].connect(window[origin+'Context'].destination);
         if (origin === 'playback') {
             playbackAudioContextInitR() ;
