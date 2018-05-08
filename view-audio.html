@@ -215,9 +215,11 @@
             }    
             catch(e){
                 this.isloadingAudio = false ;
-                this.dispatchEvent(new CustomEvent('fetch-error', {detail:{
-                    error:e
+                this.dispatchEvent(new CustomEvent('toast', {detail:{
+                    msg:this.t2('loadViewAudioError'), 
+                    persist:true
                 }, bubbles: true, composed: true }));
+                this.loadAudio('/demo_data/assets/viewAudios/grand-piano-YDP-20160804-2-ogg.zip') ; 
             } 
         }
     /* ------------- Audio synth ------------------ */
