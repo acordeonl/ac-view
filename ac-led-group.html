@@ -231,9 +231,11 @@
         }
         ___acV_MIDIaddGUIAction(e) {
             if (this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === null || this.shadowRoot.querySelector('[channel' + e.channel + '][id' + e.acLedId + ']') === undefined) {
-                this.dispatchEvent(new CustomEvent('toast', {detail:{
-                    msg:this.t('notesNotInView')
-                }, bubbles: true, composed: true }));
+                if(e.cmd === 'note-on'){
+                    this.dispatchEvent(new CustomEvent('toast', {detail:{
+                        msg:this.t('notesNotInView')
+                    }, bubbles: true, composed: true }));
+                }
                 return ;
             }
             if (e.origin === 'playback') {
