@@ -377,6 +377,7 @@
         }
     /* -------------------- GUI ------------------------- */
         ___acV_updateGUI() {
+            requestAnimationFrame(this.___acV_updateGUI.bind(this)) ; 
             if(this.___acV_in_midiIOToggle)
                 return ; 
             if (this.playbackAcLedActions !== null && this.playbackAcLedActions !== undefined && this.playbackAcLedActions.length > 0) {
@@ -425,7 +426,6 @@
                     this[origin+'AcLedActions'].popFirst();
                 }
             }
-            requestAnimationFrame(this.___acV_updateGUI.bind(this)) ; 
         }
         ___acVtoggleNotes(origin, value) {
             var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
