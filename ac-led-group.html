@@ -425,6 +425,7 @@
                     this[origin+'AcLedActions'].popFirst();
                 }
             }
+            requestAnimationFrame(this.___acV_updateGUI.bind(this)) ; 
         }
         ___acVtoggleNotes(origin, value) {
             var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
@@ -697,7 +698,8 @@
                 }
             }
             this.___acV_loadedViewAudios = 0;
-            setInterval(this.___acV_updateGUI.bind(this), 1);
+            // setInterval(this.___acV_updateGUI.bind(this), 1);
+            requestAnimationFrame(this.___acV_updateGUI.bind(this)) ; 
             this.addEventListener('view-audio-load', e => this.___acV_onLoadViewAudio(e));
             this.addEventListener('gui-action', e => this.___acV_displayMonophonicNote(e));
         }
