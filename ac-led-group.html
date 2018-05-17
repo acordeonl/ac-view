@@ -377,7 +377,6 @@
         }
     /* -------------------- GUI ------------------------- */
         ___acV_updateGUI() {
-            requestAnimationFrame(this.___acV_updateGUI.bind(this)) ; 
             if(this.___acV_in_midiIOToggle)
                 return ; 
             if (this.playbackAcLedActions !== null && this.playbackAcLedActions !== undefined && this.playbackAcLedActions.length > 0) {
@@ -698,8 +697,7 @@
                 }
             }
             this.___acV_loadedViewAudios = 0;
-            // setInterval(this.___acV_updateGUI.bind(this), 1);
-            requestAnimationFrame(this.___acV_updateGUI.bind(this)) ; 
+            setInterval(this.___acV_updateGUI.bind(this), 1);
             this.addEventListener('view-audio-load', e => this.___acV_onLoadViewAudio(e));
             this.addEventListener('gui-action', e => this.___acV_displayMonophonicNote(e));
         }
