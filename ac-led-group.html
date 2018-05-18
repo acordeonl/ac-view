@@ -383,7 +383,7 @@
                 if (this.playbackAcLedActions.first.value.when < window.performance.now()/1000) {
                     let timeRef = this.playbackAcLedActions.first.value.when ; 
                     while (this.playbackAcLedActions.length > 0 &&  this.playbackAcLedActions.first.value.when === timeRef) { 
-                        this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel,this.playbackAcLedActions.first.value.velocity);
+                        // this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState,this.playbackAcLedActions.first.value.note,this.playbackAcLedActions.first.value.channel,this.playbackAcLedActions.first.value.velocity);
 
                     // --------------- MIDI out ----------------------
                         if(appIsPlaying){
@@ -405,7 +405,7 @@
             for (var i = 0; i < this.___acV_instruments.length; i++) {
                 var origin = this.___acV_instruments[i] ;
                 if (this[origin+'AcLedActions'].length > 0) {
-                    this.shadowRoot.querySelector('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note,this[origin+'AcLedActions'].first.value.channel,this[origin+'AcLedActions'].first.value.velocity);
+                    // this.shadowRoot.querySelector('[channel' + this[origin+'AcLedActions'].first.value.channel + '][id' + this[origin+'AcLedActions'].first.value.acLedId + ']').___acVrender(this[origin+'AcLedActions'].first.value.origin, this[origin+'AcLedActions'].first.value.acLedState,this[origin+'AcLedActions'].first.value.note,this[origin+'AcLedActions'].first.value.channel,this[origin+'AcLedActions'].first.value.velocity);
                     if(origin === 'chord' && !appIsPlaying){
                         let cmd = (this[origin+'AcLedActions'].first.value.cmd  === 'note-on')? 9:8; 
                         if(this.___acV_mutePlayback)
@@ -453,7 +453,7 @@
                     when = window.performance.now()/1000 + (this.playbackAcLedActions.first.value.tempo) * (this.playbackAcLedActions.first.value.time - this.playbackAcLedActions.first.value.playbackTime);
                 }
                 if (when < window.performance.now()/1000 || this.playbackAcLedActions.first.value.playNow !== undefined) {
-                    this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
+                    // this.shadowRoot.querySelector('[channel' + this.playbackAcLedActions.first.value.channel + '][id' + this.playbackAcLedActions.first.value.acLedId + ']').___acVrender(this.playbackAcLedActions.first.value.origin, this.playbackAcLedActions.first.value.acLedState);
                     if(appIsPlaying){
                         let cmd = (this.playbackAcLedActions.first.value.cmd  === 'note-on')? 9:8; 
                         if(this.___acV_mutePlayback)
@@ -697,7 +697,7 @@
                 }
             }
             this.___acV_loadedViewAudios = 0;
-            setInterval(this.___acV_updateGUI.bind(this), 1);
+            // setInterval(this.___acV_updateGUI.bind(this), 1);
             this.addEventListener('view-audio-load', e => this.___acV_onLoadViewAudio(e));
             this.addEventListener('gui-action', e => this.___acV_displayMonophonicNote(e));
         }
