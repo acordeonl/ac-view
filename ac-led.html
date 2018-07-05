@@ -105,7 +105,7 @@
                         if (this.___acV_isMonophonic) {
                             this.dispatchEvent(new CustomEvent('gui-action', {detail:{
                                 cmd:'playbackNoteOn',
-                                note:this.___acV_getMIDINoteName(note,channel)
+                                note:note
                             }, bubbles: true, composed: true }));
                         }
                         else{
@@ -118,7 +118,7 @@
                         if (this.___acV_isMonophonic) {
                             this.dispatchEvent(new CustomEvent('gui-action', {detail:{
                                 cmd:'instrumentNoteOn',
-                                note:this.___acV_getMIDINoteName(note,channel)
+                                note:note
                             }, bubbles: true, composed: true }));
                         }
                         else{

@@ -31,6 +31,7 @@
             defaultInstrumentVolume: {type: Number,value: 1},
             defaultPlaybackVolume: {type: Number,value: 1},
         /* ------------------- Action ------------------- */
+            ___acV_displayTransposition:{type:Boolean,value:false},
             ___acV_mutePlayback:{type:Boolean,value:false},
             ___acV_playbackNotesOn:{type:Object},
             ___acV_recordingNotesOn:{type:Object},
@@ -392,6 +393,13 @@
             }
         }
     /* -------------------- GUI ------------------------- */
+        ___acVsetRotation (rotation) {
+            this.___acV_rotation = rotation;
+            var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].___acV_rotation = rotation ; 
+            }
+        }
         ___acV_updateGUI() {
             if(this.___acV_in_midiIOToggle)
                 return ; 
@@ -507,15 +515,23 @@
         }
         ___acV_displayMonophonicNote(e) {
             if(this.shadowRoot.querySelector('[playbackNote]') !== undefined && this.shadowRoot.querySelector('[playbackNote]') !== null ) { 
-                if (e.detail.cmd === 'playbackNoteOn') 
-                    this.shadowRoot.querySelector('[playbackNote]').innerHTML = e.detail.note ;
+                if (e.detail.cmd === 'playbackNoteOn') {
+                    if(this.___acV_viewPitchDiff !== 0 && this.___acV_displayTransposition)
+                        this.shadowRoot.querySelector('[playbackNote]').innerHTML = this.___acV_getMIDINoteName(e.detail.note - this.___acV_viewPitchDiff) +' ('+this.___acV_getMIDINoteName(e.detail.note)+')'
+                    else
+                        this.shadowRoot.querySelector('[playbackNote]').innerHTML = this.___acV_getMIDINoteName(e.detail.note) ;
+                }
                 if (e.detail.cmd === 'playbackNoteOff') {
                     this.shadowRoot.querySelector('[playbackNote]').innerHTML = '' ;
                 }
             }
             if (this.shadowRoot.querySelector('[instrumentNote]') !== undefined && this.shadowRoot.querySelector('[instrumentNote]') !== null) {
-                if (e.detail.cmd === 'instrumentNoteOn') 
-                    this.shadowRoot.querySelector('[instrumentNote]').innerHTML = e.detail.note ;
+                if (e.detail.cmd === 'instrumentNoteOn') {
+                    if(this.___acV_viewPitchDiff !== 0 && this.___acV_displayTransposition)
+                        this.shadowRoot.querySelector('[instrumentNote]').innerHTML = this.___acV_getMIDINoteName(e.detail.note - this.___acV_viewPitchDiff) +' ('+this.___acV_getMIDINoteName(e.detail.note)+')'
+                    else 
+                        this.shadowRoot.querySelector('[instrumentNote]').innerHTML = this.___acV_getMIDINoteName(e.detail.note) ;
+                }
                 if (e.detail.cmd === 'instrumentNoteOff') 
                     this.shadowRoot.querySelector('[instrumentNote]').innerHTML = '' ;
             }

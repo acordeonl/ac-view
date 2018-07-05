@@ -488,7 +488,7 @@
             this.___acV_rotation = rotation;
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].___acV_rotation = rotation;
+                nodeList[i].___acVsetRotation(rotation) ; 
             }
         }
     /* ------------------- Recording Data ------------------- */
