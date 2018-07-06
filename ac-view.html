@@ -95,6 +95,7 @@
             ___acV_userPreferences:{type:Object},
             ___acV_name:{type:String},
             ___acV_rotates:{type:Boolean,value:false},
+            ___acV_hasLeftHanded:{type:Boolean,value:false},
             ___acV_displaysNotes:{type:Boolean,value:false},
             ___acVinstrumentOrigins:{type:Array,value:[]},
             ___acVkeyboardEnabled:{type:Boolean,value:false},
@@ -110,7 +111,8 @@
             ___acVtotalAcLedGroups: {type: Number,value: 0},
             ___acVloadedAcLedGroups: {type: Number,value: 0},
             ___acV_finishedLoading: {type: Boolean,value: false},
-            ___acV_rotation: {type: Boolean,value: false}
+            ___acV_rotation: {type: Boolean,value: false},
+            ___acV_leftHanded:{type:Boolean,value:false},
         }}
     /* ------------------- acView Communication ------------------- */
         _acViewCallFunction (functionName, args) {
@@ -491,6 +493,13 @@
                 nodeList[i].___acVsetRotation(rotation) ; 
             }
         }
+        ___acVsetLeftHanded (leftHanded) {
+            this.___acV_leftHanded = leftHanded;
+            var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].___acVsetLeftHanded(leftHanded) ; 
+            }
+        }
     /* ------------------- Recording Data ------------------- */
         ___acVsetRecording (recording) {
             this.___acVrecording = recording;
@@ -608,6 +617,7 @@
             this.___acVsetReverb(e['reverb']);
             this.___acVreverb = e['reverb'];
             this.___acVsetRotation(e['rotation']);
+            this.___acVsetLeftHanded(e['leftHanded']);
             this.___acVsettingsUpdate('playback_opacity', e['playback_opacity']);
             this.___acVsettingsUpdate('instrument_opacity', e['instrument_opacity']);
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
@@ -626,6 +636,9 @@
         }
         ___acV_canRotate(value) {
             this.___acV_rotates = value ; 
+        }
+        ___acV_canDisplayLeftHanded(value) {
+            this.___acV_hasLeftHanded = value ; 
         }
         ___acV_setDefaultReverb (reverb) {
             this.___acVdefaultReverb = reverb ;
@@ -647,7 +660,8 @@
                 name: this.___acV_name,
                 chords:this.chords , 
                 displaysNotes:this.___acV_displaysNotes,
-                rotates:this.___acV_rotates
+                rotates:this.___acV_rotates,
+                hasLeftHanded:this.___acV_hasLeftHanded
             });
         }
         constructor() {

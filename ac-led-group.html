@@ -18,6 +18,7 @@
             ___acV_flags:{type:Array,value:[]},
             ___acV_index: {type: Number},
             ___acV_rotation: {type: Boolean,value: false},
+            ___acV_leftHanded: {type: Boolean,value: false},
             ___acV_instrumentPanning: {type: Number,value: 0,observer: '___acV_setSynthInstrumentPanning'},
             ___acV_playbackPanning: {type: Number,value: 0,observer: '___acV_setSynthPlaybackPanning'},
             ___acV_instrumentVolume: {type: Number,value: 1,observer: '___acV_setSynthInstrumentVolume'},
@@ -398,6 +399,13 @@
             var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
             for (var i = 0; i < nodeList.length; i++) {
                 nodeList[i].___acV_rotation = rotation ; 
+            }
+        }
+        ___acVsetLeftHanded (leftHanded) {
+            this.___acV_leftHanded = leftHanded;
+            var nodeList = this.shadowRoot.querySelectorAll('[acLed]');
+            for (var i = 0; i < nodeList.length; i++) {
+                nodeList[i].___acV_leftHanded = leftHanded ; 
             }
         }
         ___acV_updateGUI() {
