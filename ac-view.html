@@ -385,7 +385,7 @@
                 }, bubbles: true, composed: true }));
             var description = arg.substr(arg.indexOf(' ')+1);
             for (var i = 0; i < nodeList.length; i++) {
-                nodeList[i].___acVsetCurrentChord(midiNote-this.___acV_recordingPitchDiff,description);
+                nodeList[i].___acVsetCurrentChord(midiNote,description);
             }
         }
         ___acVrestartChord(){

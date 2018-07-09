@@ -13,6 +13,7 @@
             ___acV_totalViewAudios: {type: Number,value: 0},
             ___acV_loadedViewAudios: {type: Number,value: 0},
         /* ------------------- Setup ------------------- */
+            ___acV_hasMIDINoteMapping:{type:Boolean,value:false},
             ___acV_enableMIDIVelocity:{type:Boolean,value:false},
             ___acV_registeredChannels:{type:Object},
             ___acV_flags:{type:Array,value:[]},
@@ -309,6 +310,7 @@
                 }, bubbles: true, composed: true }));
         }
         ___acV_mapMIDINoteToAudioNote(channel,midiNote,newNote){
+            this.___acV_hasMIDINoteMapping = true ; 
             if (!this.___acV_flags[channel]) {
                 this.___acV_flags[channel]=true ;
                 this.___acV_MIDINoteToAudioNoteMap[channel] = [] ;
@@ -346,6 +348,8 @@
         ___acVsetCurrentChord(midiNote,description) {
             if (this.chords === undefined)
                 return ;
+            midiNote -= this.___acV_viewPitchDiff ; 
+
             if (this.playingChords) {
                 this.___acV_stopCurrentChord() ;
                 if (this.chords[midiNote] !== undefined)
@@ -368,7 +372,10 @@
                 for (let j = 1; j < this.currentChord[i].length; j++) {
                     var e = {};
                     e.playNow = 1;
-                    e.midiNote = this.currentChord[i][j];
+                    if(this.___acV_hasMIDINoteMapping)
+                        e.midiNote = this.currentChord[i][j];
+                    else
+                        e.midiNote = this.currentChord[i][j]+this.___acV_viewPitchDiff-this.___acV_recordingPitchDiff ;
                     e.channel = this.currentChord[i][0];
                     e.velocity = 100 ; 
                     e.origin = 'chord';
@@ -384,7 +391,10 @@
                 for (let j = 1; j < this.currentChord[i].length; j++) {
                     var e = {};
                     e.playNow = 1;
-                    e.midiNote = this.currentChord[i][j];
+                    if(this.___acV_hasMIDINoteMapping)
+                        e.midiNote = this.currentChord[i][j];
+                    else
+                        e.midiNote = this.currentChord[i][j]+this.___acV_viewPitchDiff-this.___acV_recordingPitchDiff ;
                     e.channel = this.currentChord[i][0];
                     e.origin = 'chord';
                     e.velocity = 0 ;
