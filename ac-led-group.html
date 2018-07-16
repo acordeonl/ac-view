@@ -39,7 +39,6 @@
             ___acV_recordingNotesOn:{type:Object},
             ___acV_instruments:{type:Array},
             ___acV_MIDINoteToAudioNoteMap:{type:Array,value:[]},
-            ___acV_mapKeyboardToNote:{type:Array,value:[]}
         }}
     /* ----------------  Audio ------------------------- */
         ___acVaddPitch(viewPitch,pitchDiff) {
@@ -61,32 +60,6 @@
         }
         ___acVsetDefaultViewPitch(default_viewPitch) {
             this.___acV_default_viewPitch  = default_viewPitch ;
-        }
-    /* ------------------- Keyboard ------------------- */
-        ___acV_setKeyboardToNote(key,arg){
-            this.___acV_mapKeyboardToNote[key] = arg ;
-        }
-        ___acV_onKeyboardNoteOn(key){
-            if (this.___acV_mapKeyboardToNote[key] !== undefined) {
-                var e = {};
-                e.playNow = 1;
-                e.midiNote = this.___acV_mapKeyboardToNote[key][1];
-                e.channel = this.___acV_mapKeyboardToNote[key][0];
-                e.origin = 'keyboard';
-                e.cmd = 'note-on';
-                this.___acV_onMIDIEvent(e) ;
-            }
-        }
-        ___acV_onKeyboardNoteOff(key){
-            if (this.___acV_mapKeyboardToNote[key] !== undefined) {
-                var e = {};
-                e.playNow = 1;
-                e.midiNote = this.___acV_mapKeyboardToNote[key][1];
-                e.channel = this.___acV_mapKeyboardToNote[key][0];
-                e.origin = 'keyboard';
-                e.cmd = 'note-off';
-                this.___acV_onMIDIEvent(e) ;
-            }
         }
     /* ------------------- Instrument ------------------- */
         ___acVinitInstrumentVolume(){
@@ -714,7 +687,6 @@
             this.___acV_recordingNotesOn = new Map() ; 
             this.___acV_registeredChannels = new Map() ; 
             this.___acV_instruments = [] ;
-            this.___acV_mapKeyboardToNote = [] ;
 
             this.___acV_midiOutCnt_playback = new  Array () ; 
             this.___acV_midiOutCnt_recording = new  Array () ; 

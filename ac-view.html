@@ -98,8 +98,6 @@
             ___acV_hasLeftHanded:{type:Boolean,value:false},
             ___acV_displaysNotes:{type:Boolean,value:false},
             ___acVinstrumentOrigins:{type:Array,value:[]},
-            ___acVkeyboardEnabled:{type:Boolean,value:false},
-            ___acVkeyboardOn:{type:Array,value:[]},
             ___acVorigins:{type:Array,value:[]},
             ___acVplayingChords:{type:Boolean,value:false},
             ___acV_recordingPitchDiff: {type: Number,value: 0},
@@ -277,29 +275,6 @@
                 var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
                 for (var i = 0; i < nodeList.length; i++) {
                     nodeList[i].___acVsetVelocity(velocity / 127);
-            }
-        }
-    /* ------------------- Keyboard ------------------- */
-        ___acVkeyPress(e){
-            if (!this.___acVkeyboardEnabled)
-                return ;
-            var nodeList = this.shadowRoot.querySelectorAll("[acLedGroup]");
-            for (var i = 0; i < nodeList.length; i++) {
-                if (this.___acVkeyboardOn[e.key] === undefined) {
-                    this.___acVkeyboardOn[e.key] = 1 ;
-                    nodeList[i].___acV_onKeyboardNoteOn(e.key) ;
-                }
-            }
-        }
-        ___acVkeyUp(e){
-            if (!this.___acVkeyboardEnabled)
-                return ;
-            var nodeList = this.shadowRoot.querySelectorAll("[acLedGroup]");
-            for (var i = 0; i < nodeList.length; i++) {
-                if (this.___acVkeyboardOn[e.key] !== undefined) {
-                    this.___acVkeyboardOn[e.key] = undefined ;
-                    nodeList[i].___acV_onKeyboardNoteOff(e.key) ;
-                }
             }
         }
     /* ------------------- Instrument ------------------- */
@@ -679,7 +654,6 @@
             super.ready() ;
             this.___acVorigins = [] ;
             this.___acVinstrumentOrigins = [] ;
-            this.___acVkeyboardOn = [] ;
             this.setDefaultViewPitchPromise = new Promise(resolve => this.setDefaultViewPitchPromiseR = resolve);
             this.___acVloadedAcLedGroups = 0;
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
@@ -712,7 +686,6 @@
                 this.midiNameToNumber[this.___acV_getMIDINoteName(i)] = i ;
             this.___acV_initAcLeds();
             this.___acVaddOrigin('chord') ;
-            this.___acVaddOrigin('keyboard') ;
             this.___acVaddOrigin('playback') ;
             this.___acVaddOrigin('acView') ;
             //if in an iframe
