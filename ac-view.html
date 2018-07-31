@@ -351,7 +351,7 @@
         }
     /* ------------------- Chords ------------------- */
         ___acVsetCurrentChord (arg) {
-            if(arg === undefined)
+            if(arg === undefined || arg === 'NaN M')
                 return ; 
             this.currentChord = arg ;
             var nodeList = this.shadowRoot.querySelectorAll('[acLedGroup]');
